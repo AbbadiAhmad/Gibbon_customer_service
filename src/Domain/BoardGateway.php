@@ -38,6 +38,14 @@ class BoardGateway extends QueryableGateway
         return $this->db()->select($sql, $data)->fetchAll();
     }
 
+    /** Every active board of every active space (used to find who must be notified). */
+    public function selectAllActive(): array
+    {
+        $sql = "SELECT csBoard.* FROM csBoard JOIN csSpace ON (csSpace.csSpaceID=csBoard.csSpaceID)
+                WHERE csBoard.active='Y' AND csSpace.active='Y'";
+        return $this->db()->select($sql)->fetchAll();
+    }
+
     public function selectColumns($csBoardID): array
     {
         return $this->db()->select("SELECT * FROM csBoardColumn WHERE csBoardID=:id ORDER BY sequenceNumber, csBoardColumnID", ['id' => $csBoardID])->fetchAll();

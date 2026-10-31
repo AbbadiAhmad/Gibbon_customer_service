@@ -12,6 +12,7 @@ use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
 use Gibbon\Module\CustomerService\Service\CustomFields;
+use Gibbon\Module\CustomerService\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -22,7 +23,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_e
 
 $csTicketTypeID = $_GET['csTicketTypeID'] ?? '';
 $gateway = $container->get(TicketTypeGateway::class);
-$values = ['name' => '', 'description' => '', 'csTeamID' => '', 'active' => 'Y'];
+$values = ['name' => '', 'description' => '', 'csTeamID' => '', 'active' => 'Y', 'workflow' => null];
 
 if (!empty($csTicketTypeID)) {
     $values = $gateway->getByID($csTicketTypeID);
@@ -54,6 +55,18 @@ $row = $form->addRow();
 $row = $form->addRow();
     $row->addLabel('active', __('Active'))->description(__('Inactive types cannot be chosen for new requests.'));
     $row->addYesNo('active')->required()->selected($values['active']);
+
+$form->addRow()->addHeading('Workflow', __('Workflow'))
+    ->append(__('Optional. Without rules a ticket can be moved to any status. Moving a ticket to Resolved or Closed always requires a resolution note.'));
+
+$row = $form->addRow();
+    $row->addLabel('workflowTransitions', __('Allowed Moves'))->description(__('One rule per line: "From status: Allowed target 1, Allowed target 2". A status without a line can move anywhere.'));
+    $row->addTextArea('workflowTransitions')->setRows(6)->setValue(Workflow::transitionsToText($values['workflow']))
+        ->placeholder("New: In Progress, Waiting\nIn Progress: Waiting, Resolved\nWaiting: In Progress");
+
+$row = $form->addRow();
+    $row->addLabel('workflowCommentRequired', __('Comment Required For'))->description(__('Comma separated statuses that need a comment when a ticket is moved to them (besides Resolved / Closed).'));
+    $row->addTextField('workflowCommentRequired')->maxLength(255)->setValue(Workflow::commentRequiredToText($values['workflow']));
 
 $row = $form->addRow();
     $row->addFooter();

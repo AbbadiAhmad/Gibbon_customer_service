@@ -21,7 +21,9 @@ $page->breadcrumbs->add(__('My Dashboard'));
 
 $isAdmin = csIsAdmin($guid, $connection2);
 
-echo '<p>'.Format::link(csURL($session, 'cs_request_new.php'), __('Raise a Request')).'</p>';
+echo '<p>'.Format::link(csURL($session, 'cs_request_new.php'), __('Raise a Request')).' &middot; '
+    .Format::link(csURL($session, 'cs_ticket_search.php'), __('Search Tickets')).' &middot; '
+    .Format::link(csURL($session, 'cs_ticket_search.php', ['assignee' => 'me', 'open' => 'Y']), __('Assigned to me')).'</p>';
 
 // Tickets waiting for triage on the boards the user can work on.
 $boards = csAccessibleBoards($container, $session, $isAdmin);

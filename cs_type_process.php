@@ -8,6 +8,7 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Data\Validator;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\CustomerService\Service\Workflow;
 
 $_POST['address'] = '/modules/CustomerService/cs_type_manage.php';
 
@@ -29,6 +30,7 @@ $data = [
     'description' => $_POST['description'] ?? '',
     'csTeamID'    => isset($teams[$team]) ? $team : null,
     'active'      => ($_POST['active'] ?? 'Y') == 'N' ? 'N' : 'Y',
+    'workflow'    => Workflow::fromText($_POST['workflowTransitions'] ?? '', $_POST['workflowCommentRequired'] ?? ''),
 ];
 $editParams = empty($csTicketTypeID) ? [] : ['csTicketTypeID' => $csTicketTypeID];
 

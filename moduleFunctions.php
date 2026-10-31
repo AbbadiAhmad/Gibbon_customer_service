@@ -12,8 +12,12 @@ use Gibbon\Module\CustomerService\Domain\BoardGateway;
 use Gibbon\Module\CustomerService\Domain\SpaceGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
+use Gibbon\Module\CustomerService\Service\Workflow;
 
 const CS_MODULE = 'CustomerService';
+
+/** Parameters that make up a ticket search (and a saved filter). */
+const CS_SEARCH_PARAMS = ['search', 'status', 'csTicketTypeID', 'priority', 'assignee', 'mine', 'open'];
 
 /** URL of a module page, with optional query parameters. */
 function csURL($session, string $page, array $params = []): string
@@ -118,7 +122,10 @@ function csAssignableUsers($container, $session, array $ticket, bool $isAdmin): 
     return $people;
 }
 
-/** Statuses a ticket can be moved to: the columns of the boards that show it. */
+/**
+ * Statuses a ticket can be moved to: the columns of the boards that show it, limited by the
+ * workflow of its ticket type. The current status is always included.
+ */
 function csStatusOptions($container, $session, array $ticket, bool $isAdmin): array
 {
     $boardGateway = $container->get(BoardGateway::class);
@@ -128,8 +135,22 @@ function csStatusOptions($container, $session, array $ticket, bool $isAdmin): ar
             $statuses[$column['name']] = $column['name'];
         }
     }
+    $statuses = Workflow::filterTargets($ticket['workflow'] ?? null, $ticket['status'], $statuses);
     $statuses[$ticket['status']] = $ticket['status'];
     return $statuses;
+}
+
+/** Can this user read internal notes and their attachments? (Anyone who works on the ticket, not the plain requester.) */
+function csCanSeeInternal($container, $session, array $ticket, bool $isAdmin): bool
+{
+    return csHasTicketPermission($container, $session, $ticket, 'view_board', $isAdmin);
+}
+
+/** Download link of an attachment (served by cs_attachment.php after an access check). */
+function csAttachmentLink($session, array $attachment): string
+{
+    $url = $session->get('absoluteURL').'/export.php?q=/modules/'.CS_MODULE.'/cs_attachment.php&csTicketAttachmentID='.(int)$attachment['csTicketAttachmentID'];
+    return '<a href="'.$url.'">'.htmlspecialchars($attachment['fileName']).'</a>';
 }
 
 /** Spaces the user may administrate (global admin: all spaces). */

@@ -9,6 +9,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\CustomerService\Service\Attachments;
 use Gibbon\Module\CustomerService\Service\CustomFields;
 
 require_once __DIR__ . '/moduleFunctions.php';
@@ -76,6 +77,11 @@ $row = $form->addRow();
 
 $fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
 CustomFields::addToForm($form, $fields);
+
+$fileUploader = new Gibbon\FileUploader($pdo, $session);
+$row = $form->addRow();
+    $row->addLabel('attachments', __('Attachments'))->description(sprintf(__('Optional. Up to %1$s files, e.g. screenshots or documents.'), Attachments::MAX_FILES));
+    $row->addFileUpload(Attachments::FIELD)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
 
 $row = $form->addRow();
     $row->addFooter();

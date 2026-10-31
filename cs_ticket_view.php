@@ -8,11 +8,14 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Module\CustomerService\Domain\ActivityGateway;
+use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
 use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
+use Gibbon\Module\CustomerService\Service\Attachments;
 use Gibbon\Module\CustomerService\Service\CustomFields;
 use Gibbon\Module\CustomerService\Service\Permissions;
+use Gibbon\Module\CustomerService\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -39,9 +42,19 @@ $can = [];
 foreach ([Permissions::COMMENT, Permissions::EDIT_TICKET, Permissions::TRANSITION, Permissions::ASSIGN, Permissions::DELETE_TICKET] as $permission) {
     $can[$permission] = csHasTicketPermission($container, $session, $ticket, $permission, $isAdmin);
 }
+$canInternal = csCanSeeInternal($container, $session, $ticket, $isAdmin);
+$isDone = Workflow::isDone($ticket['status']);
 
 $page->breadcrumbs->add(__('My Dashboard'), 'cs_dashboard.php');
 $page->breadcrumbs->add(csTicketRef($ticket['csTicketID']));
+
+$attachmentGateway = $container->get(AttachmentGateway::class);
+$attachments = $attachmentGateway->selectGroupedByTicket($ticket['csTicketID'], $canInternal);
+$renderAttachments = function (array $list) use ($session) {
+    return '<div class="text-sm mt-1">&#128206; '.implode(' &middot; ', array_map(function ($a) use ($session) {
+        return csAttachmentLink($session, $a);
+    }, $list)).'</div>';
+};
 
 // ---- Details ---------------------------------------------------------------
 echo '<h2>'.htmlspecialchars($ticket['title']).' <span class="text-gray-500 text-base">'.csTicketRef($ticket['csTicketID']).'</span></h2>';
@@ -56,6 +69,9 @@ $details = [
     __('Team')         => htmlspecialchars($ticket['teamName'] ?? ''),
     __('Raised')       => Format::dateTime($ticket['timestampCreated']),
 ];
+if (!empty($ticket['timestampResolved']) && $isDone) {
+    $details[__('Resolved')] = Format::dateTime($ticket['timestampResolved']);
+}
 foreach ($details as $label => $value) {
     echo '<tr><td class="w-1/4 py-1 text-gray-600">'.$label.'</td><td class="py-1">'.$value.'</td></tr>';
 }
@@ -68,6 +84,39 @@ echo '</tbody></table>';
 if (!empty($ticket['description'])) {
     echo '<h3>'.__('Description').'</h3><p>'.nl2br(htmlspecialchars($ticket['description'])).'</p>';
 }
+if (!empty($attachments[0])) {
+    echo $renderAttachments($attachments[0]);
+}
+if ($isDone && !empty($ticket['resolution'])) {
+    echo '<h3>'.__('Resolution').'</h3><p>'.nl2br(htmlspecialchars($ticket['resolution'])).'</p>';
+}
+
+// ---- Requester: confirm or reopen a finished ticket ----------------------------------
+if ($isReporter && $isDone) {
+    $form = Form::create('csReopen', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form->addHiddenValue('address', $session->get('address'));
+    $form->addHiddenValue('action', 'reopen');
+    $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
+    $form->setTitle($ticket['status'] == 'Closed' ? __('Not solved?') : __('Is this solved?'));
+    $row = $form->addRow();
+        $row->addLabel('body', __('Comment'))->description(__('Tell us what is still missing when you reopen the request.'));
+        $row->addTextArea('body')->setRows(3);
+    $row = $form->addRow();
+        $col = $row->addColumn()->addClass('flex justify-end gap-2');
+        $col->addSubmit(__('Reopen'))->setID('reopenSubmit');
+    echo $form->getOutput();
+
+    if ($ticket['status'] == 'Resolved') {
+        $form = Form::create('csConfirm', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+        $form->addHiddenValue('address', $session->get('address'));
+        $form->addHiddenValue('action', 'confirm');
+        $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
+        $row = $form->addRow();
+            $row->addContent(__('Yes, it is solved: close the request.'));
+            $row->addSubmit(__('Close Request'));
+        echo $form->getOutput();
+    }
+}
 
 // ---- Triage ----------------------------------------------------------------
 if ($can[Permissions::EDIT_TICKET] || $can[Permissions::TRANSITION] || $can[Permissions::ASSIGN]) {
@@ -79,7 +128,7 @@ if ($can[Permissions::EDIT_TICKET] || $can[Permissions::TRANSITION] || $can[Perm
 
     if ($can[Permissions::TRANSITION]) {
         $row = $form->addRow();
-            $row->addLabel('status', __('Status'));
+            $row->addLabel('status', __('Status'))->description(__('Only the moves allowed by the workflow of this ticket type are listed.'));
             $row->addSelect('status')->fromArray(csStatusOptions($container, $session, $ticket, $isAdmin))->selected($ticket['status'])->required();
     }
     if ($can[Permissions::ASSIGN]) {
@@ -97,6 +146,12 @@ if ($can[Permissions::EDIT_TICKET] || $can[Permissions::TRANSITION] || $can[Perm
             $row->addLabel('csTeamID', __('Team'));
             $row->addSelect('csTeamID')->fromArray($container->get(TeamGateway::class)->selectOptions())->selected($ticket['csTeamID'])->placeholder();
     }
+    if ($can[Permissions::TRANSITION]) {
+        $row = $form->addRow();
+            $row->addLabel('comment', __('Comment / Resolution Note'))
+                ->description(sprintf(__('Required when moving to %1$s (the resolution note, visible to the requester) and to statuses the workflow marks as needing a comment.'), implode(' / ', Workflow::DONE)));
+            $row->addTextArea('comment')->setRows(3);
+    }
     $row = $form->addRow();
         $row->addFooter();
         $row->addSubmit(__('Save'));
@@ -106,21 +161,30 @@ if ($can[Permissions::EDIT_TICKET] || $can[Permissions::TRANSITION] || $can[Perm
 
 // ---- Activity --------------------------------------------------------------
 echo '<h3>'.__('Activity').'</h3>';
-$activities = $container->get(ActivityGateway::class)->selectByTicket($ticket['csTicketID']);
+$activities = $container->get(ActivityGateway::class)->selectByTicket($ticket['csTicketID'], $canInternal);
 if (empty($activities)) {
     echo '<p class="text-gray-600">'.__('No activity yet.').'</p>';
 }
 foreach ($activities as $a) {
-    $who = htmlspecialchars(csPersonName($a['preferredName'], $a['surname']));
+    $who = htmlspecialchars(csPersonName($a['preferredName'], $a['surname']) ?: __('System'));
     $when = Format::dateTimeReadable($a['timestamp']);
     if ($a['kind'] == 'Event') {
         echo '<div class="text-sm text-gray-600 py-1">&bull; '.htmlspecialchars($a['body']).' <i>('.$who.', '.$when.')</i></div>';
     } else {
-        echo '<div class="border rounded p-3 my-2"><div class="text-sm text-gray-600 mb-1"><b>'.$who.'</b> &middot; '.$when.'</div>'.nl2br(htmlspecialchars($a['body'])).'</div>';
+        $internal = $a['visibility'] == 'Internal';
+        echo '<div class="border rounded p-3 my-2'.($internal ? ' bg-yellow-50 border-yellow-400' : '').'">';
+        echo '<div class="text-sm text-gray-600 mb-1"><b>'.$who.'</b> &middot; '.$when.($internal ? ' &middot; <b>'.__('Internal note').'</b>' : '').'</div>';
+        echo nl2br(htmlspecialchars($a['body']));
+        if (!empty($attachments[(int)$a['csTicketActivityID']])) {
+            echo $renderAttachments($attachments[(int)$a['csTicketActivityID']]);
+        }
+        echo '</div>';
     }
 }
 
 if ($isReporter || $can[Permissions::COMMENT]) {
+    $fileUploader = new Gibbon\FileUploader($pdo, $session);
+
     $form = Form::create('csComment', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', 'comment');
@@ -128,6 +192,17 @@ if ($isReporter || $can[Permissions::COMMENT]) {
     $row = $form->addRow();
         $row->addLabel('body', __('Add a comment'));
         $row->addTextArea('body')->setRows(4)->required();
+
+    if ($can[Permissions::COMMENT]) {
+        $row = $form->addRow();
+            $row->addLabel('visibility', __('Visibility'))->description(__('Internal notes are only visible to the people working on the ticket, never to the requester.'));
+            $row->addSelect('visibility')->fromArray(['Public' => __('Reply to the requester'), 'Internal' => __('Internal note')])->selected('Public');
+    }
+
+    $row = $form->addRow();
+        $row->addLabel('attachments', __('Attachments'));
+        $row->addFileUpload(Attachments::FIELD)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
+
     $row = $form->addRow();
         $row->addFooter();
         $row->addSubmit(__('Comment'));

@@ -12,6 +12,7 @@ use Gibbon\Module\CustomerService\Domain\SpaceGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
 use Gibbon\Module\CustomerService\Service\BoardFilter;
 use Gibbon\Module\CustomerService\Service\Permissions;
+use Gibbon\Module\CustomerService\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -72,7 +73,7 @@ if (!empty($unmapped)) {
     $lanes[__('Other statuses')] = $unmapped;
 }
 
-$moveOptions = array_column($columns, 'name', 'name');
+$columnNames = array_column($columns, 'name');
 
 echo '<div class="cs-board">';
 foreach ($lanes as $laneName => $laneTickets) {
@@ -90,6 +91,14 @@ foreach ($lanes as $laneName => $laneTickets) {
             $form->addHiddenValue('action', 'move');
             $form->addHiddenValue('csTicketID', $t['csTicketID']);
             $form->addHiddenValue('csBoardID', $csBoardID);
+            // Only moves the workflow of the ticket's type allows, and only to statuses that need no note
+            // (Resolved / Closed are set from the ticket page where the resolution note is entered).
+            $moveOptions = [];
+            foreach ($columnNames as $name) {
+                if ($name === $t['status'] || (Workflow::isAllowed($t['workflow'], $t['status'], $name) && !Workflow::requiresComment($t['workflow'], $name))) {
+                    $moveOptions[$name] = $name;
+                }
+            }
             $row = $form->addRow();
             $row->addSelect('status')->fromArray($moveOptions)->selected($t['status'])->placeholder(__('Move to...'))
                 ->setAttribute('onchange', 'if (this.value) this.form.submit()');

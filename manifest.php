@@ -11,7 +11,7 @@ $description = 'Service desk for customer requests: forms, tickets, teams, space
 $entryURL = 'cs_dashboard.php';
 $type = 'Additional';
 $category = 'Other';
-$version = '0.1.0';
+$version = '0.2.0';
 $author = 'Ahmad';
 $url = '';
 
@@ -44,6 +44,7 @@ $moduleTables[] = "
         `name` varchar(100) NOT NULL,
         `description` text NULL,
         `csTeamID` int(6) unsigned NULL COMMENT 'Default team new tickets of this type are routed to',
+        `workflow` text NULL COMMENT 'JSON: {transitions: {from: [to, ...]}, commentRequired: [status, ...]}',
         `active` enum('Y','N') NOT NULL DEFAULT 'Y',
         PRIMARY KEY (`csTicketTypeID`),
         UNIQUE KEY `name` (`name`)
@@ -137,6 +138,8 @@ $moduleTables[] = "
         `gibbonPersonIDAssignee` int(10) unsigned zerofill NULL,
         `csTeamID` int(6) unsigned NULL,
         `customData` longtext NULL COMMENT 'JSON object of custom field values keyed by fieldKey',
+        `resolution` text NULL COMMENT 'Resolution note given when the ticket was moved to Resolved / Closed',
+        `timestampResolved` timestamp NULL DEFAULT NULL,
         `timestampCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         `timestampUpdated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (`csTicketID`),
@@ -153,10 +156,35 @@ $moduleTables[] = "
         `csTicketID` int(10) unsigned NOT NULL,
         `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
         `kind` enum('Comment','Event') NOT NULL DEFAULT 'Comment',
+        `visibility` enum('Public','Internal') NOT NULL DEFAULT 'Public' COMMENT 'Internal = only visible to the people working on the ticket',
         `body` text NOT NULL,
         `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (`csTicketActivityID`),
         KEY `csTicketID` (`csTicketID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csTicketAttachment` (
+        `csTicketAttachmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `csTicketID` int(10) unsigned NOT NULL,
+        `csTicketActivityID` int(10) unsigned NULL COMMENT 'The comment it was attached to; NULL = attached to the request itself',
+        `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+        `fileName` varchar(255) NOT NULL,
+        `filePath` varchar(255) NOT NULL COMMENT 'Relative to the Gibbon root, below uploads/',
+        `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`csTicketAttachmentID`),
+        KEY `csTicketID` (`csTicketID`),
+        KEY `csTicketActivityID` (`csTicketActivityID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csSavedFilter` (
+        `csSavedFilterID` int(8) unsigned NOT NULL AUTO_INCREMENT,
+        `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+        `name` varchar(100) NOT NULL,
+        `params` text NOT NULL COMMENT 'JSON of the ticket search form values',
+        PRIMARY KEY (`csSavedFilterID`),
+        KEY `gibbonPersonID` (`gibbonPersonID`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 // Seed data: default roles, permissions, a team, a ticket type and a space with a board.
@@ -218,8 +246,15 @@ $actionRows[] = array_merge($csAll, [
 $actionRows[] = array_merge($csAll, [
     'name' => 'View Ticket', 'precedence' => '2', 'category' => 'Requests',
     'description' => 'View a ticket, comment on it and (with permission) triage it',
-    'URLList' => 'cs_ticket_view.php, cs_ticket_process.php', 'entryURL' => 'cs_ticket_view.php',
+    'URLList' => 'cs_ticket_view.php, cs_ticket_process.php, cs_attachment.php', 'entryURL' => 'cs_ticket_view.php',
     'entrySidebar' => 'N', 'menuShow' => 'N',
+]);
+
+$actionRows[] = array_merge($csAll, [
+    'name' => 'Search Tickets', 'precedence' => '2', 'category' => 'Requests',
+    'description' => 'Search the tickets you can see, with quick views and saved filters',
+    'URLList' => 'cs_ticket_search.php, cs_search_process.php', 'entryURL' => 'cs_ticket_search.php',
+    'entrySidebar' => 'Y', 'menuShow' => 'Y',
 ]);
 
 $actionRows[] = array_merge($csAll, [

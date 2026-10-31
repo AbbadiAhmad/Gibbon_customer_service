@@ -7,10 +7,13 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Data\Validator;
 use Gibbon\Module\CustomerService\Domain\ActivityGateway;
+use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
 use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\CustomerService\Service\Attachments;
 use Gibbon\Module\CustomerService\Service\CustomFields;
+use Gibbon\Module\CustomerService\Service\Notifier;
 
 $_POST['address'] = '/modules/CustomerService/cs_request_new.php';
 
@@ -56,4 +59,10 @@ if (empty($csTicketID)) {
 
 $container->get(ActivityGateway::class)->log($csTicketID, $person, __('Request raised'));
 
-csRedirect($session, 'cs_ticket_view.php', ['csTicketID' => $csTicketID], 'success0');
+$fileUploader = new Gibbon\FileUploader($pdo, $session);
+$failedFiles = Attachments::save($container->get(AttachmentGateway::class), $fileUploader, $csTicketID, null, $person);
+
+(new Notifier($container))->ticketCreated($container->get(TicketGateway::class)->getTicket($csTicketID), $person);
+
+// warning1: the request was saved, but at least one attachment was rejected (e.g. file type).
+csRedirect($session, 'cs_ticket_view.php', ['csTicketID' => $csTicketID], $failedFiles > 0 ? 'warning1' : 'success0');

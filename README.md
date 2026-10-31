@@ -63,10 +63,45 @@ Tickets whose status is not a column of the board appear in an extra "Other stat
 * **My Dashboard**: tickets waiting for triage (status `New`) on your boards + all your own requests.
 * A "Customer Requests" tab on the Staff, Student and Parent dashboards (hook) lists your open requests.
 
+## Notifications
+
+Gibbon notifications (and e-mail for users who enabled notification e-mails in their preferences) are sent for:
+new request (assignee, else the team, else everybody who can work the boards that show it), status change
+(requester + assignee), assignment (new assignee), public comments (requester/assignee, or the staff side when
+the requester writes), and a reopened request. The person who made the change is never notified.
+
+## Attachments
+
+Up to 5 files on the request form and on every comment, stored with Gibbon's uploader (allowed file types follow
+the Gibbon setting). Downloads go through an access check; attachments of internal notes are hidden from the requester.
+Deleting a ticket removes its files.
+
+## Internal notes
+
+Anyone with the `comment` permission can write a comment as **Internal note**: highlighted, visible only to people
+who can view the boards that show the ticket, never to the requester, and never notified to the requester.
+
+## Workflow, resolution and reopen
+
+* **Manage Ticket Types > edit type > Workflow**: `From: Target 1, Target 2` per line restricts the moves of that
+  type (a status without a line can go anywhere) and `Comment Required For` lists statuses that need a comment.
+* Moving a ticket to **Resolved** or **Closed** always needs a **resolution note** (entered on the ticket page; the
+  board dropdown only offers moves that need no note). It is stored on the ticket and shown to the requester.
+* The requester sees **Close Request** / **Reopen** on a Resolved ticket (and **Reopen** on a Closed one). Reopening sets
+  the status back to `New`, clears the resolution and notifies the team.
+* Auto-close: `php modules/CustomerService/cli_autoClose.php 14` closes tickets that stayed Resolved for 14 days
+  (run it from cron).
+
+## Search
+
+**Search Tickets** searches title, description and reference (`CS-12`) with status / type / priority / assignee
+filters, over the tickets you can see (your own + the boards of your spaces). Quick views (my open requests, assigned to
+me, unassigned, all open, resolved) and **saved filters** (per user) are on the same page.
+
 ## Not implemented yet
 
-Notifications/emails, attachments, SLAs, drag-and-drop on boards (cards are moved with a dropdown), request
-on behalf of another user, per-type workflows.
+E-mail channel, automation rules, SLAs, knowledge base, linked tickets, request on behalf of another user,
+drag-and-drop on boards (cards are moved with a dropdown), reports.
 
 ## License
 

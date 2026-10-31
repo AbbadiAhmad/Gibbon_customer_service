@@ -1,3 +1,12 @@
+v0.2.0
+------
+- Notifications for new requests, status changes, assignments, comments and reopened requests
+- Attachments on requests and comments (served through an access check)
+- Internal notes (hidden from the requester)
+- Per ticket type workflow (allowed moves, comment required), resolution note, requester confirm / reopen
+- Auto-close of long Resolved tickets (cli_autoClose.php)
+- Ticket search with quick views and saved filters
+
 v0.1.0
 ------
 Initial release of the Customer Service module:

@@ -84,7 +84,7 @@ class BoardFilter
     /**
      * @return array [string $sql, array $params] - $sql is '1=1' for an empty filter
      */
-    public static function toSql($filter): array
+    public static function toSql($filter, string $prefix = ''): array
     {
         $core = self::coreFields();
         $parts = [];
@@ -94,11 +94,11 @@ class BoardFilter
             if (isset($core[$c['field']])) {
                 $expr = $core[$c['field']];
             } else {
-                $expr = "JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(csTicket.customData,''),'{}'), :bfPath{$i}))";
-                $params["bfPath{$i}"] = '$."'.$c['field'].'"';
+                $expr = "JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(csTicket.customData,''),'{}'), :{$prefix}bfPath{$i}))";
+                $params["{$prefix}bfPath{$i}"] = '$."'.$c['field'].'"';
             }
             $val = "COALESCE({$expr}, '')";
-            $param = "bfValue{$i}";
+            $param = "{$prefix}bfValue{$i}";
 
             switch ($c['op']) {
                 case 'equals':

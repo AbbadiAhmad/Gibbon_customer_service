@@ -90,6 +90,21 @@ class SpaceGateway extends QueryableGateway
         return $out;
     }
 
+    /** Active users holding $permission in any of the spaces: gibbonPersonID list. */
+    public function selectPeopleWithPermission(array $spaceIDs, string $permission): array
+    {
+        $spaceIDs = array_map('intval', $spaceIDs);
+        if (empty($spaceIDs)) {
+            return [];
+        }
+        $sql = "SELECT DISTINCT csSpaceMember.gibbonPersonID
+                FROM csSpaceMember
+                JOIN csRolePermission ON (csRolePermission.csRoleID=csSpaceMember.csRoleID AND csRolePermission.permission=:permission)
+                JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=csSpaceMember.gibbonPersonID AND gibbonPerson.status='Full')
+                WHERE csSpaceMember.csSpaceID IN (".implode(',', $spaceIDs).")";
+        return array_map('intval', $this->db()->select($sql, ['permission' => $permission])->fetchAll(\PDO::FETCH_COLUMN));
+    }
+
     public function deleteSpace($csSpaceID): bool
     {
         $boards = $this->db()->select("SELECT csBoardID FROM csBoard WHERE csSpaceID=:id", ['id' => $csSpaceID])->fetchAll(\PDO::FETCH_COLUMN);

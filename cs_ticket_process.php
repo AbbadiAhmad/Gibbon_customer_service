@@ -7,10 +7,15 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Data\Validator;
 use Gibbon\Module\CustomerService\Domain\ActivityGateway;
+use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
 use Gibbon\Module\CustomerService\Domain\BoardGateway;
+use Gibbon\Module\CustomerService\Domain\SpaceGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
+use Gibbon\Module\CustomerService\Service\Attachments;
+use Gibbon\Module\CustomerService\Service\Notifier;
 use Gibbon\Module\CustomerService\Service\Permissions;
+use Gibbon\Module\CustomerService\Service\Workflow;
 
 $_POST['address'] = '/modules/CustomerService/cs_ticket_view.php';
 
@@ -37,6 +42,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket
 
 $tickets = $container->get(TicketGateway::class);
 $activity = $container->get(ActivityGateway::class);
+$notifier = new Notifier($container);
 $isAdmin = csIsAdmin($guid, $connection2);
 $ticket = $tickets->getTicket($csTicketID);
 
@@ -47,62 +53,113 @@ if (!csCanViewTicket($container, $session, $ticket, $isAdmin)) {
     csRedirect($session, 'cs_dashboard.php', [], 'error0');
 }
 
+$isReporter = (int)$ticket['gibbonPersonIDReporter'] === $person;
 $can = function (string $permission) use ($container, $session, $ticket, $isAdmin) {
     return csHasTicketPermission($container, $session, $ticket, $permission, $isAdmin);
+};
+
+/**
+ * Change the status, enforcing the ticket type workflow and the required comment / resolution note.
+ * $enforceWorkflow is false for the requester's own confirm / reopen buttons.
+ *
+ * @return string|null null on success, otherwise the return code to redirect with
+ */
+$changeStatus = function (string $status, string $comment, bool $enforceWorkflow = true) use ($tickets, $activity, $notifier, &$ticket, $person) {
+    if ($status === $ticket['status']) {
+        return null;
+    }
+    if ($enforceWorkflow) {
+        if (!Workflow::isAllowed($ticket['workflow'], $ticket['status'], $status)) {
+            return 'error1';
+        }
+        if (Workflow::requiresComment($ticket['workflow'], $status) && $comment === '') {
+            return 'error1';
+        }
+    }
+
+    $changes = ['status' => $status];
+    if (Workflow::isDone($status)) {
+        $changes['resolution'] = $comment !== '' ? $comment : ($ticket['resolution'] ?? null);
+        $changes['timestampResolved'] = date('Y-m-d H:i:s');
+    } elseif (Workflow::isDone($ticket['status'])) {
+        $changes['resolution'] = null;
+        $changes['timestampResolved'] = null;
+    }
+
+    $tickets->updateTicket($ticket['csTicketID'], $changes);
+    $activity->log($ticket['csTicketID'], $person, sprintf(__('Status changed from %1$s to %2$s'), $ticket['status'], $status));
+    if ($comment !== '') {
+        $activity->log($ticket['csTicketID'], $person, (Workflow::isDone($status) ? __('Resolution').': ' : '').$comment, 'Comment');
+    }
+
+    $notifier->statusChanged($ticket, $status, $person);
+    $ticket = array_merge($ticket, $changes);
+
+    return null;
 };
 
 switch ($action) {
     case 'comment':
         $body = trim($_POST['body'] ?? '');
-        $isReporter = (int)$ticket['gibbonPersonIDReporter'] === $person;
-        if (!$isReporter && !$can(Permissions::COMMENT)) {
+        $internal = ($_POST['visibility'] ?? 'Public') === 'Internal';
+        if ($internal ? !$can(Permissions::COMMENT) : (!$isReporter && !$can(Permissions::COMMENT))) {
             $back('error0');
         }
         if ($body === '') {
             $back('error1');
         }
-        $activity->log($csTicketID, $person, $body, 'Comment');
-        $back('success0');
+
+        $activityID = $activity->log($csTicketID, $person, $body, 'Comment', $internal ? 'Internal' : 'Public');
+        $fileUploader = new Gibbon\FileUploader($pdo, $session);
+        $failedFiles = Attachments::save($container->get(AttachmentGateway::class), $fileUploader, $csTicketID, $activityID, $person);
+
+        if (!$internal) {
+            $notifier->commented($ticket, $person, $body);
+        }
+        $back($failedFiles > 0 ? 'warning1' : 'success0');
         break;
 
     case 'move':
-        // Drag-free move from a board: only the status changes.
-        $board = $container->get(BoardGateway::class)->getByID($csBoardID);
+        // Move from a board: only the status changes, and only to a column of that board.
+        $boards = $container->get(BoardGateway::class);
+        $board = $boards->getByID($csBoardID);
         $status = trim($_POST['status'] ?? '');
-        if (empty($board) || !in_array($status, array_column($container->get(BoardGateway::class)->selectColumns($csBoardID), 'name'), true)) {
+        if (empty($board) || !in_array($status, array_column($boards->selectColumns($csBoardID), 'name'), true)) {
             $back('error1');
         }
         $matches = !empty($tickets->selectByFilter($board['filter'], $csTicketID, 1));
-        $allowed = $isAdmin || $container->get(\Gibbon\Module\CustomerService\Domain\SpaceGateway::class)->hasPermission($person, $board['csSpaceID'], Permissions::TRANSITION);
+        $allowed = $isAdmin || $container->get(SpaceGateway::class)->hasPermission($person, $board['csSpaceID'], Permissions::TRANSITION);
         if (!$matches || !$allowed) {
             $back('error0');
         }
-        if ($status !== $ticket['status']) {
-            $tickets->updateTicket($csTicketID, ['status' => $status]);
-            $activity->log($csTicketID, $person, sprintf(__('Status changed from %1$s to %2$s'), $ticket['status'], $status));
-        }
-        $back('success0');
+        // Statuses that need a note (Resolved, Closed, ...) have to be set from the ticket page.
+        $back($changeStatus($status, '') ?? 'success0');
         break;
 
     case 'update':
-        $changes = [];
-        $log = [];
+        $return = 'success0';
 
         if ($can(Permissions::TRANSITION) && isset($_POST['status'])) {
             $status = trim($_POST['status']);
-            if ($status !== '' && $status !== $ticket['status'] && in_array($status, csStatusOptions($container, $session, $ticket, $isAdmin), true)) {
-                $changes['status'] = $status;
-                $log[] = sprintf(__('Status changed from %1$s to %2$s'), $ticket['status'], $status);
+            if ($status !== '' && $status !== $ticket['status']) {
+                if (!in_array($status, csStatusOptions($container, $session, $ticket, $isAdmin), true)) {
+                    $back('error1');
+                }
+                $result = $changeStatus($status, trim($_POST['comment'] ?? ''));
+                if ($result !== null) {
+                    $back($result); // nothing else is saved when the status change is refused
+                }
             }
         }
+
+        $changes = [];
+        $log = [];
         if ($can(Permissions::ASSIGN) && array_key_exists('gibbonPersonIDAssignee', $_POST)) {
             $assignee = (int)$_POST['gibbonPersonIDAssignee'];
             $people = csAssignableUsers($container, $session, $ticket, $isAdmin);
-            if ($assignee === 0 || isset($people[$assignee])) {
-                if ($assignee !== (int)$ticket['gibbonPersonIDAssignee']) {
-                    $changes['gibbonPersonIDAssignee'] = $assignee ?: null;
-                    $log[] = $assignee ? sprintf(__('Assigned to %1$s'), $people[$assignee]) : __('Unassigned');
-                }
+            if (($assignee === 0 || isset($people[$assignee])) && $assignee !== (int)$ticket['gibbonPersonIDAssignee']) {
+                $changes['gibbonPersonIDAssignee'] = $assignee ?: null;
+                $log[] = $assignee ? sprintf(__('Assigned to %1$s'), $people[$assignee]) : __('Unassigned');
             }
         }
         if ($can(Permissions::EDIT_TICKET)) {
@@ -124,13 +181,47 @@ switch ($action) {
             foreach ($log as $line) {
                 $activity->log($csTicketID, $person, $line);
             }
+            if (array_key_exists('gibbonPersonIDAssignee', $changes)) {
+                $notifier->assigned($ticket, $changes['gibbonPersonIDAssignee'], $person);
+            }
         }
+        $back($return);
+        break;
+
+    case 'reopen':
+        if (!$isReporter || !Workflow::isDone($ticket['status'])) {
+            $back('error0');
+        }
+        $body = trim($_POST['body'] ?? '');
+        $changeStatus(Workflow::REOPEN_STATUS, '', false);
+        $activity->log($csTicketID, $person, __('Reopened by the requester'));
+        if ($body !== '') {
+            $activity->log($csTicketID, $person, $body, 'Comment');
+        }
+        $notifier->reopened($ticket, $person);
+        $back('success0');
+        break;
+
+    case 'confirm':
+        if (!$isReporter || $ticket['status'] !== 'Resolved') {
+            $back('error0');
+        }
+        $changeStatus('Closed', '', false);
         $back('success0');
         break;
 
     case 'delete':
         if (!$can(Permissions::DELETE_TICKET) || ($_POST['confirm'] ?? '') !== 'Y') {
             $back('error0');
+        }
+        // Remove the uploaded files too (the rows go with the ticket).
+        foreach ($container->get(AttachmentGateway::class)->selectGroupedByTicket($csTicketID, true) as $group) {
+            foreach ($group as $attachment) {
+                $file = $session->get('absolutePath').'/'.ltrim($attachment['filePath'], '/');
+                if (Attachments::isSafePath($attachment['filePath']) && is_file($file)) {
+                    @unlink($file);
+                }
+            }
         }
         $tickets->deleteTicket($csTicketID);
         csRedirect($session, 'cs_dashboard.php', [], 'success0');
