@@ -6,9 +6,12 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
+use Gibbon\Services\Format;
 use Gibbon\Module\CustomerService\Domain\ActivityGateway;
 use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
+use Gibbon\Module\CustomerService\Automation\AutomationEngine;
 use Gibbon\Module\CustomerService\Domain\BoardGateway;
+use Gibbon\Module\CustomerService\Domain\LinkGateway;
 use Gibbon\Module\CustomerService\Domain\SpaceGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
@@ -43,6 +46,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket
 $tickets = $container->get(TicketGateway::class);
 $activity = $container->get(ActivityGateway::class);
 $notifier = new Notifier($container);
+$engine = new AutomationEngine($container);
 $isAdmin = csIsAdmin($guid, $connection2);
 $ticket = $tickets->getTicket($csTicketID);
 
@@ -64,7 +68,7 @@ $can = function (string $permission) use ($container, $session, $ticket, $isAdmi
  *
  * @return string|null null on success, otherwise the return code to redirect with
  */
-$changeStatus = function (string $status, string $comment, bool $enforceWorkflow = true) use ($tickets, $activity, $notifier, &$ticket, $person) {
+$changeStatus = function (string $status, string $comment, bool $enforceWorkflow = true) use ($tickets, $activity, $notifier, $engine, $container, &$ticket, $person) {
     if ($status === $ticket['status']) {
         return null;
     }
@@ -75,16 +79,14 @@ $changeStatus = function (string $status, string $comment, bool $enforceWorkflow
         if (Workflow::requiresComment($ticket['workflow'], $status) && $comment === '') {
             return 'error1';
         }
+        // Work is not finished while subtasks are open or another ticket still blocks this one.
+        if (Workflow::isDone($status)
+            && ($tickets->countOpenSubtasks($ticket['csTicketID']) > 0 || !empty($container->get(LinkGateway::class)->selectOpenBlockers($ticket['csTicketID'])))) {
+            return 'error1';
+        }
     }
 
-    $changes = ['status' => $status];
-    if (Workflow::isDone($status)) {
-        $changes['resolution'] = $comment !== '' ? $comment : ($ticket['resolution'] ?? null);
-        $changes['timestampResolved'] = date('Y-m-d H:i:s');
-    } elseif (Workflow::isDone($ticket['status'])) {
-        $changes['resolution'] = null;
-        $changes['timestampResolved'] = null;
-    }
+    $changes = Workflow::statusChanges($ticket, $status, $comment);
 
     $tickets->updateTicket($ticket['csTicketID'], $changes);
     $activity->log($ticket['csTicketID'], $person, sprintf(__('Status changed from %1$s to %2$s'), $ticket['status'], $status));
@@ -92,8 +94,12 @@ $changeStatus = function (string $status, string $comment, bool $enforceWorkflow
         $activity->log($ticket['csTicketID'], $person, (Workflow::isDone($status) ? __('Resolution').': ' : '').$comment, 'Comment');
     }
 
+    $from = $ticket['status'];
     $notifier->statusChanged($ticket, $status, $person);
     $ticket = array_merge($ticket, $changes);
+
+    $engine->fire('status_changed', $ticket['csTicketID'], ['from' => $from, 'to' => $status]);
+    $ticket = $tickets->getTicket($ticket['csTicketID']) ?: $ticket;
 
     return null;
 };
@@ -115,6 +121,7 @@ switch ($action) {
 
         if (!$internal) {
             $notifier->commented($ticket, $person, $body);
+            $engine->fire('comment_added', $csTicketID, ['byRequester' => $isReporter]);
         }
         $back($failedFiles > 0 ? 'warning1' : 'success0');
         break;
@@ -176,6 +183,27 @@ switch ($action) {
             }
         }
 
+        if ($can(Permissions::EDIT_TICKET)) {
+            foreach (['dateStart' => __('Start date'), 'dateDue' => __('Due date')] as $column => $label) {
+                if (!array_key_exists($column, $_POST)) {
+                    continue;
+                }
+                $date = csParseDate($_POST[$column]);
+                if ($date === false) {
+                    $back('error1');
+                }
+                if ($date !== ($ticket[$column] ?: null)) {
+                    $changes[$column] = $date;
+                    $log[] = $date ? sprintf(__('%1$s set to %2$s'), $label, Format::date($date)) : sprintf(__('%1$s removed'), $label);
+                }
+            }
+            $start = $changes['dateStart'] ?? $ticket['dateStart'];
+            $due = $changes['dateDue'] ?? $ticket['dateDue'];
+            if (!empty($start) && !empty($due) && $due < $start) {
+                $back('error1');
+            }
+        }
+
         if (!empty($changes)) {
             $tickets->updateTicket($csTicketID, $changes);
             foreach ($log as $line) {
@@ -183,6 +211,7 @@ switch ($action) {
             }
             if (array_key_exists('gibbonPersonIDAssignee', $changes)) {
                 $notifier->assigned($ticket, $changes['gibbonPersonIDAssignee'], $person);
+                $engine->fire('ticket_assigned', $csTicketID);
             }
         }
         $back($return);
@@ -199,6 +228,7 @@ switch ($action) {
             $activity->log($csTicketID, $person, $body, 'Comment');
         }
         $notifier->reopened($ticket, $person);
+        $engine->fire('ticket_reopened', $csTicketID);
         $back('success0');
         break;
 

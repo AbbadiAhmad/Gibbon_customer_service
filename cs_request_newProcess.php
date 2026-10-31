@@ -6,6 +6,7 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
+use Gibbon\Module\CustomerService\Automation\AutomationEngine;
 use Gibbon\Module\CustomerService\Domain\ActivityGateway;
 use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
 use Gibbon\Module\CustomerService\Domain\FieldGateway;
@@ -35,6 +36,13 @@ if (empty($type) || $type['active'] != 'Y' || $title === '') {
     csRedirect($session, 'cs_request_new.php', ['csTicketTypeID' => $csTicketTypeID], 'error1');
 }
 
+// Basic fields every type has: start and due date (both optional).
+$dateStart = csParseDate($_POST['dateStart'] ?? '');
+$dateDue = csParseDate($_POST['dateDue'] ?? '');
+if (($dateStart === false) || ($dateDue === false) || (!empty($dateStart) && !empty($dateDue) && $dateDue < $dateStart)) {
+    csRedirect($session, 'cs_request_new.php', ['csTicketTypeID' => $csTicketTypeID], 'error1');
+}
+
 $fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
 [$customData, $missing] = CustomFields::collect($fields, $_POST);
 if (!empty($missing)) {
@@ -48,6 +56,8 @@ $csTicketID = $container->get(TicketGateway::class)->createTicket([
     'description'            => $_POST['description'] ?? '',
     'status'                 => 'New',
     'priority'               => $priority,
+    'dateStart'              => $dateStart ?: null,
+    'dateDue'                => $dateDue ?: null,
     'gibbonPersonIDReporter' => $person,
     'csTeamID'               => $type['csTeamID'] ?: null,
     'customData'             => $customData,
@@ -63,6 +73,7 @@ $fileUploader = new Gibbon\FileUploader($pdo, $session);
 $failedFiles = Attachments::save($container->get(AttachmentGateway::class), $fileUploader, $csTicketID, null, $person);
 
 (new Notifier($container))->ticketCreated($container->get(TicketGateway::class)->getTicket($csTicketID), $person);
+(new AutomationEngine($container))->fire('ticket_created', $csTicketID);
 
 // warning1: the request was saved, but at least one attachment was rejected (e.g. file type).
 csRedirect($session, 'cs_ticket_view.php', ['csTicketID' => $csTicketID], $failedFiles > 0 ? 'warning1' : 'success0');

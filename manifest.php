@@ -11,7 +11,7 @@ $description = 'Service desk for customer requests: forms, tickets, teams, space
 $entryURL = 'cs_dashboard.php';
 $type = 'Additional';
 $category = 'Other';
-$version = '0.2.0';
+$version = '0.3.0';
 $author = 'Ahmad';
 $url = '';
 
@@ -140,6 +140,11 @@ $moduleTables[] = "
         `customData` longtext NULL COMMENT 'JSON object of custom field values keyed by fieldKey',
         `resolution` text NULL COMMENT 'Resolution note given when the ticket was moved to Resolved / Closed',
         `timestampResolved` timestamp NULL DEFAULT NULL,
+        `csTicketIDParent` int(10) unsigned NULL COMMENT 'Set on subtasks: the ticket this one is a part of',
+        `dateStart` date NULL,
+        `dateDue` date NULL,
+        `dueReminderSent` datetime NULL COMMENT 'When the due soon reminder was sent (reset when the due date changes)',
+        `overdueNoticeSent` datetime NULL COMMENT 'When the overdue notice was sent (reset when the due date changes)',
         `timestampCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         `timestampUpdated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (`csTicketID`),
@@ -147,7 +152,9 @@ $moduleTables[] = "
         KEY `status` (`status`),
         KEY `reporter` (`gibbonPersonIDReporter`),
         KEY `assignee` (`gibbonPersonIDAssignee`),
-        KEY `csTeamID` (`csTeamID`)
+        KEY `csTeamID` (`csTeamID`),
+        KEY `csTicketIDParent` (`csTicketIDParent`),
+        KEY `dateDue` (`dateDue`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
@@ -185,6 +192,84 @@ $moduleTables[] = "
         `params` text NOT NULL COMMENT 'JSON of the ticket search form values',
         PRIMARY KEY (`csSavedFilterID`),
         KEY `gibbonPersonID` (`gibbonPersonID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csTag` (
+      `csTagID` int(8) unsigned NOT NULL AUTO_INCREMENT,
+      `name` varchar(50) NOT NULL,
+      PRIMARY KEY (`csTagID`),
+      UNIQUE KEY `name` (`name`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csTicketTag` (
+      `csTicketTagID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+      `csTicketID` int(10) unsigned NOT NULL,
+      `csTagID` int(8) unsigned NOT NULL,
+      PRIMARY KEY (`csTicketTagID`),
+      UNIQUE KEY `ticket_tag` (`csTicketID`, `csTagID`),
+      KEY `csTagID` (`csTagID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csTicketWatcher` (
+      `csTicketWatcherID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+      `csTicketID` int(10) unsigned NOT NULL,
+      `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+      PRIMARY KEY (`csTicketWatcherID`),
+      UNIQUE KEY `ticket_person` (`csTicketID`, `gibbonPersonID`),
+      KEY `gibbonPersonID` (`gibbonPersonID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csTicketLink` (
+      `csTicketLinkID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+      `csTicketIDFrom` int(10) unsigned NOT NULL COMMENT 'FROM blocks / duplicates / relates to TO',
+      `csTicketIDTo` int(10) unsigned NOT NULL,
+      `linkType` enum('blocks','duplicates','relates') NOT NULL,
+      `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+      `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (`csTicketLinkID`),
+      UNIQUE KEY `link` (`csTicketIDFrom`, `csTicketIDTo`, `linkType`),
+      KEY `csTicketIDTo` (`csTicketIDTo`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csChecklist` (
+      `csChecklistID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+      `csTicketID` int(10) unsigned NOT NULL,
+      `title` varchar(100) NOT NULL,
+      `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+      PRIMARY KEY (`csChecklistID`),
+      KEY `csTicketID` (`csTicketID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csChecklistItem` (
+      `csChecklistItemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+      `csChecklistID` int(10) unsigned NOT NULL,
+      `text` varchar(255) NOT NULL,
+      `done` enum('N','Y') NOT NULL DEFAULT 'N',
+      `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+      `gibbonPersonIDDone` int(10) unsigned zerofill NULL,
+      `timestampDone` timestamp NULL DEFAULT NULL,
+      PRIMARY KEY (`csChecklistItemID`),
+      KEY `csChecklistID` (`csChecklistID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `csAutomationRule` (
+      `csAutomationRuleID` int(8) unsigned NOT NULL AUTO_INCREMENT,
+      `csTicketTypeID` int(6) unsigned NULL COMMENT 'NULL = applies to every ticket type',
+      `name` varchar(100) NOT NULL,
+      `triggerKey` varchar(50) NOT NULL COMMENT 'See AutomationEngine::triggers()',
+      `conditions` text NULL COMMENT 'JSON list of {field, op, value} - same format as board filters',
+      `actions` text NOT NULL COMMENT 'JSON list of {type, params} - see Automation/Actions',
+      `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+      `active` enum('Y','N') NOT NULL DEFAULT 'Y',
+      PRIMARY KEY (`csAutomationRuleID`),
+      KEY `triggerKey` (`triggerKey`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 // Seed data: default roles, permissions, a team, a ticket type and a space with a board.
@@ -246,8 +331,15 @@ $actionRows[] = array_merge($csAll, [
 $actionRows[] = array_merge($csAll, [
     'name' => 'View Ticket', 'precedence' => '2', 'category' => 'Requests',
     'description' => 'View a ticket, comment on it and (with permission) triage it',
-    'URLList' => 'cs_ticket_view.php, cs_ticket_process.php, cs_attachment.php', 'entryURL' => 'cs_ticket_view.php',
+    'URLList' => 'cs_ticket_view.php, cs_ticket_process.php, cs_ticket_extrasProcess.php, cs_attachment.php', 'entryURL' => 'cs_ticket_view.php',
     'entrySidebar' => 'N', 'menuShow' => 'N',
+]);
+
+$actionRows[] = array_merge($csAdmin, [
+    'name' => 'Manage Automation', 'precedence' => '14', 'category' => 'Configuration',
+    'description' => 'Rules that run actions when something happens to a ticket (conditions + actions)',
+    'URLList' => 'cs_rule_manage.php, cs_rule_edit.php, cs_rule_process.php, cs_delete.php, cs_delete_process.php',
+    'entryURL' => 'cs_rule_manage.php', 'entrySidebar' => 'Y', 'menuShow' => 'Y',
 ]);
 
 $actionRows[] = array_merge($csAll, [

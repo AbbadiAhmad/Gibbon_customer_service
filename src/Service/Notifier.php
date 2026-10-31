@@ -12,6 +12,7 @@ use Gibbon\Module\CustomerService\Domain\BoardGateway;
 use Gibbon\Module\CustomerService\Domain\SpaceGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
+use Gibbon\Module\CustomerService\Domain\WatcherGateway;
 
 /**
  * Sends Gibbon notifications (in-app, plus e-mail for users who enabled notification e-mails)
@@ -40,7 +41,7 @@ class Notifier
     public function statusChanged(array $ticket, string $newStatus, $actorID): void
     {
         $text = sprintf(__('Status changed to %1$s'), $newStatus);
-        $this->send([$ticket['gibbonPersonIDReporter'], $ticket['gibbonPersonIDAssignee']], $actorID, $ticket, $text);
+        $this->send($this->withWatchers($ticket, [$ticket['gibbonPersonIDReporter'], $ticket['gibbonPersonIDAssignee']]), $actorID, $ticket, $text);
     }
 
     public function assigned(array $ticket, $newAssigneeID, $actorID): void
@@ -57,15 +58,37 @@ class Notifier
         $text = sprintf(__('New comment: %1$s'), $excerpt);
 
         if ((int)$actorID === (int)$ticket['gibbonPersonIDReporter']) {
-            $this->send($this->staffRecipients($ticket), $actorID, $ticket, $text);
+            $this->send($this->withWatchers($ticket, $this->staffRecipients($ticket)), $actorID, $ticket, $text);
         } else {
-            $this->send([$ticket['gibbonPersonIDReporter'], $ticket['gibbonPersonIDAssignee']], $actorID, $ticket, $text);
+            $this->send($this->withWatchers($ticket, [$ticket['gibbonPersonIDReporter'], $ticket['gibbonPersonIDAssignee']]), $actorID, $ticket, $text);
         }
     }
 
     public function reopened(array $ticket, $actorID): void
     {
-        $this->send($this->staffRecipients($ticket), $actorID, $ticket, sprintf(__('Reopened by the requester: %1$s'), $ticket['title']));
+        $this->send($this->withWatchers($ticket, $this->staffRecipients($ticket)), $actorID, $ticket, sprintf(__('Reopened by the requester: %1$s'), $ticket['title']));
+    }
+
+    /** Reminder: the due date is near. Goes to whoever works on the ticket and to the watchers. */
+    public function dueSoon(array $ticket): void
+    {
+        $this->send($this->withWatchers($ticket, $this->staffRecipients($ticket)), 0, $ticket, sprintf(__('Due on %1$s'), $ticket['dateDue']));
+    }
+
+    public function overdue(array $ticket): void
+    {
+        $this->send($this->withWatchers($ticket, $this->staffRecipients($ticket)), 0, $ticket, sprintf(__('OVERDUE since %1$s'), $ticket['dateDue']));
+    }
+
+    /** Free text notification (automation actions). */
+    public function custom(array $ticket, array $recipients, string $text, $actorID = 0): void
+    {
+        $this->send($recipients, $actorID, $ticket, $text);
+    }
+
+    protected function withWatchers(array $ticket, array $recipients): array
+    {
+        return array_merge($recipients, $this->container->get(WatcherGateway::class)->selectPersonIDs($ticket['csTicketID']));
     }
 
     /** @return int[] */

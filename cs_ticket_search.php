@@ -20,6 +20,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket
 }
 
 $page->breadcrumbs->add(__('Search Tickets'));
+$page->stylesheets->add('module-cs', 'modules/CustomerService/css/module.css');
 
 $isAdmin = csIsAdmin($guid, $connection2);
 $person = csPersonID($session);
@@ -39,6 +40,8 @@ $quick = [
     __('My open requests')   => ['mine' => 'Y', 'open' => 'Y'],
     __('Assigned to me')     => ['assignee' => 'me', 'open' => 'Y'],
     __('Unassigned')         => ['assignee' => 'none', 'open' => 'Y'],
+    __('Overdue')            => ['overdue' => 'Y'],
+    __('Watched by me')      => ['watching' => 'Y', 'open' => 'Y'],
     __('All open tickets')   => ['open' => 'Y'],
     __('Resolved')           => ['status' => 'Resolved'],
 ];
@@ -92,6 +95,18 @@ $row = $form->addRow();
     $row->addSelect('assignee')->fromArray(['me' => __('Me'), 'none' => __('Unassigned')])->selected($filters['assignee'] ?? '')->placeholder(__('Anyone'));
 
 $row = $form->addRow();
+    $row->addLabel('tag', __('Tag'));
+    $row->addTextField('tag')->maxLength(50)->setValue($filters['tag'] ?? '');
+
+$row = $form->addRow();
+    $row->addLabel('overdue', __('Overdue only'));
+    $row->addCheckbox('overdue')->setValue('Y')->checked($filters['overdue'] ?? '');
+
+$row = $form->addRow();
+    $row->addLabel('watching', __('Tickets I watch'));
+    $row->addCheckbox('watching')->setValue('Y')->checked($filters['watching'] ?? '');
+
+$row = $form->addRow();
     $row->addLabel('mine', __('Requested by me'));
     $row->addCheckbox('mine')->setValue('Y')->checked($filters['mine'] ?? '');
 
@@ -125,6 +140,9 @@ $table->addColumn('reporter', __('Requested by'))->format(function ($t) {
 });
 $table->addColumn('assignee', __('Assigned to'))->format(function ($t) {
     return htmlspecialchars(csPersonName($t['assigneePreferredName'], $t['assigneeSurname']));
+});
+$table->addColumn('dateDue', __('Due'))->sortable(['csTicket.dateDue'])->format(function ($t) {
+    return csDueBadge($t);
 });
 $table->addColumn('timestampCreated', __('Raised'))->sortable(['csTicket.timestampCreated'])->format(function ($t) {
     return Format::dateTimeReadable($t['timestampCreated']);

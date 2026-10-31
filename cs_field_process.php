@@ -50,7 +50,7 @@ $data = [
 if (empty($csFieldID)) {
     $key = trim($_POST['fieldKey'] ?? '') ?: CustomFields::slug($label);
     // The key may not collide with a core field name used in board filters.
-    if (!BoardFilter::isValidKey($key) || isset(BoardFilter::coreFields()[$key]) || $gateway->keyExists($csTicketTypeID, $key)) {
+    if (!BoardFilter::isValidKey($key) || BoardFilter::isReservedKey($key) || $gateway->keyExists($csTicketTypeID, $key)) {
         csRedirect($session, 'cs_field_edit.php', $editParams, 'error7');
     }
     $data['fieldKey'] = $key;

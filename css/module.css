@@ -7,3 +7,5 @@
 .cs-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85rem; }
 .cs-meta { color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; }
 .cs-card select { width: 100%; margin-top: 0.4rem; font-size: 0.75rem; }
+.cs-tag { display: inline-block; background: #e0e7ff; color: #3730a3; border-radius: 9999px; padding: 0 0.6rem; margin-right: 0.3rem; font-size: 0.8rem; }
+.cs-tag a { color: inherit; }

@@ -17,7 +17,7 @@ use Gibbon\Module\CustomerService\Service\Workflow;
 const CS_MODULE = 'CustomerService';
 
 /** Parameters that make up a ticket search (and a saved filter). */
-const CS_SEARCH_PARAMS = ['search', 'status', 'csTicketTypeID', 'priority', 'assignee', 'mine', 'open'];
+const CS_SEARCH_PARAMS = ['search', 'status', 'csTicketTypeID', 'priority', 'assignee', 'mine', 'open', 'overdue', 'tag', 'watching'];
 
 /** URL of a module page, with optional query parameters. */
 function csURL($session, string $page, array $params = []): string
@@ -177,6 +177,9 @@ function csRenderMyRequests($container, $session, bool $openOnly = false, int $l
     $table->addColumn('title', __('Title'));
     $table->addColumn('typeName', __('Type'));
     $table->addColumn('status', __('Status'));
+    $table->addColumn('due', __('Due'))->format(function ($t) {
+        return csDueBadge($t);
+    });
     $table->addColumn('timestampCreated', __('Raised'))->format(function ($t) {
         return Format::dateTimeReadable($t['timestampCreated']);
     });
@@ -213,6 +216,10 @@ function csDeleteTarget($container, $session, bool $isAdmin, string $entity, $id
             $field = $gateway->getByID($id);
             return ['allowed' => $isAdmin && !empty($field), 'back' => ['cs_type_edit.php', ['csTicketTypeID' => $field['csTicketTypeID'] ?? '']],
                 'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
+        case 'rule':
+            $gateway = $container->get($ns.'RuleGateway');
+            return ['allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_rule_manage.php', []],
+                'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
         case 'space':
             return ['allowed' => $isAdmin && $spaces->exists($id), 'back' => ['cs_space_manage.php', []],
                 'delete' => function () use ($spaces, $id) { return $spaces->deleteSpace($id); }];
@@ -232,4 +239,38 @@ function csDeleteTarget($container, $session, bool $isAdmin, string $entity, $id
     }
 
     return null;
+}
+
+/**
+ * Read a date typed in a Gibbon date input.
+ *
+ * @return string|null|false 'Y-m-d', null when empty, false when it is not a valid date
+ */
+function csParseDate($input)
+{
+    $input = trim((string)$input);
+    if ($input === '') {
+        return null;
+    }
+    $date = \Gibbon\Services\Format::dateConvert($input);
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string)$date, $m) || !checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
+        return false;
+    }
+    return $date;
+}
+
+/** Overdue / due soon marker for a ticket row (empty string when there is nothing to flag). */
+function csDueBadge(array $ticket): string
+{
+    if (empty($ticket['dateDue']) || \Gibbon\Module\CustomerService\Service\Workflow::isDone($ticket['status'])) {
+        return '';
+    }
+    $today = date('Y-m-d');
+    if ($ticket['dateDue'] < $today) {
+        return '<span class="text-red-700 font-bold">'.__('Overdue').' ('.\Gibbon\Services\Format::date($ticket['dateDue']).')</span>';
+    }
+    if ($ticket['dateDue'] == $today) {
+        return '<span class="text-orange-600 font-bold">'.__('Due today').'</span>';
+    }
+    return '<span class="text-gray-600">'.sprintf(__('Due %1$s'), \Gibbon\Services\Format::date($ticket['dateDue'])).'</span>';
 }

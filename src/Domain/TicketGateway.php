@@ -22,12 +22,14 @@ class TicketGateway extends QueryableGateway
 
     const SELECT = "SELECT csTicket.*, csTicketType.name AS typeName, csTicketType.workflow, csTeam.name AS teamName,
                 reporter.preferredName AS reporterPreferredName, reporter.surname AS reporterSurname, reporter.username AS reporterUsername,
-                assignee.preferredName AS assigneePreferredName, assignee.surname AS assigneeSurname, assignee.username AS assigneeUsername
+                assignee.preferredName AS assigneePreferredName, assignee.surname AS assigneeSurname, assignee.username AS assigneeUsername,
+                parent.title AS parentTitle, parent.status AS parentStatus
             FROM csTicket
             JOIN csTicketType ON (csTicketType.csTicketTypeID=csTicket.csTicketTypeID)
             LEFT JOIN csTeam ON (csTeam.csTeamID=csTicket.csTeamID)
             LEFT JOIN gibbonPerson AS reporter ON (reporter.gibbonPersonID=csTicket.gibbonPersonIDReporter)
-            LEFT JOIN gibbonPerson AS assignee ON (assignee.gibbonPersonID=csTicket.gibbonPersonIDAssignee)";
+            LEFT JOIN gibbonPerson AS assignee ON (assignee.gibbonPersonID=csTicket.gibbonPersonIDAssignee)
+            LEFT JOIN csTicket AS parent ON (parent.csTicketID=csTicket.csTicketIDParent)";
 
     public function getTicket($csTicketID): array
     {
@@ -122,6 +124,17 @@ class TicketGateway extends QueryableGateway
         if (($f['open'] ?? '') === 'Y') {
             $query->where("csTicket.status NOT IN ('Resolved','Closed')");
         }
+        if (($f['overdue'] ?? '') === 'Y') {
+            $query->where("(csTicket.dateDue < CURDATE() AND csTicket.status NOT IN ('Resolved','Closed'))");
+        }
+        if (!empty($f['tag'])) {
+            $query->where('EXISTS (SELECT 1 FROM csTicketTag AS ft JOIN csTag AS fg ON (fg.csTagID=ft.csTagID) WHERE ft.csTicketID=csTicket.csTicketID AND fg.name = :fTag)')
+                ->bindValue('fTag', $f['tag']);
+        }
+        if (($f['watching'] ?? '') === 'Y') {
+            $query->where('EXISTS (SELECT 1 FROM csTicketWatcher AS fw WHERE fw.csTicketID=csTicket.csTicketID AND fw.gibbonPersonID = :fWatcher)')
+                ->bindValue('fWatcher', $gibbonPersonID);
+        }
 
         return $this->runQuery($query, $criteria);
     }
@@ -139,6 +152,50 @@ class TicketGateway extends QueryableGateway
         return $this->db()->select($sql)->fetchAll(\PDO::FETCH_COLUMN);
     }
 
+    /** Subtasks of a ticket (they are tickets of their own). */
+    public function selectSubtasks($csTicketID): array
+    {
+        $sql = self::SELECT." WHERE csTicket.csTicketIDParent=:id ORDER BY csTicket.csTicketID";
+        return array_map([$this, 'decode'], $this->db()->select($sql, ['id' => $csTicketID])->fetchAll());
+    }
+
+    /** @return array csTicketID => [done, total] for the tickets that have subtasks */
+    public function selectSubtaskProgress(array $csTicketIDs): array
+    {
+        $csTicketIDs = array_map('intval', $csTicketIDs);
+        if (empty($csTicketIDs)) {
+            return [];
+        }
+        $sql = "SELECT csTicketIDParent, SUM(status IN ('Resolved','Closed')) AS doneCount, COUNT(*) AS total FROM csTicket
+                WHERE csTicketIDParent IN (".implode(',', $csTicketIDs).") GROUP BY csTicketIDParent";
+        $out = [];
+        foreach ($this->db()->select($sql)->fetchAll() as $row) {
+            $out[(int)$row['csTicketIDParent']] = [(int)$row['doneCount'], (int)$row['total']];
+        }
+        return $out;
+    }
+
+    public function countOpenSubtasks($csTicketID): int
+    {
+        return (int)$this->db()->selectOne("SELECT COUNT(*) FROM csTicket WHERE csTicketIDParent=:id AND status NOT IN ('Resolved','Closed')", ['id' => $csTicketID]);
+    }
+
+    /** Open tickets due within $days days (including today) that have not had their reminder yet. */
+    public function selectDueSoon(int $days): array
+    {
+        $sql = self::SELECT." WHERE csTicket.dateDue IS NOT NULL AND csTicket.dateDue >= CURDATE() AND csTicket.dateDue <= DATE_ADD(CURDATE(), INTERVAL ".(int)$days." DAY)
+                AND csTicket.status NOT IN ('Resolved','Closed') AND csTicket.dueReminderSent IS NULL";
+        return array_map([$this, 'decode'], $this->db()->select($sql)->fetchAll());
+    }
+
+    /** Open tickets past their due date that have not had their overdue notice yet. */
+    public function selectOverdue(): array
+    {
+        $sql = self::SELECT." WHERE csTicket.dateDue IS NOT NULL AND csTicket.dateDue < CURDATE()
+                AND csTicket.status NOT IN ('Resolved','Closed') AND csTicket.overdueNoticeSent IS NULL";
+        return array_map([$this, 'decode'], $this->db()->select($sql)->fetchAll());
+    }
+
     public function createTicket(array $data): int
     {
         $data['customData'] = json_encode($data['customData'] ?? new \stdClass(), JSON_UNESCAPED_UNICODE);
@@ -150,11 +207,22 @@ class TicketGateway extends QueryableGateway
         if (array_key_exists('customData', $data)) {
             $data['customData'] = json_encode($data['customData'], JSON_UNESCAPED_UNICODE);
         }
+        // A new due date starts the reminders over.
+        if (array_key_exists('dateDue', $data)) {
+            $data['dueReminderSent'] = null;
+            $data['overdueNoticeSent'] = null;
+        }
         return $this->update($csTicketID, $data);
     }
 
     public function deleteTicket($csTicketID): bool
     {
+        $this->db()->update("UPDATE csTicket SET csTicketIDParent=NULL WHERE csTicketIDParent=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM csTicketTag WHERE csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM csTicketWatcher WHERE csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM csTicketLink WHERE csTicketIDFrom=:id OR csTicketIDTo=:id2", ['id' => $csTicketID, 'id2' => $csTicketID]);
+        $this->db()->delete("DELETE csChecklistItem FROM csChecklistItem JOIN csChecklist ON (csChecklist.csChecklistID=csChecklistItem.csChecklistID) WHERE csChecklist.csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM csChecklist WHERE csTicketID=:id", ['id' => $csTicketID]);
         $this->db()->delete("DELETE FROM csTicketAttachment WHERE csTicketID=:id", ['id' => $csTicketID]);
         $this->db()->delete("DELETE FROM csTicketActivity WHERE csTicketID=:id", ['id' => $csTicketID]);
         return $this->delete($csTicketID);

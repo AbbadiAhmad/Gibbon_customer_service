@@ -76,6 +76,8 @@ echo $form->getOutput();
 
 // Fields of this type
 if (!empty($csTicketTypeID)) {
+    echo '<div class="message">'.__('Every ticket type has these basic fields by default: Title, Description, Priority, Start Date, Due Date and Attachments. The fields below are extra fields for this type.').'</div>';
+
     $fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
     $typeLabels = CustomFields::typeLabels();
 

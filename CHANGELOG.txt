@@ -1,3 +1,12 @@
+v0.3.0
+------
+- Automation rules: trigger -> conditions -> actions; 10 built-in actions, new actions are one class file
+- Start / due dates on every ticket type, overdue markers, daily reminders (cli_reminders.php)
+- Subtasks and checklists
+- Linked tickets: blocks / is blocked by, duplicates, relates to; blocked tickets cannot be resolved
+- Tags (filterable) and watchers
+- Board filters: due/start date, overdue, blocked, subtask and tag conditions
+
 v0.2.0
 ------
 - Notifications for new requests, status changes, assignments, comments and reopened requests

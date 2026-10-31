@@ -7,13 +7,11 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Forms\Form;
 use Gibbon\Module\CustomerService\Domain\BoardGateway;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\SpaceGateway;
 use Gibbon\Module\CustomerService\Service\BoardFilter;
+use Gibbon\Module\CustomerService\Service\FilterForm;
 
 require_once __DIR__ . '/moduleFunctions.php';
-
-const CS_FILTER_ROWS = 5;
 
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_board_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
@@ -53,17 +51,6 @@ $page->breadcrumbs->add(__('Manage Spaces'), 'cs_space_manage.php');
 $page->breadcrumbs->add($space['name'], 'cs_space_edit.php', ['csSpaceID' => $csSpaceID]);
 $page->breadcrumbs->add(empty($csBoardID) ? __('Add Board') : __('Edit Board'));
 
-// Fields a condition can test: core fields + every custom field key defined on any ticket type.
-$fieldOptions = [
-    __('Ticket') => [
-        'type' => __('Ticket type (name)'), 'status' => __('Status'), 'priority' => __('Priority'), 'team' => __('Team (name)'),
-        'assignee' => __('Assignee (username)'), 'reporter' => __('Requested by (username)'), 'title' => __('Title'),
-    ],
-];
-foreach ($container->get(FieldGateway::class)->selectDistinctKeys() as $f) {
-    $fieldOptions[__('Custom fields')][$f['fieldKey']] = $f['label'].' ['.$f['fieldKey'].'] - '.$f['typeNames'];
-}
-
 $conditions = BoardFilter::decode($values['filter']);
 
 $form = Form::create('csBoard', $session->get('absoluteURL').'/modules/CustomerService/cs_board_process.php');
@@ -84,18 +71,9 @@ $row = $form->addRow();
     $row->addYesNo('active')->required()->selected($values['active']);
 
 $form->addRow()->addHeading('Filter', __('Filter'))
-    ->append(__('The board shows the tickets that match ALL conditions below. Leave all rows empty to show every ticket. A custom field that a ticket type does not have is simply treated as empty - it never causes an error.'));
+    ->append(__('The board shows the tickets that match ALL conditions below. Leave all rows empty to show every ticket. A custom field that a ticket type does not have is simply treated as empty - it never causes an error.').' '.FilterForm::help());
 
-for ($i = 0; $i < CS_FILTER_ROWS; $i++) {
-    $c = $conditions[$i] ?? ['field' => '', 'op' => 'equals', 'value' => ''];
-
-    $row = $form->addRow();
-    $row->addLabel('filterField'.$i, sprintf(__('Condition %1$s'), $i + 1));
-    $col = $row->addColumn()->addClass('flex flex-wrap gap-2');
-    $col->addSelect('filterField'.$i)->fromArray($fieldOptions)->selected($c['field'])->placeholder()->addClass('flex-1');
-    $col->addSelect('filterOp'.$i)->fromArray(BoardFilter::operatorLabels())->selected($c['op'])->addClass('flex-1');
-    $col->addTextField('filterValue'.$i)->maxLength(255)->setValue($c['value'])->addClass('flex-1');
-}
+FilterForm::addRows($form, $container, $conditions);
 
 $form->addRow()->addHeading('Columns', __('Columns'));
 $row = $form->addRow();

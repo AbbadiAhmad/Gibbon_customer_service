@@ -8,7 +8,9 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Module\CustomerService\Domain\BoardGateway;
+use Gibbon\Module\CustomerService\Domain\LinkGateway;
 use Gibbon\Module\CustomerService\Domain\SpaceGateway;
+use Gibbon\Module\CustomerService\Domain\TagGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
 use Gibbon\Module\CustomerService\Service\BoardFilter;
 use Gibbon\Module\CustomerService\Service\Permissions;
@@ -56,6 +58,12 @@ $columns = $container->get(BoardGateway::class)->selectColumns($csBoardID);
 $tickets = $container->get(TicketGateway::class)->selectByFilter($board['filter']);
 $canMove = $isAdmin || $container->get(SpaceGateway::class)->hasPermission(csPersonID($session), $board['csSpaceID'], Permissions::TRANSITION);
 
+// Extras shown on the cards, fetched once for the whole board.
+$ticketIDs = array_column($tickets, 'csTicketID');
+$tagsByTicket = $container->get(TagGateway::class)->selectByTickets($ticketIDs);
+$progressByTicket = $container->get(TicketGateway::class)->selectSubtaskProgress($ticketIDs);
+$blockedIDs = $container->get(LinkGateway::class)->selectBlockedIDs($ticketIDs);
+
 // Group tickets by column; tickets whose status matches no column go to an extra lane so none disappear.
 $lanes = [];
 foreach ($columns as $column) {
@@ -84,6 +92,28 @@ foreach ($lanes as $laneName => $laneTickets) {
         echo '<div>'.Format::link(csURL($session, 'cs_ticket_view.php', ['csTicketID' => $t['csTicketID']]), csTicketRef($t['csTicketID']).' '.htmlspecialchars($t['title'])).'</div>';
         echo '<div class="cs-meta">'.htmlspecialchars($t['typeName']).' &middot; '.csPriorityLabel($t['priority']).'</div>';
         echo '<div class="cs-meta">'.htmlspecialchars(csPersonName($t['assigneePreferredName'], $t['assigneeSurname']) ?: __('Unassigned')).'</div>';
+
+        $badges = [];
+        if ($due = csDueBadge($t)) {
+            $badges[] = $due;
+        }
+        if (in_array((int)$t['csTicketID'], $blockedIDs, true)) {
+            $badges[] = '<span class="text-red-700">&#128274; '.__('Blocked').'</span>';
+        }
+        if (isset($progressByTicket[(int)$t['csTicketID']])) {
+            $badges[] = sprintf(__('Subtasks %1$s/%2$s'), ...$progressByTicket[(int)$t['csTicketID']]);
+        }
+        if (!empty($t['csTicketIDParent'])) {
+            $badges[] = sprintf(__('Subtask of %1$s'), csTicketRef($t['csTicketIDParent']));
+        }
+        if (!empty($badges)) {
+            echo '<div class="cs-meta">'.implode(' &middot; ', $badges).'</div>';
+        }
+        if (!empty($tagsByTicket[(int)$t['csTicketID']])) {
+            echo '<div class="cs-meta">'.implode(' ', array_map(function ($tag) {
+                return '<span class="cs-tag">'.htmlspecialchars($tag).'</span>';
+            }, $tagsByTicket[(int)$t['csTicketID']])).'</div>';
+        }
 
         if ($canMove) {
             $form = Form::createBlank('move'.$t['csTicketID'], $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');

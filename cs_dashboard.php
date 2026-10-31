@@ -59,4 +59,31 @@ if (!empty($boards)) {
     echo $table->render(new DataSet(array_slice(array_values($incoming), 0, 50)));
 }
 
+// My work: open tickets assigned to me, most urgent due date first.
+$mine = $container->get(TicketGateway::class)->selectByFilter([
+    ['field' => 'assignee', 'op' => 'equals', 'value' => $session->get('username')],
+    ['field' => 'status', 'op' => 'not_equals', 'value' => 'Resolved'],
+    ['field' => 'status', 'op' => 'not_equals', 'value' => 'Closed'],
+], null, 100);
+if (!empty($mine)) {
+    usort($mine, function ($a, $b) {
+        return strcmp($a['dateDue'] ?: '9999-12-31', $b['dateDue'] ?: '9999-12-31');
+    });
+
+    $table = DataTable::create('csAssignedToMe');
+    $table->setTitle(__('Assigned to Me'));
+    $table->addColumn('ref', __('Reference'))->format(function ($t) use ($session) {
+        return Format::link(csURL($session, 'cs_ticket_view.php', ['csTicketID' => $t['csTicketID']]), csTicketRef($t['csTicketID']));
+    });
+    $table->addColumn('title', __('Title'));
+    $table->addColumn('status', __('Status'));
+    $table->addColumn('priority', __('Priority'))->format(function ($t) {
+        return csPriorityLabel($t['priority']);
+    });
+    $table->addColumn('due', __('Due'))->format(function ($t) {
+        return csDueBadge($t);
+    });
+    echo $table->render(new DataSet(array_slice($mine, 0, 20)));
+}
+
 echo csRenderMyRequests($container, $session);

@@ -75,6 +75,14 @@ $row = $form->addRow();
     $row->addLabel('priority', __('Priority'));
     $row->addSelect('priority')->fromArray(['Low' => __('Low'), 'Medium' => __('Medium'), 'High' => __('High'), 'Urgent' => __('Urgent')])->selected('Medium')->required();
 
+$row = $form->addRow();
+    $row->addLabel('dateStart', __('Start Date'))->description(__('Optional. When the work should begin.'));
+    $row->addDate('dateStart');
+
+$row = $form->addRow();
+    $row->addLabel('dateDue', __('Due Date'))->description(__('Optional. When you need it done.'));
+    $row->addDate('dateDue');
+
 $fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
 CustomFields::addToForm($form, $fields);
 

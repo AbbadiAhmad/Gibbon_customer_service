@@ -98,10 +98,92 @@ who can view the boards that show the ticket, never to the requester, and never 
 filters, over the tickets you can see (your own + the boards of your spaces). Quick views (my open requests, assigned to
 me, unassigned, all open, resolved) and **saved filters** (per user) are on the same page.
 
+## Basic fields of every ticket type
+
+Every type has these fields by default: **Title, Description, Priority, Start Date, Due Date, Attachments**. The fields you
+define on a type (Manage Ticket Types) are extra fields on top of these.
+
+## Due dates and reminders
+
+* Start and due date are optional on the request form and editable by agents. **Overdue / Due today** markers show on
+  boards, the dashboard, search results, subtasks and the ticket page.
+* Run `php modules/CustomerService/cli_reminders.php 1` once a day from cron: tickets due within N days (default 1) get one
+  "due soon" reminder, overdue tickets one "overdue" notice. They go to whoever works on the ticket and to the watchers and
+  fire the `ticket_due_soon` / `ticket_overdue` automation triggers. Changing the due date restarts the reminders.
+
+## Subtasks and checklists
+
+* **Subtask**: a full ticket (own status, assignee, due date) that belongs to a parent (one level). Added from the parent's page,
+  shown on the parent with progress, and on boards with a "Subtask of CS-12" marker. A parent cannot be moved to Resolved / Closed
+  while subtasks are open.
+* **Checklist**: named lists of items inside a ticket, ticked off in place (several lists per ticket; items can be added or removed).
+* Both are for the people working on the ticket; the requester does not see them.
+
+## Linked tickets (dependencies)
+
+*blocks / is blocked by*, *duplicates / is duplicated by*, *relates to*, entered by ticket reference (`CS-12`). A ticket that
+is blocked by an unfinished ticket shows a banner, is flagged on boards, and cannot be resolved or closed until the blockers are done.
+Links are only offered to tickets you can see.
+
+## Tags
+
+Free labels typed on the ticket (comma separated, created on the fly, case-insensitive). Filter by tag in Search, and use the
+`Tag` condition in board filters and automation rules.
+
+## Watchers
+
+Anyone who can see a ticket can **Watch** it; agents can add or remove other watchers. Watchers get the status change, public
+comment, reopen and due-date notifications, without owning the ticket.
+
+## Automation (conditions and actions)
+
+**Manage Automation** (Administrators): a rule is *trigger -> conditions -> actions*.
+
+* **Triggers**: request raised, status changes, ticket assigned, public comment added, requester reopens, due date near, ticket overdue.
+* **Conditions**: the same field / operator / value rows as board filters (all must match), including the date, overdue, blocked,
+  subtask and tag fields. Optional ticket type: a rule can apply to one type or all.
+* **Actions** (run in order): set priority, set status, assign to a person, route to a team, add a comment (public or internal),
+  send a notification, add tags, set a due date, add a watcher, add a checklist.
+* Everything an action does is written to the ticket activity as an *internal* "Automation" event. Rules can chain (a rule's
+  status change fires `status_changed` for other rules) up to 3 levels, and one rule runs at most 3 times per ticket per request.
+* Actions skip the workflow rules of the type (an automation may move a ticket anywhere).
+
+### Writing a new action
+
+Actions are plug-ins: add **one class file** to `src/Automation/Actions/` and it shows up in the rule editor, with the settings
+you declare - no registration, no form code.
+
+```php
+namespace Gibbon\Module\CustomerService\Automation\Actions;
+
+use Gibbon\Module\CustomerService\Automation\AutomationContext;
+use Gibbon\Module\CustomerService\Automation\BaseAction;
+
+class SetPriorityUrgent extends BaseAction            // key is derived: set_priority_urgent
+{
+    public function label(): string { return __('Make urgent'); }
+
+    public function params($container): array         // the settings the rule editor asks for (can be empty)
+    {
+        return ['reason' => ['label' => __('Reason'), 'type' => 'text', 'required' => true]];
+        // types: text, textarea, number, select (with 'options'), person, team
+    }
+
+    public function execute(array $ticket, array $params, AutomationContext $ctx): void
+    {
+        $ctx->update(['priority' => 'Urgent'], sprintf(__('made urgent: %1$s'), $params['reason']));
+        // other helpers: $ctx->changeStatus(), assign(), comment(), notify(), log(), fire(), ticket()
+    }
+}
+```
+
+An action whose class is removed later is skipped by existing rules (shown as "unavailable" in the rule list).
+New **triggers** are one entry in `AutomationEngine::triggers()` plus a `->fire('your_trigger', $csTicketID)` call where it happens.
+
 ## Not implemented yet
 
-E-mail channel, automation rules, SLAs, knowledge base, linked tickets, request on behalf of another user,
-drag-and-drop on boards (cards are moved with a dropdown), reports.
+E-mail channel, SLAs, knowledge base, request on behalf of another user, drag-and-drop on boards (cards are moved with a
+dropdown), reports, @mentions, bulk actions.
 
 ## License
 

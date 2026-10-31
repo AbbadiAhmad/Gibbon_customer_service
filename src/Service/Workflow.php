@@ -72,6 +72,23 @@ class Workflow
         return implode(', ', self::decode($json)['commentRequired']);
     }
 
+    /**
+     * Columns to update when a ticket moves to $status (resolution note / resolved time bookkeeping).
+     * Shared by the ticket page, the boards and the automation actions.
+     */
+    public static function statusChanges(array $ticket, string $status, string $comment = ''): array
+    {
+        $changes = ['status' => $status];
+        if (self::isDone($status)) {
+            $changes['resolution'] = $comment !== '' ? $comment : ($ticket['resolution'] ?? null);
+            $changes['timestampResolved'] = date('Y-m-d H:i:s');
+        } elseif (self::isDone($ticket['status'])) {
+            $changes['resolution'] = null;
+            $changes['timestampResolved'] = null;
+        }
+        return $changes;
+    }
+
     public static function isDone(string $status): bool
     {
         return in_array($status, self::DONE, true);
