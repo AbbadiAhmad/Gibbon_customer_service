@@ -1,0 +1,8 @@
+v0.1.0
+------
+Initial release of the Customer Service module:
+- Teams, ticket types and per-type custom fields
+- Spaces with boards, board filters and status columns
+- Roles with permissions, users assigned to roles per space
+- Request portal (raise a request, my requests), ticket view with comments and activity
+- Dashboard hooks (Staff / Student / Parent dashboards)

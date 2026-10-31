@@ -1,0 +1,94 @@
+<?php
+/*
+Gibbon: the flexible, open school platform
+Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community
+Copyright © 2010, Gibbon Foundation
+*/
+
+use Gibbon\Domain\DataSet;
+use Gibbon\Forms\Form;
+use Gibbon\Tables\DataTable;
+use Gibbon\Module\CustomerService\Domain\FieldGateway;
+use Gibbon\Module\CustomerService\Domain\TeamGateway;
+use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\CustomerService\Service\CustomFields;
+
+require_once __DIR__ . '/moduleFunctions.php';
+
+if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_edit.php')) {
+    $page->addError(__('You do not have access to this action.'));
+    return;
+}
+
+$csTicketTypeID = $_GET['csTicketTypeID'] ?? '';
+$gateway = $container->get(TicketTypeGateway::class);
+$values = ['name' => '', 'description' => '', 'csTeamID' => '', 'active' => 'Y'];
+
+if (!empty($csTicketTypeID)) {
+    $values = $gateway->getByID($csTicketTypeID);
+    if (empty($values)) {
+        $page->addError(__('The specified record cannot be found.'));
+        return;
+    }
+}
+
+$page->breadcrumbs->add(__('Manage Ticket Types'), 'cs_type_manage.php');
+$page->breadcrumbs->add(empty($csTicketTypeID) ? __('Add Ticket Type') : __('Edit Ticket Type'));
+
+$form = Form::create('csType', $session->get('absoluteURL').'/modules/CustomerService/cs_type_process.php');
+$form->addHiddenValue('address', $session->get('address'));
+$form->addHiddenValue('csTicketTypeID', $csTicketTypeID);
+
+$row = $form->addRow();
+    $row->addLabel('name', __('Name'));
+    $row->addTextField('name')->maxLength(100)->required()->setValue($values['name']);
+
+$row = $form->addRow();
+    $row->addLabel('description', __('Description'))->description(__('Shown to the requester when choosing the request type.'));
+    $row->addTextArea('description')->setRows(3)->setValue($values['description']);
+
+$row = $form->addRow();
+    $row->addLabel('csTeamID', __('Default Team'))->description(__('New tickets of this type are routed to this team.'));
+    $row->addSelect('csTeamID')->fromArray($container->get(TeamGateway::class)->selectOptions())->selected($values['csTeamID'])->placeholder();
+
+$row = $form->addRow();
+    $row->addLabel('active', __('Active'))->description(__('Inactive types cannot be chosen for new requests.'));
+    $row->addYesNo('active')->required()->selected($values['active']);
+
+$row = $form->addRow();
+    $row->addFooter();
+    $row->addSubmit();
+
+echo $form->getOutput();
+
+// Fields of this type
+if (!empty($csTicketTypeID)) {
+    $fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
+    $typeLabels = CustomFields::typeLabels();
+
+    $table = DataTable::create('csFields');
+    $table->setTitle(__('Form Fields'));
+    $table->addMetaData('blankSlate', __('This type has no extra fields yet. Requesters only fill in title, description and priority.'));
+    $table->addHeaderAction('add', __('Add'))->setURL('/modules/CustomerService/cs_field_edit.php')
+        ->addParam('csTicketTypeID', $csTicketTypeID)->displayLabel();
+
+    $table->addColumn('sequenceNumber', __('Order'));
+    $table->addColumn('label', __('Label'));
+    $table->addColumn('fieldKey', __('Key'));
+    $table->addColumn('fieldType', __('Type'))->format(function ($f) use ($typeLabels) {
+        return $typeLabels[$f['fieldType']] ?? $f['fieldType'];
+    });
+    $table->addColumn('required', __('Required'))->format(function ($f) {
+        return $f['required'] == 'Y' ? __('Yes') : __('No');
+    });
+    $table->addActionColumn()
+        ->addParam('csFieldID')
+        ->addParam('csTicketTypeID', $csTicketTypeID)
+        ->format(function ($field, $actions) {
+            $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_field_edit.php');
+            $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
+                ->addParam('entity', 'field')->addParam('id', $field['csFieldID']);
+        });
+
+    echo $table->render(new DataSet($fields));
+}
