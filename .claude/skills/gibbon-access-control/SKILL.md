@@ -26,6 +26,7 @@ Every file a browser can request must authorise itself. Checklist, in order:
      `csCanSeeInternal()`; the requester never receives them (filter in the query, not only in the template).
    * Space management: global admin (`csIsAdmin()` = holds *Manage Ticket Types*) or the space permission `manage_members` / `manage_boards`;
      the space of a board/member is read from the stored record, never trusted from the request.
+   * Quick create (`QuickCreate`): admin or `edit_ticket` in some space; the assignee must be in the people of the spaces where the user has `assign_ticket` (or the type's team) - validated in the service, not only in the form.
    * Request types: active **and** inside the user's audience (`FormConfig::inAudience`) - checked on the portal, the form *and* the submit script.
    * IDs that arrive in the request (checklist, link, saved filter, attachment) are always re-read together with the owning ticket/user
      (`getForTicket`, `getOwned`, `removeLink($id, $ticketId)`).

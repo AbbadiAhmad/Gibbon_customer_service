@@ -9,7 +9,7 @@ the project skills in [`.claude/skills/`](../.claude/skills) (summarised in [`CL
 * Written against the Gibbon v31 core source and the Sepa module as reference.
 * **Verified against a real MariaDB (`tests/`)**: the install (`manifest.php` tables + default data), the upgrade chain from the first
   release to the current one (schema identical to a fresh install), and the module's own gateways, filters, form configuration, workflow and
-  automation engine on the default data (64 checks). Run them with a throw-away database: see `tests/bootstrap.php`.
+  automation engine on the default data (90 checks). Run them with a throw-away database: see `tests/bootstrap.php`.
 * **Not verified: anything that needs Gibbon itself.** No page or process script has been rendered or submitted (forms, tables, CSRF,
   permissions, notifications, uploads, the module installer). Gibbon core could not be installed in the authoring environment
   (`composer install` was blocked), so expect small mismatches with Gibbon's form/table APIs on first install, and test each role.
@@ -23,6 +23,7 @@ the project skills in [`.claude/skills/`](../.claude/skills) (summarised in [`CL
 | 0.3.0 | Automation rules (modular actions), start/due dates + reminders, subtasks, checklists, ticket links, tags, watchers |
 | 0.4.0 | Customer portal, request-form builder, request-type audience, agent field editing, access hardening |
 | 0.5.0 | Tables renamed `csX` -> `gibbonCsX` (Gibbon convention) |
+| 0.7.0 | Quick create (type, title, summary, assignee) as page, board box and dashboard link |
 | 0.6.0 | Status categories (To Do / In Progress / Done) + status registry, default school data (space, teams, 6 request types, boards, rules), ticket tabs (Comments / History / All), DB tests |
 
 ## Domain model
@@ -70,6 +71,7 @@ Portal (cs_portal.php) -> request form (cs_request_new.php, built by FormConfig)
 Ticket page (cs_ticket_view.php) -> cs_ticket_process.php (update | comment | move | fields | reopen | confirm | delete)
                                  -> cs_ticket_extrasProcess.php (subtasks, checklists, tags, links, watchers)
 Board (cs_board_view.php): card "Move to" form -> cs_ticket_process.php action=move
+Quick create (agents): cs_ticket_quick.php / board box -> cs_ticket_quickProcess.php -> Service/QuickCreate::create (permission, assignee rules, ticket, history, notification, rules)
 Cron: cli_reminders.php (due soon / overdue), cli_autoClose.php (Resolved -> Closed)
 ```
 
@@ -83,6 +85,7 @@ requirement, open-subtask and open-blocker guards, `Workflow::statusChanges()` b
 |---|---|
 | Module definition | `manifest.php` (tables, seed data, actions, hooks), `CHANGEDB.php` (upgrades), `version.php`, `CHANGELOG.txt` |
 | Shared helpers | `moduleFunctions.php` (URL/redirect, access, visibility, status options, delete targets, date helpers) |
+| Quick create | `cs_ticket_quick(+Process)`, `Service/QuickCreate`, `csQuickCreateForm()` in `moduleFunctions.php` |
 | End-user pages | `cs_portal`, `cs_request_new(+Process)`, `cs_dashboard`, `cs_ticket_view`, `cs_ticket_search`, `cs_attachment` |
 | Staff pages | `cs_board_view`, `cs_ticket_process`, `cs_ticket_extrasProcess`, `cs_search_process` |
 | Configuration | `cs_team_*`, `cs_type_*`, `cs_field_*`, `cs_form_*`, `cs_role_*`, `cs_space_*`, `cs_board_*`, `cs_rule_*`, `cs_delete(+_process)` |

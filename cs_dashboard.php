@@ -25,7 +25,9 @@ $isAdmin = csIsAdmin($guid, $connection2);
 
 echo '<p>'.Format::link(csURL($session, 'cs_request_new.php'), __('Raise a Request')).' &middot; '
     .Format::link(csURL($session, 'cs_ticket_search.php'), __('Search Tickets')).' &middot; '
-    .Format::link(csURL($session, 'cs_ticket_search.php', ['assignee' => 'me', 'open' => 'Y']), __('Assigned to me')).'</p>';
+    .Format::link(csURL($session, 'cs_ticket_search.php', ['assignee' => 'me', 'open' => 'Y']), __('Assigned to me'))
+    .(csAccess($guid, $connection2, 'cs_ticket_quick.php') && \Gibbon\Module\administration\Service\QuickCreate::canUse($container, csPersonID($session), $isAdmin)
+        ? ' &middot; '.Format::link(csURL($session, 'cs_ticket_quick.php'), __('Quick create')) : '').'</p>';
 
 // Tickets waiting for triage on the boards the user can work on.
 $boards = csAccessibleBoards($container, $session, $isAdmin);

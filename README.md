@@ -142,6 +142,17 @@ your own statuses to a board (*Manage Spaces > board > Status Columns*) and give
 (it is kept in one registry), so changing the category of an existing status changes it everywhere. "Finished" always means category **Done**:
 reminders stop, blockers and open subtasks are released, the requester may reopen it, and a resolution note is required to get there.
 
+## Quick create
+
+For agents who just need a ticket, without the request form: **Quick Create** (menu, dashboard link, and a "+ Quick create" box on every
+board). Choose the **type**, give it a **title** and a short **summary** (it becomes the description) and optionally the **assignee**; press Create.
+
+* Who: administrators, and anybody who has the `edit_ticket` permission in at least one space (the agents). The Quick Create action is staff-only by default.
+* Assignee: the people of the spaces where you have `assign_ticket` (administrators: every space) and the members of the team of the chosen type.
+  Without the permission the field is not shown. Leave it empty and the team of the type picks the ticket up.
+* The ticket is a normal new request: status New, priority Medium, team of the type, you as the requester, history entry "Request raised (quick create)",
+  notifications and automation rules as usual. Required custom fields of the type are not asked: complete them on the ticket.
+
 ## The ticket page
 
 Like Jira: details and description on top, then three tabs - **Comments** (with the form to add one, public reply or internal note, with files),

@@ -1,3 +1,9 @@
+v0.7.0
+------
+- Quick create (Jira "Create" shortcut): type, title, summary and optional assignee in one step - own page (Quick Create action),
+  inline on every board, link on the dashboard. Staff only; space permissions decide who may create and whom they may assign to
+- 26 more database tests (90 in total)
+
 v0.6.0
 ------
 - Default data for a school: space "School Office", teams (Front Office, Admissions, Staff Services), request types Absence Report,

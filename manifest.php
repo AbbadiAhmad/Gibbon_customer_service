@@ -11,7 +11,7 @@ $description = 'Service desk for customer requests: forms, tickets, teams, space
 $entryURL = 'cs_portal.php';
 $type = 'Additional';
 $category = 'Other';
-$version = '0.6.0';
+$version = '0.7.0';
 $author = 'Ahmad';
 $url = '';
 
@@ -351,6 +351,14 @@ $actionRows[] = array_merge($csAdmin, [
     'description' => 'Rules that run actions when something happens to a ticket (conditions + actions)',
     'URLList' => 'cs_rule_manage.php, cs_rule_edit.php, cs_rule_process.php, cs_delete.php, cs_delete_process.php',
     'entryURL' => 'cs_rule_manage.php', 'entrySidebar' => 'Y', 'menuShow' => 'Y',
+]);
+
+// Quick create: the agents' shortcut (type, title, summary, assignee). Staff only; the space permission edit_ticket decides who really can.
+$actionRows[] = array_merge($csStaff, [
+    'name' => 'Quick Create', 'precedence' => '4', 'category' => 'Service Desk',
+    'description' => 'Create a ticket in one step: type, title, summary and assignee',
+    'URLList' => 'cs_ticket_quick.php, cs_ticket_quickProcess.php', 'entryURL' => 'cs_ticket_quick.php',
+    'entrySidebar' => 'Y', 'menuShow' => 'Y',
 ]);
 
 $actionRows[] = array_merge($csAll, [

@@ -43,7 +43,7 @@ namespace {
     require dirname(__DIR__).'/moduleFunctions.php';
 
     use Gibbon\Module\administration\Domain\{TicketGateway, TicketTypeGateway, FieldGateway, BoardGateway, StatusGateway, SpaceGateway, RoleGateway, TeamGateway, LinkGateway, TagGateway, WatcherGateway, ChecklistGateway, ActivityGateway, RuleGateway};
-    use Gibbon\Module\administration\Service\{Workflow, FormConfig, BoardFilter, CustomFields};
+    use Gibbon\Module\administration\Service\{Workflow, FormConfig, BoardFilter, CustomFields, QuickCreate};
     use Gibbon\Module\administration\Automation\AutomationEngine;
 
     $fail = 0; $n = 0;
@@ -153,6 +153,50 @@ namespace {
     $hist = $c->get(ActivityGateway::class)->selectByTicket($reg, true);
     check('automation wrote an internal history event', count($hist) == 1 && $hist[0]['visibility'] == 'Internal', json_encode($hist));
     check('the requester does not see it', count($c->get(ActivityGateway::class)->selectByTicket($reg, false)) == 0);
+
+    echo "== quick create ==\n";
+    // users: 1 admin (not a member), 2 agent in the space (edit + assign), 4 viewer, 3 parent
+    check('admin may quick create', QuickCreate::canUse($c, 1, true));
+    check('agent may quick create', QuickCreate::canUse($c, 2, false));
+    check('viewer may not (no edit_ticket)', !QuickCreate::canUse($c, 4, false));
+    check('parent may not', !QuickCreate::canUse($c, 3, false));
+    check('agent can assign to the people of the space', QuickCreate::assignees($c, 2, false) == [2 => 'Olga Office', 4 => 'Sam Staff'], json_encode(QuickCreate::assignees($c, 2, false)));
+    check('viewer can assign nobody', QuickCreate::assignees($c, 4, false) == []);
+    $typeOptions = QuickCreate::typeOptions($c);
+    check('type options are grouped by portal group', isset($typeOptions['Families'], $typeOptions['Staff']) && count($typeOptions['Families']) == 4 && count($typeOptions['Staff']) == 2);
+
+    Gibbon\Comms\NotificationSender::$sent = [];
+    [$q1, $r1] = QuickCreate::create($c, 2, false, ['csTicketTypeID' => 1, 'title' => '  Phone call from Anna  ', 'summary' => 'Anna is ill until Friday', 'gibbonPersonIDAssignee' => 4]);
+    $row = $tickets->getTicket($q1);
+    check('quick create returns success and an id', $r1 == 'success0' && $q1 > 0, "$r1 $q1");
+    check('title trimmed, summary is the description', $row['title'] == 'Phone call from Anna' && $row['description'] == 'Anna is ill until Friday');
+    check('new request defaults: New, Medium, team of the type, reporter = creator', $row['status'] == 'New' && $row['priority'] == 'Medium' && $row['csTeamID'] == 1 && $row['gibbonPersonIDReporter'] == 2);
+    check('assigned as asked', (int)$row['gibbonPersonIDAssignee'] == 4);
+    check('it shows on the Absences board and on the generic board', in_array($q1, array_column($tickets->selectByFilter($boards->getByID(2)['filter']), 'csTicketID')) && in_array($q1, array_column($tickets->selectByFilter(null), 'csTicketID')));
+    $events = array_column($c->get(ActivityGateway::class)->selectByTicket($q1, true), 'body');
+    check('history says it was quick created and assigned', in_array('Request raised (quick create)', $events) && in_array('Assignee changed from Unassigned to Sam Staff', $events), json_encode($events));
+    check('the assignee was notified once', count(array_filter(Gibbon\Comms\NotificationSender::$sent, fn($x) => $x[0] == 4)) == 1, json_encode(Gibbon\Comms\NotificationSender::$sent));
+
+    [$q2, $r2] = QuickCreate::create($c, 2, false, ['csTicketTypeID' => 4, 'title' => 'No assignee']);
+    check('assignee is optional; the team of the type is used', $r2 == 'success0' && empty($tickets->getTicket($q2)['gibbonPersonIDAssignee']) && $tickets->getTicket($q2)['csTeamID'] == 1);
+    [$q3, $r3] = QuickCreate::create($c, 2, false, ['csTicketTypeID' => 2, 'title' => 'Registration by phone']);
+    check('the type rules run (registration checklist)', $r3 == 'success0' && count($cl->selectByTicket($q3)) == 1);
+
+    $count1 = (int)$db->query("SELECT COUNT(*) FROM gibbonCsTicket")->fetchColumn();
+    check('a viewer cannot create', QuickCreate::create($c, 4, false, ['csTicketTypeID' => 1, 'title' => 'x']) == [0, 'error0']);
+    check('a parent cannot create', QuickCreate::create($c, 3, false, ['csTicketTypeID' => 1, 'title' => 'x']) == [0, 'error0']);
+    check('empty title is refused', QuickCreate::create($c, 2, false, ['csTicketTypeID' => 1, 'title' => '   ']) == [0, 'error1']);
+    check('unknown type is refused', QuickCreate::create($c, 2, false, ['csTicketTypeID' => 999, 'title' => 'x']) == [0, 'error1']);
+    check('somebody outside the space cannot be assigned', QuickCreate::create($c, 2, false, ['csTicketTypeID' => 1, 'title' => 'x', 'gibbonPersonIDAssignee' => 3]) == [0, 'error0']);
+    check('a user who may not assign cannot slip an assignee in', QuickCreate::create($c, 4, false, ['csTicketTypeID' => 1, 'title' => 'x', 'gibbonPersonIDAssignee' => 2])[1] == 'error0');
+    $db->exec("UPDATE gibbonCsTicketType SET active='N' WHERE csTicketTypeID=5");
+    check('an inactive type is refused', QuickCreate::create($c, 1, true, ['csTicketTypeID' => 5, 'title' => 'x']) == [0, 'error1']);
+    $db->exec("UPDATE gibbonCsTicketType SET active='Y' WHERE csTicketTypeID=5");
+    check('nothing was created by the refused attempts', (int)$db->query("SELECT COUNT(*) FROM gibbonCsTicket")->fetchColumn() == $count1);
+    [$q4, $r4] = QuickCreate::create($c, 1, true, ['csTicketTypeID' => 6, 'title' => 'Admin creates', 'gibbonPersonIDAssignee' => 2]);
+    check('admin may create and assign across spaces', $r4 == 'success0' && (int)$tickets->getTicket($q4)['gibbonPersonIDAssignee'] == 2);
+    $db->exec("INSERT INTO gibbonCsTeamMember (csTeamID, gibbonPersonID) VALUES (3, 3)");
+    check('members of the type team can be assigned too', QuickCreate::create($c, 2, false, ['csTicketTypeID' => 5, 'title' => 'Team member', 'gibbonPersonIDAssignee' => 3])[1] == 'success0');
 
     echo "\n$n checks, $fail failed\n";
     exit($fail ? 1 : 0);
