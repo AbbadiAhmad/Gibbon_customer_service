@@ -10,8 +10,7 @@ Verified against the Gibbon v31 core source and the Sepa module. When unsure, re
 ## Module shape
 * Folder name = `$name` in `manifest.php` = namespace `Gibbon\Module\<Name>`. Classes live in `src/` and are autoloaded by namespace
   (`src/Domain/XGateway.php` -> `Gibbon\Module\<Name>\Domain\XGateway`). No spaces in the module name.
-* Pages and process scripts are flat files in the module root. `moduleFunctions.php` holds shared functions (this module `require_once`s it at the top of every page and process script; also
-  `require_once` it).
+* Pages and process scripts are flat files in the module root. `moduleFunctions.php` holds shared functions (this module `require_once`s it at the top of every page and process script).
 * `version.php` (`$moduleVersion`), `manifest.php` (`$version`) and the newest `CHANGEDB.php` entry must always be the same number.
 
 ## Database
