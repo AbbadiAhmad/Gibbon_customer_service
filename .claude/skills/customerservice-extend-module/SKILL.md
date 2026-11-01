@@ -1,0 +1,39 @@
+---
+name: customerservice-extend-module
+description: Checklist for adding a feature, page, setting or table to the CustomerService Gibbon module - where code goes, the schema/upgrade/docs steps, naming, tolerance rules, how to verify without a live Gibbon. Use before any change to this repository.
+---
+
+# Extending CustomerService
+
+Read `docs/ARCHITECTURE.md` first (model, who can see what, file map). Also follow `gibbon-module-conventions` and `gibbon-access-control`.
+
+## Where things go
+| You are adding | Put it in |
+|---|---|
+| SQL / a query | the matching `src/Domain/*Gateway.php` (new table group -> new gateway) |
+| Logic without UI (rules, parsing, formatting) | `src/Service/` as a static/pure class so it can be tested stand-alone |
+| A page | `cs_<area>_<verb>.php` (`manage`, `edit` for add+edit, `view`) + `cs_<area>_process.php` for its POST |
+| A record the shared delete page may remove | a `case` in `csDeleteTarget()` (set `action`, `allowed`, `back`, `delete`) |
+| A ticket-page tool (sub-forms) | a section in `cs_ticket_view.php` + an `action` case in `cs_ticket_extrasProcess.php` (non-main) or `cs_ticket_process.php` (status/assign/comment) |
+| Something that happens on a ticket event | `Notifier` method + `AutomationEngine::fire('trigger', $id)` at the same spot |
+| A new filter field | `BoardFilter::specialFields()` + `special()`; it then works in boards, automation conditions and the filter forms |
+
+## Change checklist (do all of it)
+1. Schema change? Update `manifest.php` (tables, seed) **and** add a new `CHANGEDB.php` entry (never edit old ones); bump `$version` / `$moduleVersion` together.
+2. New page/action? `manifest.php` `$actionRows` (+ every page and process in `URLList`) **and** the CHANGEDB `INSERT gibbonAction` + `gibbonPermission` pair.
+3. Guards: `csAccess` + `csSanitizeRequest` on pages; `csRequirePost` + sanitize + `csAccess` on processes; record-level checks (see `gibbon-access-control`).
+4. Tables start with `gibbon` (`gibbonCs...`); columns keep the `cs...ID` style; keep the word-boundary rename in mind if you ever mass-replace names.
+5. Tolerance: board filters/rules must never error on a custom field that a type lacks - empty value semantics only. Unknown action classes, unknown triggers or
+   deleted records are skipped, not fatal. Notifications and automation failures are caught and logged, they never break the user's request.
+6. User text through `__()`; escape on output.
+7. Update `README.md` (feature description), `CHANGELOG.txt`, and `docs/ARCHITECTURE.md` if the model, a decision or the file map changed.
+8. Verify and report honestly: `for f in $(find . -name '*.php'); do php -l $f; done`; run new pure logic with a small stub script; cross-check table names
+   (`manifest.php` created tables vs `gibbonCs...` used in code). State that no live Gibbon run happened unless one did.
+9. Commit on the working branch with a message that says what and why; do not open a pull request unless asked.
+
+## Conventions worth keeping
+* Status names are free text matching board columns; `New` is the entry status, `Resolved`/`Closed` are "done" (`Workflow::DONE`), reopen goes back to `New`.
+* Admin = holds *Manage Ticket Types*. Space admins act through space roles, not through that action.
+* One status-change path (`$changeStatus` in `cs_ticket_process.php`) - extend it instead of writing a second one; automation uses `AutomationContext::changeStatus`.
+* Events written by people or automation to the activity log: public only if the requester should see them; configuration-ish events are `Internal`.
+* Dates in the database are `Y-m-d`; show with `Format::date`; parse with `csParseDate`.

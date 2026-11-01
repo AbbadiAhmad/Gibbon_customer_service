@@ -6,6 +6,13 @@ Similar in spirit to the basic functions of Jira Service Management.
 
 Module name / folder: `CustomerService` (namespace `Gibbon\Module\CustomerService`).
 
+## Documentation
+
+* [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) - data model, who can see what, request flow, file map, decisions, known gaps and the **verification status**.
+* [`CLAUDE.md`](CLAUDE.md) and [`.claude/skills/`](.claude/skills) - the development rules (Gibbon module conventions, access control,
+  how to extend this module, how to write automation actions), written down so every contributor and AI session follows the same rules.
+* [`CHANGELOG.txt`](CHANGELOG.txt) - what changed per version.
+
 ## Install
 
 1. Copy (or clone) this repository to `<gibbon>/modules/CustomerService`.
