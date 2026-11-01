@@ -12,8 +12,8 @@ namespace Gibbon\Module\CustomerService\Service;
  * the basic (core) fields can be shown/hidden, made required, relabelled and given help text; custom fields can be
  * shown on the portal form or kept for the agents; everything has an order.
  *
- * Core field settings live in csTicketType.formConfig (JSON, key => {show, required, label, help, order}).
- * Custom field settings live on the field itself (csField.showOnForm / required / sequenceNumber).
+ * Core field settings live in gibbonCsTicketType.formConfig (JSON, key => {show, required, label, help, order}).
+ * Custom field settings live on the field itself (gibbonCsField.showOnForm / required / sequenceNumber).
  */
 class FormConfig
 {

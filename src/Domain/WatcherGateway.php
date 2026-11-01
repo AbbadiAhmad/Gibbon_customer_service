@@ -15,22 +15,22 @@ class WatcherGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'csTicketWatcher';
+    private static $tableName = 'gibbonCsTicketWatcher';
     private static $primaryKey = 'csTicketWatcherID';
     private static $searchableColumns = [];
 
     /** @return int[] */
     public function selectPersonIDs($csTicketID): array
     {
-        return array_map('intval', $this->db()->select("SELECT gibbonPersonID FROM csTicketWatcher WHERE csTicketID=:id", ['id' => $csTicketID])->fetchAll(\PDO::FETCH_COLUMN));
+        return array_map('intval', $this->db()->select("SELECT gibbonPersonID FROM gibbonCsTicketWatcher WHERE csTicketID=:id", ['id' => $csTicketID])->fetchAll(\PDO::FETCH_COLUMN));
     }
 
     /** @return array gibbonPersonID => name */
     public function selectWithNames($csTicketID): array
     {
         $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonPerson.preferredName, gibbonPerson.surname
-                FROM csTicketWatcher JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=csTicketWatcher.gibbonPersonID)
-                WHERE csTicketWatcher.csTicketID=:id ORDER BY gibbonPerson.surname, gibbonPerson.preferredName";
+                FROM gibbonCsTicketWatcher JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=gibbonCsTicketWatcher.gibbonPersonID)
+                WHERE gibbonCsTicketWatcher.csTicketID=:id ORDER BY gibbonPerson.surname, gibbonPerson.preferredName";
         $out = [];
         foreach ($this->db()->select($sql, ['id' => $csTicketID])->fetchAll() as $p) {
             $out[(int)$p['gibbonPersonID']] = $p['preferredName'].' '.$p['surname'];
@@ -45,11 +45,11 @@ class WatcherGateway extends QueryableGateway
 
     public function add($csTicketID, $gibbonPersonID): void
     {
-        $this->db()->insert("INSERT IGNORE INTO csTicketWatcher (csTicketID, gibbonPersonID) VALUES (:ticket, :person)", ['ticket' => $csTicketID, 'person' => $gibbonPersonID]);
+        $this->db()->insert("INSERT IGNORE INTO gibbonCsTicketWatcher (csTicketID, gibbonPersonID) VALUES (:ticket, :person)", ['ticket' => $csTicketID, 'person' => $gibbonPersonID]);
     }
 
     public function remove($csTicketID, $gibbonPersonID): void
     {
-        $this->db()->delete("DELETE FROM csTicketWatcher WHERE csTicketID=:ticket AND gibbonPersonID=:person", ['ticket' => $csTicketID, 'person' => $gibbonPersonID]);
+        $this->db()->delete("DELETE FROM gibbonCsTicketWatcher WHERE csTicketID=:ticket AND gibbonPersonID=:person", ['ticket' => $csTicketID, 'person' => $gibbonPersonID]);
     }
 }

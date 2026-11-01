@@ -14,16 +14,16 @@ class AttachmentGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'csTicketAttachment';
+    private static $tableName = 'gibbonCsTicketAttachment';
     private static $primaryKey = 'csTicketAttachmentID';
     private static $searchableColumns = ['fileName'];
 
     /** Attachments of a ticket, grouped by csTicketActivityID (0 = attached to the request itself). */
     public function selectGroupedByTicket($csTicketID, bool $includeInternal = false): array
     {
-        $sql = "SELECT csTicketAttachment.*, COALESCE(csTicketActivity.visibility, 'Public') AS visibility
-                FROM csTicketAttachment LEFT JOIN csTicketActivity ON (csTicketActivity.csTicketActivityID=csTicketAttachment.csTicketActivityID)
-                WHERE csTicketAttachment.csTicketID=:id ORDER BY csTicketAttachment.csTicketAttachmentID";
+        $sql = "SELECT gibbonCsTicketAttachment.*, COALESCE(gibbonCsTicketActivity.visibility, 'Public') AS visibility
+                FROM gibbonCsTicketAttachment LEFT JOIN gibbonCsTicketActivity ON (gibbonCsTicketActivity.csTicketActivityID=gibbonCsTicketAttachment.csTicketActivityID)
+                WHERE gibbonCsTicketAttachment.csTicketID=:id ORDER BY gibbonCsTicketAttachment.csTicketAttachmentID";
         $grouped = [];
         foreach ($this->db()->select($sql, ['id' => $csTicketID])->fetchAll() as $row) {
             if ($row['visibility'] == 'Internal' && !$includeInternal) {
@@ -37,9 +37,9 @@ class AttachmentGateway extends QueryableGateway
     /** Attachment with the visibility of the comment it belongs to. */
     public function getWithVisibility($csTicketAttachmentID): array
     {
-        $sql = "SELECT csTicketAttachment.*, COALESCE(csTicketActivity.visibility, 'Public') AS visibility
-                FROM csTicketAttachment LEFT JOIN csTicketActivity ON (csTicketActivity.csTicketActivityID=csTicketAttachment.csTicketActivityID)
-                WHERE csTicketAttachment.csTicketAttachmentID=:id";
+        $sql = "SELECT gibbonCsTicketAttachment.*, COALESCE(gibbonCsTicketActivity.visibility, 'Public') AS visibility
+                FROM gibbonCsTicketAttachment LEFT JOIN gibbonCsTicketActivity ON (gibbonCsTicketActivity.csTicketActivityID=gibbonCsTicketAttachment.csTicketActivityID)
+                WHERE gibbonCsTicketAttachment.csTicketAttachmentID=:id";
         return $this->db()->select($sql, ['id' => $csTicketAttachmentID])->fetch() ?: [];
     }
 }

@@ -8,7 +8,7 @@ Copyright © 2010, Gibbon Foundation
 namespace Gibbon\Module\CustomerService\Service;
 
 /**
- * Per ticket type workflow, stored as JSON in csTicketType.workflow:
+ * Per ticket type workflow, stored as JSON in gibbonCsTicketType.workflow:
  *
  *   {"transitions": {"New": ["In Progress", "Waiting"], ...}, "commentRequired": ["Waiting"]}
  *

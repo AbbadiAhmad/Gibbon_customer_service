@@ -14,48 +14,48 @@ class BoardGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'csBoard';
+    private static $tableName = 'gibbonCsBoard';
     private static $primaryKey = 'csBoardID';
     private static $searchableColumns = ['name', 'description'];
 
     public function selectBySpace($csSpaceID): array
     {
-        return $this->db()->select("SELECT * FROM csBoard WHERE csSpaceID=:id ORDER BY name", ['id' => $csSpaceID])->fetchAll();
+        return $this->db()->select("SELECT * FROM gibbonCsBoard WHERE csSpaceID=:id ORDER BY name", ['id' => $csSpaceID])->fetchAll();
     }
 
     /** Active boards of active spaces the person has the view permission in (all of them for $all). */
     public function selectAccessible($gibbonPersonID, bool $all = false): array
     {
-        $sql = "SELECT DISTINCT csBoard.*, csSpace.name AS spaceName
-                FROM csBoard JOIN csSpace ON (csSpace.csSpaceID=csBoard.csSpaceID)";
+        $sql = "SELECT DISTINCT gibbonCsBoard.*, gibbonCsSpace.name AS spaceName
+                FROM gibbonCsBoard JOIN gibbonCsSpace ON (gibbonCsSpace.csSpaceID=gibbonCsBoard.csSpaceID)";
         $data = [];
         if (!$all) {
-            $sql .= " JOIN csSpaceMember ON (csSpaceMember.csSpaceID=csSpace.csSpaceID AND csSpaceMember.gibbonPersonID=:person)
-                      JOIN csRolePermission ON (csRolePermission.csRoleID=csSpaceMember.csRoleID AND csRolePermission.permission='view_board')";
+            $sql .= " JOIN gibbonCsSpaceMember ON (gibbonCsSpaceMember.csSpaceID=gibbonCsSpace.csSpaceID AND gibbonCsSpaceMember.gibbonPersonID=:person)
+                      JOIN gibbonCsRolePermission ON (gibbonCsRolePermission.csRoleID=gibbonCsSpaceMember.csRoleID AND gibbonCsRolePermission.permission='view_board')";
             $data['person'] = $gibbonPersonID;
         }
-        $sql .= " WHERE csBoard.active='Y' AND csSpace.active='Y' ORDER BY csSpace.name, csBoard.name";
+        $sql .= " WHERE gibbonCsBoard.active='Y' AND gibbonCsSpace.active='Y' ORDER BY gibbonCsSpace.name, gibbonCsBoard.name";
         return $this->db()->select($sql, $data)->fetchAll();
     }
 
     /** Every active board of every active space (used to find who must be notified). */
     public function selectAllActive(): array
     {
-        $sql = "SELECT csBoard.* FROM csBoard JOIN csSpace ON (csSpace.csSpaceID=csBoard.csSpaceID)
-                WHERE csBoard.active='Y' AND csSpace.active='Y'";
+        $sql = "SELECT gibbonCsBoard.* FROM gibbonCsBoard JOIN gibbonCsSpace ON (gibbonCsSpace.csSpaceID=gibbonCsBoard.csSpaceID)
+                WHERE gibbonCsBoard.active='Y' AND gibbonCsSpace.active='Y'";
         return $this->db()->select($sql)->fetchAll();
     }
 
     public function selectColumns($csBoardID): array
     {
-        return $this->db()->select("SELECT * FROM csBoardColumn WHERE csBoardID=:id ORDER BY sequenceNumber, csBoardColumnID", ['id' => $csBoardID])->fetchAll();
+        return $this->db()->select("SELECT * FROM gibbonCsBoardColumn WHERE csBoardID=:id ORDER BY sequenceNumber, csBoardColumnID", ['id' => $csBoardID])->fetchAll();
     }
 
     /** Replace the columns with the given ordered list of names (duplicates and blanks dropped). */
     public function replaceColumns($csBoardID, array $names): void
     {
         $seen = [];
-        $this->db()->delete("DELETE FROM csBoardColumn WHERE csBoardID=:id", ['id' => $csBoardID]);
+        $this->db()->delete("DELETE FROM gibbonCsBoardColumn WHERE csBoardID=:id", ['id' => $csBoardID]);
         foreach ($names as $name) {
             $name = mb_substr(trim($name), 0, 60);
             if ($name === '' || isset($seen[mb_strtolower($name)])) {
@@ -63,7 +63,7 @@ class BoardGateway extends QueryableGateway
             }
             $seen[mb_strtolower($name)] = true;
             $this->db()->insert(
-                "INSERT INTO csBoardColumn (csBoardID, name, sequenceNumber) VALUES (:id, :name, :seq)",
+                "INSERT INTO gibbonCsBoardColumn (csBoardID, name, sequenceNumber) VALUES (:id, :name, :seq)",
                 ['id' => $csBoardID, 'name' => $name, 'seq' => count($seen)]
             );
         }
@@ -71,7 +71,7 @@ class BoardGateway extends QueryableGateway
 
     public function deleteBoard($csBoardID): bool
     {
-        $this->db()->delete("DELETE FROM csBoardColumn WHERE csBoardID=:id", ['id' => $csBoardID]);
+        $this->db()->delete("DELETE FROM gibbonCsBoardColumn WHERE csBoardID=:id", ['id' => $csBoardID]);
         return $this->delete($csBoardID);
     }
 }

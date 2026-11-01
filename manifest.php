@@ -11,7 +11,7 @@ $description = 'Service desk for customer requests: forms, tickets, teams, space
 $entryURL = 'cs_portal.php';
 $type = 'Additional';
 $category = 'Other';
-$version = '0.4.0';
+$version = '0.5.0';
 $author = 'Ahmad';
 $url = '';
 
@@ -20,7 +20,7 @@ $url = '';
 // ---------------------------------------------------------------------------
 
 $moduleTables[] = "
-    CREATE TABLE `csTeam` (
+    CREATE TABLE `gibbonCsTeam` (
         `csTeamID` int(6) unsigned NOT NULL AUTO_INCREMENT,
         `name` varchar(100) NOT NULL,
         `description` text NULL,
@@ -30,7 +30,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTeamMember` (
+    CREATE TABLE `gibbonCsTeamMember` (
         `csTeamMemberID` int(8) unsigned NOT NULL AUTO_INCREMENT,
         `csTeamID` int(6) unsigned NOT NULL,
         `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
@@ -39,7 +39,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTicketType` (
+    CREATE TABLE `gibbonCsTicketType` (
         `csTicketTypeID` int(6) unsigned NOT NULL AUTO_INCREMENT,
         `name` varchar(100) NOT NULL,
         `description` text NULL,
@@ -55,7 +55,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csField` (
+    CREATE TABLE `gibbonCsField` (
         `csFieldID` int(8) unsigned NOT NULL AUTO_INCREMENT,
         `csTicketTypeID` int(6) unsigned NOT NULL,
         `fieldKey` varchar(50) NOT NULL COMMENT 'Machine name (a-z, 0-9, _). Same key on different types = same field for board filters',
@@ -71,7 +71,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csRole` (
+    CREATE TABLE `gibbonCsRole` (
         `csRoleID` int(6) unsigned NOT NULL AUTO_INCREMENT,
         `name` varchar(100) NOT NULL,
         `description` text NULL,
@@ -80,7 +80,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csRolePermission` (
+    CREATE TABLE `gibbonCsRolePermission` (
         `csRolePermissionID` int(8) unsigned NOT NULL AUTO_INCREMENT,
         `csRoleID` int(6) unsigned NOT NULL,
         `permission` varchar(50) NOT NULL,
@@ -89,7 +89,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csSpace` (
+    CREATE TABLE `gibbonCsSpace` (
         `csSpaceID` int(6) unsigned NOT NULL AUTO_INCREMENT,
         `name` varchar(100) NOT NULL,
         `description` text NULL,
@@ -99,7 +99,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csSpaceMember` (
+    CREATE TABLE `gibbonCsSpaceMember` (
         `csSpaceMemberID` int(8) unsigned NOT NULL AUTO_INCREMENT,
         `csSpaceID` int(6) unsigned NOT NULL,
         `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
@@ -110,7 +110,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csBoard` (
+    CREATE TABLE `gibbonCsBoard` (
         `csBoardID` int(6) unsigned NOT NULL AUTO_INCREMENT,
         `csSpaceID` int(6) unsigned NOT NULL,
         `name` varchar(100) NOT NULL,
@@ -122,7 +122,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csBoardColumn` (
+    CREATE TABLE `gibbonCsBoardColumn` (
         `csBoardColumnID` int(8) unsigned NOT NULL AUTO_INCREMENT,
         `csBoardID` int(6) unsigned NOT NULL,
         `name` varchar(60) NOT NULL COMMENT 'Also the ticket status a ticket gets when moved into this column',
@@ -132,7 +132,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTicket` (
+    CREATE TABLE `gibbonCsTicket` (
         `csTicketID` int(10) unsigned NOT NULL AUTO_INCREMENT,
         `csTicketTypeID` int(6) unsigned NOT NULL,
         `title` varchar(200) NOT NULL,
@@ -163,7 +163,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTicketActivity` (
+    CREATE TABLE `gibbonCsTicketActivity` (
         `csTicketActivityID` int(10) unsigned NOT NULL AUTO_INCREMENT,
         `csTicketID` int(10) unsigned NOT NULL,
         `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
@@ -176,7 +176,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTicketAttachment` (
+    CREATE TABLE `gibbonCsTicketAttachment` (
         `csTicketAttachmentID` int(10) unsigned NOT NULL AUTO_INCREMENT,
         `csTicketID` int(10) unsigned NOT NULL,
         `csTicketActivityID` int(10) unsigned NULL COMMENT 'The comment it was attached to; NULL = attached to the request itself',
@@ -190,7 +190,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csSavedFilter` (
+    CREATE TABLE `gibbonCsSavedFilter` (
         `csSavedFilterID` int(8) unsigned NOT NULL AUTO_INCREMENT,
         `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
         `name` varchar(100) NOT NULL,
@@ -200,7 +200,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTag` (
+    CREATE TABLE `gibbonCsTag` (
       `csTagID` int(8) unsigned NOT NULL AUTO_INCREMENT,
       `name` varchar(50) NOT NULL,
       PRIMARY KEY (`csTagID`),
@@ -208,7 +208,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTicketTag` (
+    CREATE TABLE `gibbonCsTicketTag` (
       `csTicketTagID` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `csTicketID` int(10) unsigned NOT NULL,
       `csTagID` int(8) unsigned NOT NULL,
@@ -218,7 +218,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTicketWatcher` (
+    CREATE TABLE `gibbonCsTicketWatcher` (
       `csTicketWatcherID` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `csTicketID` int(10) unsigned NOT NULL,
       `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
@@ -228,7 +228,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csTicketLink` (
+    CREATE TABLE `gibbonCsTicketLink` (
       `csTicketLinkID` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `csTicketIDFrom` int(10) unsigned NOT NULL COMMENT 'FROM blocks / duplicates / relates to TO',
       `csTicketIDTo` int(10) unsigned NOT NULL,
@@ -241,7 +241,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csChecklist` (
+    CREATE TABLE `gibbonCsChecklist` (
       `csChecklistID` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `csTicketID` int(10) unsigned NOT NULL,
       `title` varchar(100) NOT NULL,
@@ -251,7 +251,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csChecklistItem` (
+    CREATE TABLE `gibbonCsChecklistItem` (
       `csChecklistItemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `csChecklistID` int(10) unsigned NOT NULL,
       `text` varchar(255) NOT NULL,
@@ -264,7 +264,7 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
-    CREATE TABLE `csAutomationRule` (
+    CREATE TABLE `gibbonCsAutomationRule` (
       `csAutomationRuleID` int(8) unsigned NOT NULL AUTO_INCREMENT,
       `csTicketTypeID` int(6) unsigned NULL COMMENT 'NULL = applies to every ticket type',
       `name` varchar(100) NOT NULL,
@@ -278,21 +278,21 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 // Seed data: default roles, permissions, a team, a ticket type and a space with a board.
-$moduleTables[] = "INSERT INTO `csRole` (`csRoleID`, `name`, `description`) VALUES
+$moduleTables[] = "INSERT INTO `gibbonCsRole` (`csRoleID`, `name`, `description`) VALUES
     (1, 'Space Admin', 'Full control of a space: members, boards and all tickets'),
     (2, 'Agent', 'Triages and works on tickets (e.g. the L1 team)'),
     (3, 'Viewer', 'Can see the boards of the space and comment');";
 
-$moduleTables[] = "INSERT INTO `csRolePermission` (`csRoleID`, `permission`) VALUES
+$moduleTables[] = "INSERT INTO `gibbonCsRolePermission` (`csRoleID`, `permission`) VALUES
     (1, 'view_board'), (1, 'comment'), (1, 'edit_ticket'), (1, 'transition_ticket'), (1, 'assign_ticket'), (1, 'delete_ticket'), (1, 'manage_boards'), (1, 'manage_members'),
     (2, 'view_board'), (2, 'comment'), (2, 'edit_ticket'), (2, 'transition_ticket'), (2, 'assign_ticket'),
     (3, 'view_board'), (3, 'comment');";
 
-$moduleTables[] = "INSERT INTO `csTeam` (`csTeamID`, `name`, `description`) VALUES (1, 'L1 Support', 'First line: triage incoming requests and move them forward');";
-$moduleTables[] = "INSERT INTO `csTicketType` (`csTicketTypeID`, `name`, `description`, `csTeamID`) VALUES (1, 'General Request', 'Anything that does not fit another request type', 1);";
-$moduleTables[] = "INSERT INTO `csSpace` (`csSpaceID`, `name`, `description`) VALUES (1, 'Customer Service', 'Default space');";
-$moduleTables[] = "INSERT INTO `csBoard` (`csBoardID`, `csSpaceID`, `name`, `description`, `filter`) VALUES (1, 1, 'All requests', 'Every request, grouped by status', NULL);";
-$moduleTables[] = "INSERT INTO `csBoardColumn` (`csBoardID`, `name`, `sequenceNumber`) VALUES
+$moduleTables[] = "INSERT INTO `gibbonCsTeam` (`csTeamID`, `name`, `description`) VALUES (1, 'L1 Support', 'First line: triage incoming requests and move them forward');";
+$moduleTables[] = "INSERT INTO `gibbonCsTicketType` (`csTicketTypeID`, `name`, `description`, `csTeamID`) VALUES (1, 'General Request', 'Anything that does not fit another request type', 1);";
+$moduleTables[] = "INSERT INTO `gibbonCsSpace` (`csSpaceID`, `name`, `description`) VALUES (1, 'Customer Service', 'Default space');";
+$moduleTables[] = "INSERT INTO `gibbonCsBoard` (`csBoardID`, `csSpaceID`, `name`, `description`, `filter`) VALUES (1, 1, 'All requests', 'Every request, grouped by status', NULL);";
+$moduleTables[] = "INSERT INTO `gibbonCsBoardColumn` (`csBoardID`, `name`, `sequenceNumber`) VALUES
     (1, 'New', 1), (1, 'In Progress', 2), (1, 'Waiting', 3), (1, 'Resolved', 4), (1, 'Closed', 5);";
 
 // ---------------------------------------------------------------------------

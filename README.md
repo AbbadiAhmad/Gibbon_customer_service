@@ -16,6 +16,11 @@ Module name / folder: `CustomerService` (namespace `Gibbon\Module\CustomerServic
 
 Requires Gibbon v28+ and MySQL 5.7+ / MariaDB 10.2+ (JSON functions are used by board filters).
 
+## Database
+
+All 21 tables are prefixed `gibbonCs` (e.g. `gibbonCsTeam`, `gibbonCsTicket`, `gibbonCsTicketActivity`) and are created by `manifest.php`;
+upgrades from 0.4.0 or older rename the old `cs...` tables in place (CHANGEDB 0.5.0).
+
 ## Concepts
 
 | Concept | Where | What it is |

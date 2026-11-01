@@ -121,19 +121,19 @@ echo $form->getOutput();
 
 // ---- Results --------------------------------------------------------------------------
 $scopeBoards = $isAdmin ? null : csAccessibleBoards($container, $session, false);
-$criteria = $tickets->newQueryCriteria(true)->sortBy(['csTicket.csTicketID'], 'DESC')->fromPOST();
+$criteria = $tickets->newQueryCriteria(true)->sortBy(['gibbonCsTicket.csTicketID'], 'DESC')->fromPOST();
 $results = $tickets->querySearch($criteria, $person, $scopeBoards, $filters);
 
 $table = DataTable::createPaginated('csSearch', $criteria);
 $table->setTitle(__('Tickets'));
 $table->addMetaData('blankSlate', __('No tickets match.'));
 
-$table->addColumn('ref', __('Reference'))->sortable(['csTicket.csTicketID'])->format(function ($t) use ($session) {
+$table->addColumn('ref', __('Reference'))->sortable(['gibbonCsTicket.csTicketID'])->format(function ($t) use ($session) {
     return Format::link(csURL($session, 'cs_ticket_view.php', ['csTicketID' => $t['csTicketID']]), csTicketRef($t['csTicketID']));
 });
-$table->addColumn('title', __('Title'))->sortable(['csTicket.title']);
+$table->addColumn('title', __('Title'))->sortable(['gibbonCsTicket.title']);
 $table->addColumn('typeName', __('Type'));
-$table->addColumn('status', __('Status'))->sortable(['csTicket.status']);
+$table->addColumn('status', __('Status'))->sortable(['gibbonCsTicket.status']);
 $table->addColumn('priority', __('Priority'))->format(function ($t) {
     return csPriorityLabel($t['priority']);
 });
@@ -143,10 +143,10 @@ $table->addColumn('reporter', __('Requested by'))->format(function ($t) {
 $table->addColumn('assignee', __('Assigned to'))->format(function ($t) {
     return htmlspecialchars(csPersonName($t['assigneePreferredName'], $t['assigneeSurname']));
 });
-$table->addColumn('dateDue', __('Due'))->sortable(['csTicket.dateDue'])->format(function ($t) {
+$table->addColumn('dateDue', __('Due'))->sortable(['gibbonCsTicket.dateDue'])->format(function ($t) {
     return csDueBadge($t);
 });
-$table->addColumn('timestampCreated', __('Raised'))->sortable(['csTicket.timestampCreated'])->format(function ($t) {
+$table->addColumn('timestampCreated', __('Raised'))->sortable(['gibbonCsTicket.timestampCreated'])->format(function ($t) {
     return Format::dateTimeReadable($t['timestampCreated']);
 });
 

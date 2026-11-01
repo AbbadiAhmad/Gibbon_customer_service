@@ -15,15 +15,15 @@ class TagGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'csTag';
+    private static $tableName = 'gibbonCsTag';
     private static $primaryKey = 'csTagID';
     private static $searchableColumns = ['name'];
 
     /** @return array csTagID => name */
     public function selectByTicket($csTicketID): array
     {
-        $sql = "SELECT csTag.csTagID, csTag.name FROM csTicketTag JOIN csTag ON (csTag.csTagID=csTicketTag.csTagID)
-                WHERE csTicketTag.csTicketID=:id ORDER BY csTag.name";
+        $sql = "SELECT gibbonCsTag.csTagID, gibbonCsTag.name FROM gibbonCsTicketTag JOIN gibbonCsTag ON (gibbonCsTag.csTagID=gibbonCsTicketTag.csTagID)
+                WHERE gibbonCsTicketTag.csTicketID=:id ORDER BY gibbonCsTag.name";
         return $this->db()->select($sql, ['id' => $csTicketID])->fetchAll(\PDO::FETCH_KEY_PAIR);
     }
 
@@ -34,8 +34,8 @@ class TagGateway extends QueryableGateway
         if (empty($csTicketIDs)) {
             return [];
         }
-        $sql = "SELECT csTicketTag.csTicketID, csTag.name FROM csTicketTag JOIN csTag ON (csTag.csTagID=csTicketTag.csTagID)
-                WHERE csTicketTag.csTicketID IN (".implode(',', $csTicketIDs).") ORDER BY csTag.name";
+        $sql = "SELECT gibbonCsTicketTag.csTicketID, gibbonCsTag.name FROM gibbonCsTicketTag JOIN gibbonCsTag ON (gibbonCsTag.csTagID=gibbonCsTicketTag.csTagID)
+                WHERE gibbonCsTicketTag.csTicketID IN (".implode(',', $csTicketIDs).") ORDER BY gibbonCsTag.name";
         $out = [];
         foreach ($this->db()->select($sql)->fetchAll() as $row) {
             $out[(int)$row['csTicketID']][] = $row['name'];
@@ -46,8 +46,8 @@ class TagGateway extends QueryableGateway
     /** All tags in use with the number of tickets, for suggestions. */
     public function selectPopular(int $limit = 50): array
     {
-        $sql = "SELECT csTag.name, COUNT(csTicketTag.csTicketTagID) AS uses FROM csTag
-                LEFT JOIN csTicketTag ON (csTicketTag.csTagID=csTag.csTagID) GROUP BY csTag.csTagID ORDER BY uses DESC, csTag.name LIMIT ".(int)$limit;
+        $sql = "SELECT gibbonCsTag.name, COUNT(gibbonCsTicketTag.csTicketTagID) AS uses FROM gibbonCsTag
+                LEFT JOIN gibbonCsTicketTag ON (gibbonCsTicketTag.csTagID=gibbonCsTag.csTagID) GROUP BY gibbonCsTag.csTagID ORDER BY uses DESC, gibbonCsTag.name LIMIT ".(int)$limit;
         return $this->db()->select($sql)->fetchAll();
     }
 
@@ -73,10 +73,10 @@ class TagGateway extends QueryableGateway
             if (in_array(mb_strtolower($name), $current, true)) {
                 continue;
             }
-            $this->db()->insert("INSERT IGNORE INTO csTag (name) VALUES (:name)", ['name' => $name]);
-            $csTagID = $this->db()->selectOne("SELECT csTagID FROM csTag WHERE name=:name", ['name' => $name]);
+            $this->db()->insert("INSERT IGNORE INTO gibbonCsTag (name) VALUES (:name)", ['name' => $name]);
+            $csTagID = $this->db()->selectOne("SELECT csTagID FROM gibbonCsTag WHERE name=:name", ['name' => $name]);
             if (!empty($csTagID)) {
-                $this->db()->insert("INSERT IGNORE INTO csTicketTag (csTicketID, csTagID) VALUES (:ticket, :tag)", ['ticket' => $csTicketID, 'tag' => $csTagID]);
+                $this->db()->insert("INSERT IGNORE INTO gibbonCsTicketTag (csTicketID, csTagID) VALUES (:ticket, :tag)", ['ticket' => $csTicketID, 'tag' => $csTagID]);
                 $added[] = $name;
             }
         }
@@ -90,7 +90,7 @@ class TagGateway extends QueryableGateway
         $current = $this->selectByTicket($csTicketID);
         foreach ($csTagIDs as $csTagID) {
             if (isset($current[(int)$csTagID])) {
-                $this->db()->delete("DELETE FROM csTicketTag WHERE csTicketID=:ticket AND csTagID=:tag", ['ticket' => $csTicketID, 'tag' => (int)$csTagID]);
+                $this->db()->delete("DELETE FROM gibbonCsTicketTag WHERE csTicketID=:ticket AND csTagID=:tag", ['ticket' => $csTicketID, 'tag' => (int)$csTagID]);
                 $removed[] = $current[(int)$csTagID];
             }
         }

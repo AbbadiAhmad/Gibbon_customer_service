@@ -32,11 +32,11 @@ class BoardFilter
     public static function coreFields(): array
     {
         return [
-            'type'     => 'csTicketType.name',
-            'status'   => 'csTicket.status',
-            'priority' => 'csTicket.priority',
-            'team'     => 'csTeam.name',
-            'title'    => 'csTicket.title',
+            'type'     => 'gibbonCsTicketType.name',
+            'status'   => 'gibbonCsTicket.status',
+            'priority' => 'gibbonCsTicket.priority',
+            'team'     => 'gibbonCsTeam.name',
+            'title'    => 'gibbonCsTicket.title',
             'assignee' => 'assignee.username',
             'reporter' => 'reporter.username',
         ];
@@ -133,7 +133,7 @@ class BoardFilter
             if (isset($core[$c['field']])) {
                 $expr = $core[$c['field']];
             } else {
-                $expr = "JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(csTicket.customData,''),'{}'), :{$prefix}bfPath{$i}))";
+                $expr = "JSON_UNQUOTE(JSON_EXTRACT(COALESCE(NULLIF(gibbonCsTicket.customData,''),'{}'), :{$prefix}bfPath{$i}))";
                 $params["{$prefix}bfPath{$i}"] = '$."'.$c['field'].'"';
             }
             $val = "COALESCE({$expr}, '')";
@@ -182,17 +182,17 @@ class BoardFilter
     {
         switch ($field) {
             case 'overdue':
-                return self::flag("(csTicket.dateDue IS NOT NULL AND csTicket.dateDue < CURDATE() AND csTicket.status NOT IN ".self::DONE_SQL.")", $op, $value);
+                return self::flag("(gibbonCsTicket.dateDue IS NOT NULL AND gibbonCsTicket.dateDue < CURDATE() AND gibbonCsTicket.status NOT IN ".self::DONE_SQL.")", $op, $value);
 
             case 'blocked':
-                return self::flag("EXISTS (SELECT 1 FROM csTicketLink AS bl JOIN csTicket AS blocker ON (blocker.csTicketID=bl.csTicketIDFrom)
-                    WHERE bl.linkType='blocks' AND bl.csTicketIDTo=csTicket.csTicketID AND blocker.status NOT IN ".self::DONE_SQL.")", $op, $value);
+                return self::flag("EXISTS (SELECT 1 FROM gibbonCsTicketLink AS bl JOIN gibbonCsTicket AS blocker ON (blocker.csTicketID=bl.csTicketIDFrom)
+                    WHERE bl.linkType='blocks' AND bl.csTicketIDTo=gibbonCsTicket.csTicketID AND blocker.status NOT IN ".self::DONE_SQL.")", $op, $value);
 
             case 'subtask':
-                return self::flag("csTicket.csTicketIDParent IS NOT NULL", $op, $value);
+                return self::flag("gibbonCsTicket.csTicketIDParent IS NOT NULL", $op, $value);
 
             case 'tag':
-                $exists = "EXISTS (SELECT 1 FROM csTicketTag AS tt JOIN csTag AS tg ON (tg.csTagID=tt.csTagID) WHERE tt.csTicketID=csTicket.csTicketID";
+                $exists = "EXISTS (SELECT 1 FROM gibbonCsTicketTag AS tt JOIN gibbonCsTag AS tg ON (tg.csTagID=tt.csTagID) WHERE tt.csTicketID=gibbonCsTicket.csTicketID";
                 switch ($op) {
                     case 'equals':
                         $params[$param] = $value;
@@ -215,7 +215,7 @@ class BoardFilter
 
             case 'due':
             case 'start':
-                $column = $field == 'due' ? 'csTicket.dateDue' : 'csTicket.dateStart';
+                $column = $field == 'due' ? 'gibbonCsTicket.dateDue' : 'gibbonCsTicket.dateStart';
                 if ($op == 'empty') {
                     return "{$column} IS NULL";
                 }

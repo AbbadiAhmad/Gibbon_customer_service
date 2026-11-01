@@ -14,15 +14,15 @@ class ActivityGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'csTicketActivity';
+    private static $tableName = 'gibbonCsTicketActivity';
     private static $primaryKey = 'csTicketActivityID';
     private static $searchableColumns = ['body'];
 
     public function selectByTicket($csTicketID, bool $includeInternal = false): array
     {
-        $sql = "SELECT csTicketActivity.*, gibbonPerson.preferredName, gibbonPerson.surname
-                FROM csTicketActivity LEFT JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=csTicketActivity.gibbonPersonID)
-                WHERE csTicketActivity.csTicketID=:id".($includeInternal ? "" : " AND csTicketActivity.visibility='Public'")." ORDER BY csTicketActivity.timestamp, csTicketActivity.csTicketActivityID";
+        $sql = "SELECT gibbonCsTicketActivity.*, gibbonPerson.preferredName, gibbonPerson.surname
+                FROM gibbonCsTicketActivity LEFT JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=gibbonCsTicketActivity.gibbonPersonID)
+                WHERE gibbonCsTicketActivity.csTicketID=:id".($includeInternal ? "" : " AND gibbonCsTicketActivity.visibility='Public'")." ORDER BY gibbonCsTicketActivity.timestamp, gibbonCsTicketActivity.csTicketActivityID";
         return $this->db()->select($sql, ['id' => $csTicketID])->fetchAll();
     }
 

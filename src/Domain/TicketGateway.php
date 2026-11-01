@@ -16,34 +16,34 @@ class TicketGateway extends QueryableGateway
 {
     use TableAware;
 
-    private static $tableName = 'csTicket';
+    private static $tableName = 'gibbonCsTicket';
     private static $primaryKey = 'csTicketID';
     private static $searchableColumns = ['title', 'description'];
 
-    const SELECT = "SELECT csTicket.*, csTicketType.name AS typeName, csTicketType.workflow, csTeam.name AS teamName,
+    const SELECT = "SELECT gibbonCsTicket.*, gibbonCsTicketType.name AS typeName, gibbonCsTicketType.workflow, gibbonCsTeam.name AS teamName,
                 reporter.preferredName AS reporterPreferredName, reporter.surname AS reporterSurname, reporter.username AS reporterUsername,
                 assignee.preferredName AS assigneePreferredName, assignee.surname AS assigneeSurname, assignee.username AS assigneeUsername,
                 parent.title AS parentTitle, parent.status AS parentStatus
-            FROM csTicket
-            JOIN csTicketType ON (csTicketType.csTicketTypeID=csTicket.csTicketTypeID)
-            LEFT JOIN csTeam ON (csTeam.csTeamID=csTicket.csTeamID)
-            LEFT JOIN gibbonPerson AS reporter ON (reporter.gibbonPersonID=csTicket.gibbonPersonIDReporter)
-            LEFT JOIN gibbonPerson AS assignee ON (assignee.gibbonPersonID=csTicket.gibbonPersonIDAssignee)
-            LEFT JOIN csTicket AS parent ON (parent.csTicketID=csTicket.csTicketIDParent)";
+            FROM gibbonCsTicket
+            JOIN gibbonCsTicketType ON (gibbonCsTicketType.csTicketTypeID=gibbonCsTicket.csTicketTypeID)
+            LEFT JOIN gibbonCsTeam ON (gibbonCsTeam.csTeamID=gibbonCsTicket.csTeamID)
+            LEFT JOIN gibbonPerson AS reporter ON (reporter.gibbonPersonID=gibbonCsTicket.gibbonPersonIDReporter)
+            LEFT JOIN gibbonPerson AS assignee ON (assignee.gibbonPersonID=gibbonCsTicket.gibbonPersonIDAssignee)
+            LEFT JOIN gibbonCsTicket AS parent ON (parent.csTicketID=gibbonCsTicket.csTicketIDParent)";
 
     public function getTicket($csTicketID): array
     {
-        $row = $this->db()->select(self::SELECT." WHERE csTicket.csTicketID=:id", ['id' => $csTicketID])->fetch();
+        $row = $this->db()->select(self::SELECT." WHERE gibbonCsTicket.csTicketID=:id", ['id' => $csTicketID])->fetch();
         return $row ? $this->decode($row) : [];
     }
 
     public function selectByReporter($gibbonPersonID, bool $openOnly = false, int $limit = 100): array
     {
-        $sql = self::SELECT." WHERE csTicket.gibbonPersonIDReporter=:person";
+        $sql = self::SELECT." WHERE gibbonCsTicket.gibbonPersonIDReporter=:person";
         if ($openOnly) {
-            $sql .= " AND csTicket.status NOT IN ('Resolved','Closed')";
+            $sql .= " AND gibbonCsTicket.status NOT IN ('Resolved','Closed')";
         }
-        $sql .= " ORDER BY csTicket.timestampCreated DESC LIMIT ".(int)$limit;
+        $sql .= " ORDER BY gibbonCsTicket.timestampCreated DESC LIMIT ".(int)$limit;
         return array_map([$this, 'decode'], $this->db()->select($sql, ['person' => $gibbonPersonID])->fetchAll());
     }
 
@@ -55,10 +55,10 @@ class TicketGateway extends QueryableGateway
         [$where, $params] = BoardFilter::toSql($filter);
         $sql = self::SELECT." WHERE ({$where})";
         if ($csTicketID !== null) {
-            $sql .= " AND csTicket.csTicketID=:onlyTicket";
+            $sql .= " AND gibbonCsTicket.csTicketID=:onlyTicket";
             $params['onlyTicket'] = $csTicketID;
         }
-        $sql .= " ORDER BY FIELD(csTicket.priority,'Urgent','High','Medium','Low'), csTicket.timestampCreated DESC LIMIT ".(int)$limit;
+        $sql .= " ORDER BY FIELD(gibbonCsTicket.priority,'Urgent','High','Medium','Low'), gibbonCsTicket.timestampCreated DESC LIMIT ".(int)$limit;
 
         return array_map([$this, 'decode'], $this->db()->select($sql, $params)->fetchAll());
     }
@@ -74,19 +74,19 @@ class TicketGateway extends QueryableGateway
         $query = $this
             ->newQuery()
             ->cols([
-                'csTicket.*', 'csTicketType.name AS typeName', 'csTeam.name AS teamName',
+                'gibbonCsTicket.*', 'gibbonCsTicketType.name AS typeName', 'gibbonCsTeam.name AS teamName',
                 'reporter.preferredName AS reporterPreferredName', 'reporter.surname AS reporterSurname',
                 'assignee.preferredName AS assigneePreferredName', 'assignee.surname AS assigneeSurname',
             ])
-            ->from('csTicket')
-            ->innerJoin('csTicketType', 'csTicketType.csTicketTypeID=csTicket.csTicketTypeID')
-            ->leftJoin('csTeam', 'csTeam.csTeamID=csTicket.csTeamID')
-            ->leftJoin('gibbonPerson AS reporter', 'reporter.gibbonPersonID=csTicket.gibbonPersonIDReporter')
-            ->leftJoin('gibbonPerson AS assignee', 'assignee.gibbonPersonID=csTicket.gibbonPersonIDAssignee');
+            ->from('gibbonCsTicket')
+            ->innerJoin('gibbonCsTicketType', 'gibbonCsTicketType.csTicketTypeID=gibbonCsTicket.csTicketTypeID')
+            ->leftJoin('gibbonCsTeam', 'gibbonCsTeam.csTeamID=gibbonCsTicket.csTeamID')
+            ->leftJoin('gibbonPerson AS reporter', 'reporter.gibbonPersonID=gibbonCsTicket.gibbonPersonIDReporter')
+            ->leftJoin('gibbonPerson AS assignee', 'assignee.gibbonPersonID=gibbonCsTicket.gibbonPersonIDAssignee');
 
         // What the person may see: own requests + whatever the boards of their spaces show.
         if ($scopeBoards !== null) {
-            $parts = ['csTicket.gibbonPersonIDReporter = :scopeMe'];
+            $parts = ['gibbonCsTicket.gibbonPersonIDReporter = :scopeMe'];
             $params = ['scopeMe' => $gibbonPersonID];
             foreach (array_values($scopeBoards) as $n => $board) {
                 [$where, $boardParams] = BoardFilter::toSql($board['filter'], 's'.$n.'_');
@@ -99,40 +99,40 @@ class TicketGateway extends QueryableGateway
         $q = trim($f['search'] ?? '');
         if ($q !== '') {
             $ref = preg_match('/^(?:CS-?)?(\d+)$/i', $q, $m) ? (int)$m[1] : 0;
-            $query->where('(csTicket.title LIKE :qTitle OR csTicket.description LIKE :qDescription OR csTicket.csTicketID = :qRef)')
+            $query->where('(gibbonCsTicket.title LIKE :qTitle OR gibbonCsTicket.description LIKE :qDescription OR gibbonCsTicket.csTicketID = :qRef)')
                 ->bindValue('qTitle', '%'.addcslashes($q, '\\%_').'%')
                 ->bindValue('qDescription', '%'.addcslashes($q, '\\%_').'%')
                 ->bindValue('qRef', $ref);
         }
         if (!empty($f['status'])) {
-            $query->where('csTicket.status = :fStatus')->bindValue('fStatus', $f['status']);
+            $query->where('gibbonCsTicket.status = :fStatus')->bindValue('fStatus', $f['status']);
         }
         if (!empty($f['csTicketTypeID'])) {
-            $query->where('csTicket.csTicketTypeID = :fType')->bindValue('fType', $f['csTicketTypeID']);
+            $query->where('gibbonCsTicket.csTicketTypeID = :fType')->bindValue('fType', $f['csTicketTypeID']);
         }
         if (in_array($f['priority'] ?? '', ['Low', 'Medium', 'High', 'Urgent'], true)) {
-            $query->where('csTicket.priority = :fPriority')->bindValue('fPriority', $f['priority']);
+            $query->where('gibbonCsTicket.priority = :fPriority')->bindValue('fPriority', $f['priority']);
         }
         if (($f['assignee'] ?? '') === 'me') {
-            $query->where('csTicket.gibbonPersonIDAssignee = :fMe')->bindValue('fMe', $gibbonPersonID);
+            $query->where('gibbonCsTicket.gibbonPersonIDAssignee = :fMe')->bindValue('fMe', $gibbonPersonID);
         } elseif (($f['assignee'] ?? '') === 'none') {
-            $query->where('csTicket.gibbonPersonIDAssignee IS NULL');
+            $query->where('gibbonCsTicket.gibbonPersonIDAssignee IS NULL');
         }
         if (($f['mine'] ?? '') === 'Y') {
-            $query->where('csTicket.gibbonPersonIDReporter = :fMine')->bindValue('fMine', $gibbonPersonID);
+            $query->where('gibbonCsTicket.gibbonPersonIDReporter = :fMine')->bindValue('fMine', $gibbonPersonID);
         }
         if (($f['open'] ?? '') === 'Y') {
-            $query->where("csTicket.status NOT IN ('Resolved','Closed')");
+            $query->where("gibbonCsTicket.status NOT IN ('Resolved','Closed')");
         }
         if (($f['overdue'] ?? '') === 'Y') {
-            $query->where("(csTicket.dateDue < CURDATE() AND csTicket.status NOT IN ('Resolved','Closed'))");
+            $query->where("(gibbonCsTicket.dateDue < CURDATE() AND gibbonCsTicket.status NOT IN ('Resolved','Closed'))");
         }
         if (!empty($f['tag'])) {
-            $query->where('EXISTS (SELECT 1 FROM csTicketTag AS ft JOIN csTag AS fg ON (fg.csTagID=ft.csTagID) WHERE ft.csTicketID=csTicket.csTicketID AND fg.name = :fTag)')
+            $query->where('EXISTS (SELECT 1 FROM gibbonCsTicketTag AS ft JOIN gibbonCsTag AS fg ON (fg.csTagID=ft.csTagID) WHERE ft.csTicketID=gibbonCsTicket.csTicketID AND fg.name = :fTag)')
                 ->bindValue('fTag', $f['tag']);
         }
         if (($f['watching'] ?? '') === 'Y') {
-            $query->where('EXISTS (SELECT 1 FROM csTicketWatcher AS fw WHERE fw.csTicketID=csTicket.csTicketID AND fw.gibbonPersonID = :fWatcher)')
+            $query->where('EXISTS (SELECT 1 FROM gibbonCsTicketWatcher AS fw WHERE fw.csTicketID=gibbonCsTicket.csTicketID AND fw.gibbonPersonID = :fWatcher)')
                 ->bindValue('fWatcher', $gibbonPersonID);
         }
 
@@ -142,20 +142,20 @@ class TicketGateway extends QueryableGateway
     /** Distinct statuses in use, for the search form. */
     public function selectStatuses(): array
     {
-        return $this->db()->select("SELECT DISTINCT status FROM csTicket ORDER BY status")->fetchAll(\PDO::FETCH_COLUMN);
+        return $this->db()->select("SELECT DISTINCT status FROM gibbonCsTicket ORDER BY status")->fetchAll(\PDO::FETCH_COLUMN);
     }
 
     /** Resolved tickets untouched for $days days (auto-close). */
     public function selectStaleResolved(int $days): array
     {
-        $sql = "SELECT csTicketID FROM csTicket WHERE status='Resolved' AND COALESCE(timestampResolved, timestampUpdated, timestampCreated) < (NOW() - INTERVAL ".(int)$days." DAY)";
+        $sql = "SELECT csTicketID FROM gibbonCsTicket WHERE status='Resolved' AND COALESCE(timestampResolved, timestampUpdated, timestampCreated) < (NOW() - INTERVAL ".(int)$days." DAY)";
         return $this->db()->select($sql)->fetchAll(\PDO::FETCH_COLUMN);
     }
 
     /** Subtasks of a ticket (they are tickets of their own). */
     public function selectSubtasks($csTicketID): array
     {
-        $sql = self::SELECT." WHERE csTicket.csTicketIDParent=:id ORDER BY csTicket.csTicketID";
+        $sql = self::SELECT." WHERE gibbonCsTicket.csTicketIDParent=:id ORDER BY gibbonCsTicket.csTicketID";
         return array_map([$this, 'decode'], $this->db()->select($sql, ['id' => $csTicketID])->fetchAll());
     }
 
@@ -166,7 +166,7 @@ class TicketGateway extends QueryableGateway
         if (empty($csTicketIDs)) {
             return [];
         }
-        $sql = "SELECT csTicketIDParent, SUM(status IN ('Resolved','Closed')) AS doneCount, COUNT(*) AS total FROM csTicket
+        $sql = "SELECT csTicketIDParent, SUM(status IN ('Resolved','Closed')) AS doneCount, COUNT(*) AS total FROM gibbonCsTicket
                 WHERE csTicketIDParent IN (".implode(',', $csTicketIDs).") GROUP BY csTicketIDParent";
         $out = [];
         foreach ($this->db()->select($sql)->fetchAll() as $row) {
@@ -177,22 +177,22 @@ class TicketGateway extends QueryableGateway
 
     public function countOpenSubtasks($csTicketID): int
     {
-        return (int)$this->db()->selectOne("SELECT COUNT(*) FROM csTicket WHERE csTicketIDParent=:id AND status NOT IN ('Resolved','Closed')", ['id' => $csTicketID]);
+        return (int)$this->db()->selectOne("SELECT COUNT(*) FROM gibbonCsTicket WHERE csTicketIDParent=:id AND status NOT IN ('Resolved','Closed')", ['id' => $csTicketID]);
     }
 
     /** Open tickets due within $days days (including today) that have not had their reminder yet. */
     public function selectDueSoon(int $days): array
     {
-        $sql = self::SELECT." WHERE csTicket.dateDue IS NOT NULL AND csTicket.dateDue >= CURDATE() AND csTicket.dateDue <= DATE_ADD(CURDATE(), INTERVAL ".(int)$days." DAY)
-                AND csTicket.status NOT IN ('Resolved','Closed') AND csTicket.dueReminderSent IS NULL";
+        $sql = self::SELECT." WHERE gibbonCsTicket.dateDue IS NOT NULL AND gibbonCsTicket.dateDue >= CURDATE() AND gibbonCsTicket.dateDue <= DATE_ADD(CURDATE(), INTERVAL ".(int)$days." DAY)
+                AND gibbonCsTicket.status NOT IN ('Resolved','Closed') AND gibbonCsTicket.dueReminderSent IS NULL";
         return array_map([$this, 'decode'], $this->db()->select($sql)->fetchAll());
     }
 
     /** Open tickets past their due date that have not had their overdue notice yet. */
     public function selectOverdue(): array
     {
-        $sql = self::SELECT." WHERE csTicket.dateDue IS NOT NULL AND csTicket.dateDue < CURDATE()
-                AND csTicket.status NOT IN ('Resolved','Closed') AND csTicket.overdueNoticeSent IS NULL";
+        $sql = self::SELECT." WHERE gibbonCsTicket.dateDue IS NOT NULL AND gibbonCsTicket.dateDue < CURDATE()
+                AND gibbonCsTicket.status NOT IN ('Resolved','Closed') AND gibbonCsTicket.overdueNoticeSent IS NULL";
         return array_map([$this, 'decode'], $this->db()->select($sql)->fetchAll());
     }
 
@@ -217,14 +217,14 @@ class TicketGateway extends QueryableGateway
 
     public function deleteTicket($csTicketID): bool
     {
-        $this->db()->update("UPDATE csTicket SET csTicketIDParent=NULL WHERE csTicketIDParent=:id", ['id' => $csTicketID]);
-        $this->db()->delete("DELETE FROM csTicketTag WHERE csTicketID=:id", ['id' => $csTicketID]);
-        $this->db()->delete("DELETE FROM csTicketWatcher WHERE csTicketID=:id", ['id' => $csTicketID]);
-        $this->db()->delete("DELETE FROM csTicketLink WHERE csTicketIDFrom=:id OR csTicketIDTo=:id2", ['id' => $csTicketID, 'id2' => $csTicketID]);
-        $this->db()->delete("DELETE csChecklistItem FROM csChecklistItem JOIN csChecklist ON (csChecklist.csChecklistID=csChecklistItem.csChecklistID) WHERE csChecklist.csTicketID=:id", ['id' => $csTicketID]);
-        $this->db()->delete("DELETE FROM csChecklist WHERE csTicketID=:id", ['id' => $csTicketID]);
-        $this->db()->delete("DELETE FROM csTicketAttachment WHERE csTicketID=:id", ['id' => $csTicketID]);
-        $this->db()->delete("DELETE FROM csTicketActivity WHERE csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->update("UPDATE gibbonCsTicket SET csTicketIDParent=NULL WHERE csTicketIDParent=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM gibbonCsTicketTag WHERE csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM gibbonCsTicketWatcher WHERE csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM gibbonCsTicketLink WHERE csTicketIDFrom=:id OR csTicketIDTo=:id2", ['id' => $csTicketID, 'id2' => $csTicketID]);
+        $this->db()->delete("DELETE gibbonCsChecklistItem FROM gibbonCsChecklistItem JOIN gibbonCsChecklist ON (gibbonCsChecklist.csChecklistID=gibbonCsChecklistItem.csChecklistID) WHERE gibbonCsChecklist.csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM gibbonCsChecklist WHERE csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM gibbonCsTicketAttachment WHERE csTicketID=:id", ['id' => $csTicketID]);
+        $this->db()->delete("DELETE FROM gibbonCsTicketActivity WHERE csTicketID=:id", ['id' => $csTicketID]);
         return $this->delete($csTicketID);
     }
 

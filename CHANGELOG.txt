@@ -1,3 +1,8 @@
+v0.5.0
+------
+- Database tables renamed to the Gibbon convention (csTeam -> gibbonCsTeam, ...). The upgrade renames them in place and keeps all data.
+  Column names (csTeamID, ...) are unchanged.
+
 v0.4.0
 ------
 - Customer Portal home (grouped request type cards, search) as the module's first page
