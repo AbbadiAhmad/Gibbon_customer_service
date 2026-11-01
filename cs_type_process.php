@@ -8,12 +8,15 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Data\Validator;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\CustomerService\Service\FormConfig;
 use Gibbon\Module\CustomerService\Service\Workflow;
 
 $_POST['address'] = '/modules/CustomerService/cs_type_manage.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
+
+csRequirePost($session);
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csTicketTypeID = $_POST['csTicketTypeID'] ?? '';
@@ -30,6 +33,9 @@ $data = [
     'description' => $_POST['description'] ?? '',
     'csTeamID'    => isset($teams[$team]) ? $team : null,
     'active'      => ($_POST['active'] ?? 'Y') == 'N' ? 'N' : 'Y',
+    'groupName'   => mb_substr(trim($_POST['groupName'] ?? ''), 0, 60) ?: null,
+    'icon'        => mb_substr(trim($_POST['icon'] ?? ''), 0, 8) ?: null,
+    'audience'    => implode(',', array_intersect((array)($_POST['audience'] ?? []), array_keys(FormConfig::audienceOptions()))) ?: null,
     'workflow'    => Workflow::fromText($_POST['workflowTransitions'] ?? '', $_POST['workflowCommentRequired'] ?? ''),
 ];
 $editParams = empty($csTicketTypeID) ? [] : ['csTicketTypeID' => $csTicketTypeID];

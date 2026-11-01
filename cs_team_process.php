@@ -13,6 +13,8 @@ $_POST['address'] = '/modules/CustomerService/cs_team_manage.php';
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 
+csRequirePost($session);
+
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csTeamID = $_POST['csTeamID'] ?? '';
 

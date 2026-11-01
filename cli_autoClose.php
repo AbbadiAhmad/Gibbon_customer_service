@@ -16,6 +16,12 @@ use Gibbon\Module\CustomerService\Service\Notifier;
  *   php /path/to/gibbon/modules/CustomerService/cli_autoClose.php 14
  * The optional argument is the number of days (default 14).
  */
+// Command line only - refuse before anything is loaded.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
+
 require __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 

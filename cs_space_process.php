@@ -14,6 +14,8 @@ $_POST['address'] = '/modules/CustomerService/cs_space_manage.php';
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 
+csRequirePost($session);
+
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $action = $_POST['action'] ?? '';
 $csSpaceID = $_POST['csSpaceID'] ?? '';

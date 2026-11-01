@@ -40,6 +40,7 @@ class FieldGateway extends QueryableGateway
 
     public function nextSequence($csTicketTypeID): int
     {
-        return 1 + (int)$this->db()->selectOne("SELECT COALESCE(MAX(sequenceNumber),0) FROM csField WHERE csTicketTypeID=:id", ['id' => $csTicketTypeID]);
+        // Custom fields start after the basic fields (their default order is 1-5, attachments last).
+        return 1 + max(5, (int)$this->db()->selectOne("SELECT COALESCE(MAX(sequenceNumber),0) FROM csField WHERE csTicketTypeID=:id", ['id' => $csTicketTypeID]));
     }
 }

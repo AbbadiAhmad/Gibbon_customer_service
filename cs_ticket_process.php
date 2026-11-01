@@ -11,11 +11,13 @@ use Gibbon\Module\CustomerService\Domain\ActivityGateway;
 use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
 use Gibbon\Module\CustomerService\Automation\AutomationEngine;
 use Gibbon\Module\CustomerService\Domain\BoardGateway;
+use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\LinkGateway;
 use Gibbon\Module\CustomerService\Domain\SpaceGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
 use Gibbon\Module\CustomerService\Service\Attachments;
+use Gibbon\Module\CustomerService\Service\CustomFields;
 use Gibbon\Module\CustomerService\Service\Notifier;
 use Gibbon\Module\CustomerService\Service\Permissions;
 use Gibbon\Module\CustomerService\Service\Workflow;
@@ -24,6 +26,8 @@ $_POST['address'] = '/modules/CustomerService/cs_ticket_view.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
+
+csRequirePost($session);
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $action = $_POST['action'] ?? '';
@@ -215,6 +219,28 @@ switch ($action) {
             }
         }
         $back($return);
+        break;
+
+    case 'fields':
+        if (!$can(Permissions::EDIT_TICKET)) {
+            $back('error0');
+        }
+        $fields = $container->get(FieldGateway::class)->selectByType($ticket['csTicketTypeID']);
+        [$values, $missing] = CustomFields::collect($fields, $_POST);
+        if (!empty($missing)) {
+            $back('error1');
+        }
+        $changed = [];
+        foreach ($fields as $field) {
+            if (($ticket['customData'][$field['fieldKey']] ?? '') != $values[$field['fieldKey']]) {
+                $changed[] = $field['label'];
+            }
+        }
+        if (!empty($changed)) {
+            $tickets->updateTicket($csTicketID, ['customData' => array_merge($ticket['customData'], $values)]);
+            $activity->log($csTicketID, $person, sprintf(__('Fields updated: %1$s'), implode(', ', $changed)), 'Event', 'Internal');
+        }
+        $back('success0');
         break;
 
     case 'reopen':

@@ -26,6 +26,8 @@ $_POST['address'] = '/modules/CustomerService/cs_ticket_view.php';
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 
+csRequirePost($session);
+
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $action = $_POST['action'] ?? '';
 $csTicketID = $_POST['csTicketID'] ?? '';

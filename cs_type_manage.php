@@ -11,6 +11,8 @@ use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
+csSanitizeRequest($container);
+
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
@@ -35,6 +37,7 @@ $table->addActionColumn()
     ->addParam('csTicketTypeID')
     ->format(function ($type, $actions) {
         $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_type_edit.php');
+        $actions->addAction('view', __('Request Form'))->setURL('/modules/CustomerService/cs_form_edit.php');
         $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
             ->addParam('entity', 'type')->addParam('id', $type['csTicketTypeID']);
     });

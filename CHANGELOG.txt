@@ -1,3 +1,12 @@
+v0.4.0
+------
+- Customer Portal home (grouped request type cards, search) as the module's first page
+- Request form builder per request type: show/hide, required, labels, help text, order; fields hidden from the requester
+- Request types limited to role categories (Staff / Student / Parent / Other)
+- Agents can edit custom fields on the ticket
+- Security hardening: named-action check on shared pages, POST-only process scripts, GET sanitising, hook/cron/src protection
+- Boards action is staff-only by default
+
 v0.3.0
 ------
 - Automation rules: trigger -> conditions -> actions; 10 built-in actions, new actions are one class file

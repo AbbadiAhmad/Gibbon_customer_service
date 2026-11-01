@@ -12,6 +12,8 @@ use Gibbon\Module\CustomerService\Service\CustomFields;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
+csSanitizeRequest($container);
+
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_field_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
@@ -27,7 +29,7 @@ if (empty($type)) {
     return;
 }
 
-$values = ['label' => '', 'fieldKey' => '', 'fieldType' => 'varchar', 'options' => '', 'required' => 'N', 'description' => '', 'sequenceNumber' => $gateway->nextSequence($csTicketTypeID)];
+$values = ['label' => '', 'fieldKey' => '', 'fieldType' => 'varchar', 'options' => '', 'required' => 'N', 'showOnForm' => 'Y', 'description' => '', 'sequenceNumber' => $gateway->nextSequence($csTicketTypeID)];
 if (!empty($csFieldID)) {
     $values = $gateway->getByID($csFieldID);
     if (empty($values) || $values['csTicketTypeID'] != $csTicketTypeID) {
@@ -68,6 +70,10 @@ $row = $form->addRow();
 $row = $form->addRow();
     $row->addLabel('description', __('Help Text'));
     $row->addTextField('description')->maxLength(255)->setValue($values['description']);
+
+$row = $form->addRow();
+    $row->addLabel('showOnForm', __('Show on the Request Form'))->description(__('"No" keeps the field for the agents: they fill it in on the ticket page, the requester never sees it.'));
+    $row->addYesNo('showOnForm')->required()->selected($values['showOnForm']);
 
 $row = $form->addRow();
     $row->addLabel('required', __('Required'));

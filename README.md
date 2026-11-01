@@ -98,6 +98,27 @@ who can view the boards that show the ticket, never to the requester, and never 
 filters, over the tickets you can see (your own + the boards of your spaces). Quick views (my open requests, assigned to
 me, unassigned, all open, resolved) and **saved filters** (per user) are on the same page.
 
+## Customer portal and request forms (like Jira Service Management)
+
+* **Customer Portal** is the first page of the module. It lists the request types as cards, grouped (IT, Facilities...), with a
+  search box. Click a card to open its form; each form also has a direct link (shown on *Manage Ticket Types > Request Form*).
+* **Request form builder** (*Manage Ticket Types > Request Form* icon): per request type, choose which basic fields are shown
+  (Summary, Description, Priority, Start/Due date, Attachments), which are required, their labels and help text, and the order -
+  mixed with the type's custom fields. A custom field can be set to *Hidden*: the requester never sees it, the agents fill it in
+  on the ticket page (**Fields** form).
+* **Who can raise it**: a request type can be limited to Staff, Students, Parents or Other users (Gibbon role categories);
+  others neither see it on the portal nor can post to it.
+* Portal group and icon are set on the request type.
+
+## Security
+
+Every page and process script starts with Gibbon's own `isActionAccessible()` check of its action (Manage Permissions decides
+who gets which action), process scripts accept POST only (Gibbon's CSRF token + nonce check applies), requests are sanitised with
+Gibbon's `Validator`, and on top of the role permission each ticket is only readable by its requester and by members of spaces
+whose boards show it. The shared delete page requires the action that owns the record type (e.g. *Manage Spaces* for boards).
+`src/` is blocked from direct web access, `hook_dashboard.php` refuses to run outside Gibbon and the cron scripts refuse to run
+outside the command line. Boards are not offered to student / parent roles by default.
+
 ## Basic fields of every ticket type
 
 Every type has these fields by default: **Title, Description, Priority, Start Date, Due Date, Attachments**. The fields you

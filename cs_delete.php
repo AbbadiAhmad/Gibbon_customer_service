@@ -9,6 +9,8 @@ use Gibbon\Forms\Prefab\DeleteForm;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
+csSanitizeRequest($container);
+
 // Generic delete confirmation for teams, ticket types, fields, roles, spaces, boards and space members.
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_delete.php')) {
     $page->addError(__('You do not have access to this action.'));
@@ -23,7 +25,8 @@ if ($target === null || empty($id)) {
     $page->addError(__('You have not specified one or more required parameters.'));
     return;
 }
-if (!$target['allowed']) {
+// The shared delete page is listed in several actions: require the one that owns this kind of record.
+if (!$target['allowed'] || !csAccess($guid, $connection2, 'cs_delete.php', $target['action'])) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }

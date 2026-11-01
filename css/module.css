@@ -9,3 +9,9 @@
 .cs-card select { width: 100%; margin-top: 0.4rem; font-size: 0.75rem; }
 .cs-tag { display: inline-block; background: #e0e7ff; color: #3730a3; border-radius: 9999px; padding: 0 0.6rem; margin-right: 0.3rem; font-size: 0.8rem; }
 .cs-tag a { color: inherit; }
+.cs-portal { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+.cs-portal-card { display: flex; flex-direction: column; width: 15rem; padding: 0.9rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; text-decoration: none; color: inherit; }
+.cs-portal-card:hover { border-color: #6366f1; box-shadow: 0 1px 6px rgba(99, 102, 241, 0.25); }
+.cs-portal-icon { font-size: 1.6rem; }
+.cs-portal-name { font-weight: 600; margin-top: 0.3rem; }
+.cs-portal-desc { color: #6b7280; font-size: 0.8rem; margin-top: 0.2rem; }

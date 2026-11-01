@@ -20,6 +20,12 @@ use Gibbon\Module\CustomerService\Service\Notifier;
  * the ticket_due_soon / ticket_overdue triggers of the automation rules. Changing the due date of a ticket
  * restarts its reminders.
  */
+// Command line only - refuse before anything is loaded.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
+
 require __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 

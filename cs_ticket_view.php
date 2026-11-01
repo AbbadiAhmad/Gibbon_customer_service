@@ -25,6 +25,8 @@ use Gibbon\Module\CustomerService\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
+csSanitizeRequest($container);
+
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_view.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
@@ -88,7 +90,12 @@ if (!empty($ticket['timestampResolved']) && $isDone) {
 foreach ($details as $label => $value) {
     echo '<tr><td class="w-1/4 py-1 text-gray-600">'.$label.'</td><td class="py-1">'.$value.'</td></tr>';
 }
-foreach ($container->get(FieldGateway::class)->selectByType($ticket['csTicketTypeID']) as $field) {
+$typeFields = $container->get(FieldGateway::class)->selectByType($ticket['csTicketTypeID']);
+foreach ($typeFields as $field) {
+    // Fields kept for the agents (not on the request form) are not shown to the requester.
+    if ($field['showOnForm'] == 'N' && !$canInternal) {
+        continue;
+    }
     $shown = CustomFields::format($field, $ticket['customData'][$field['fieldKey']] ?? null);
     echo '<tr><td class="w-1/4 py-1 text-gray-600">'.htmlspecialchars($field['label']).'</td><td class="py-1">'.nl2br(htmlspecialchars($shown)).'</td></tr>';
 }
@@ -397,6 +404,20 @@ if ($canInternal) {
             $row->addSubmit(__('Add'));
         echo $form->getOutput();
     }
+}
+
+// ---- Agents edit the custom fields (including the ones the requester never sees) ------------------------
+if ($can[Permissions::EDIT_TICKET] && !empty($typeFields)) {
+    $form = Form::create('csFields', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form->addHiddenValue('address', $session->get('address'));
+    $form->addHiddenValue('action', 'fields');
+    $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
+    $form->setTitle(__('Fields'));
+    CustomFields::addToForm($form, $typeFields, $ticket['customData']);
+    $row = $form->addRow();
+        $row->addFooter();
+        $row->addSubmit(__('Save Fields'));
+    echo $form->getOutput();
 }
 
 // ---- Activity --------------------------------------------------------------

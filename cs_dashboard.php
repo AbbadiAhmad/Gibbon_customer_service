@@ -12,6 +12,8 @@ use Gibbon\Module\CustomerService\Domain\TicketGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
+csSanitizeRequest($container);
+
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_dashboard.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;

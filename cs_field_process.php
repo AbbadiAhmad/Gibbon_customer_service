@@ -16,6 +16,8 @@ $_POST['address'] = '/modules/CustomerService/cs_type_manage.php';
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 
+csRequirePost($session);
+
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csTicketTypeID = $_POST['csTicketTypeID'] ?? '';
 $csFieldID = $_POST['csFieldID'] ?? '';
@@ -44,6 +46,7 @@ $data = [
     'options'        => trim($_POST['options'] ?? ''),
     'description'    => trim($_POST['description'] ?? ''),
     'required'       => ($_POST['required'] ?? 'N') == 'Y' ? 'Y' : 'N',
+    'showOnForm'     => ($_POST['showOnForm'] ?? 'Y') == 'N' ? 'N' : 'Y',
     'sequenceNumber' => (int)($_POST['sequenceNumber'] ?? 0),
 ];
 

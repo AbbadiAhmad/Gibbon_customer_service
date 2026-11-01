@@ -13,6 +13,8 @@ use Gibbon\Module\CustomerService\Service\Attachments;
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 
+csSanitizeRequest($container);
+
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_view.php')) {
     header('HTTP/1.1 403 Forbidden');
     echo __('You do not have access to this action.');

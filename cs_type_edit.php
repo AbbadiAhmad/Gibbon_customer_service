@@ -12,9 +12,13 @@ use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\TeamGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
 use Gibbon\Module\CustomerService\Service\CustomFields;
+use Gibbon\Module\CustomerService\Service\FormConfig;
+use Gibbon\Services\Format;
 use Gibbon\Module\CustomerService\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
+
+csSanitizeRequest($container);
 
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
@@ -23,7 +27,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_e
 
 $csTicketTypeID = $_GET['csTicketTypeID'] ?? '';
 $gateway = $container->get(TicketTypeGateway::class);
-$values = ['name' => '', 'description' => '', 'csTeamID' => '', 'active' => 'Y', 'workflow' => null];
+$values = ['name' => '', 'description' => '', 'csTeamID' => '', 'active' => 'Y', 'workflow' => null, 'groupName' => '', 'icon' => '', 'audience' => ''];
 
 if (!empty($csTicketTypeID)) {
     $values = $gateway->getByID($csTicketTypeID);
@@ -47,6 +51,19 @@ $row = $form->addRow();
 $row = $form->addRow();
     $row->addLabel('description', __('Description'))->description(__('Shown to the requester when choosing the request type.'));
     $row->addTextArea('description')->setRows(3)->setValue($values['description']);
+
+$form->addRow()->addHeading('Portal', __('Customer Portal'));
+$row = $form->addRow();
+    $row->addLabel('groupName', __('Group'))->description(__('Request types with the same group are listed together on the portal, e.g. IT, Facilities, Administration.'));
+    $row->addTextField('groupName')->maxLength(60)->setValue($values['groupName']);
+
+$row = $form->addRow();
+    $row->addLabel('icon', __('Icon'))->description(__('One emoji shown on the portal card, e.g. a key or a laptop.'));
+    $row->addTextField('icon')->maxLength(8)->setValue($values['icon']);
+
+$row = $form->addRow();
+    $row->addLabel('audience', __('Who Can Raise It'))->description(__('Limit the request type to some kinds of users. Leave all unticked for everybody.'));
+    $row->addCheckbox('audience')->fromArray(FormConfig::audienceOptions())->checked(array_filter(explode(',', (string)$values['audience'])));
 
 $row = $form->addRow();
     $row->addLabel('csTeamID', __('Default Team'))->description(__('New tickets of this type are routed to this team.'));
@@ -76,6 +93,8 @@ echo $form->getOutput();
 
 // Fields of this type
 if (!empty($csTicketTypeID)) {
+    echo '<p>'.Format::link(csURL($session, 'cs_form_edit.php', ['csTicketTypeID' => $csTicketTypeID]), __('Configure the request form'))
+        .' &middot; '.Format::link(csURL($session, 'cs_request_new.php', ['csTicketTypeID' => $csTicketTypeID]), __('Open the form as a requester sees it')).'</p>';
     echo '<div class="message">'.__('Every ticket type has these basic fields by default: Title, Description, Priority, Start Date, Due Date and Attachments. The fields below are extra fields for this type.').'</div>';
 
     $fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);

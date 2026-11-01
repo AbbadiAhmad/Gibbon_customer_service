@@ -8,6 +8,8 @@ Copyright © 2010, Gibbon Foundation
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
 
+csRequirePost($session);
+
 $entity = $_POST['entity'] ?? '';
 $id = $_POST['id'] ?? '';
 
@@ -21,7 +23,7 @@ if ($target === null || empty($id)) {
 }
 
 [$backPage, $backParams] = $target['back'];
-if (!$target['allowed']) {
+if (!$target['allowed'] || !csAccess($guid, $connection2, 'cs_delete.php', $target['action'])) {
     csRedirect($session, $backPage, $backParams, 'error0');
 }
 

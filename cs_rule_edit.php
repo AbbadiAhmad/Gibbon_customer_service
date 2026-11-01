@@ -15,6 +15,8 @@ use Gibbon\Module\CustomerService\Service\FilterForm;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
+csSanitizeRequest($container);
+
 if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_rule_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;

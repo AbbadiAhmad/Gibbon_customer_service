@@ -6,90 +6,90 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Services\Format;
 use Gibbon\Module\CustomerService\Domain\FieldGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
 use Gibbon\Module\CustomerService\Service\Attachments;
 use Gibbon\Module\CustomerService\Service\CustomFields;
+use Gibbon\Module\CustomerService\Service\FormConfig;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_request_new.php')) {
+csSanitizeRequest($container);
+
+if (!csAccess($guid, $connection2, 'cs_request_new.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
 
-$page->breadcrumbs->add(__('Raise a Request'));
-
-$typeGateway = $container->get(TicketTypeGateway::class);
 $csTicketTypeID = $_GET['csTicketTypeID'] ?? '';
 
-// Step 1: choose the type of request
+// No request type chosen: this is the portal home.
 if (empty($csTicketTypeID)) {
-    $types = $typeGateway->selectActive();
-    if (empty($types)) {
-        $page->addMessage(__('No request types have been set up yet.'));
-        return;
-    }
-
-    echo '<h2>'.__('What do you need help with?').'</h2>';
-    echo '<ul class="list-disc pl-6 leading-loose">';
-    foreach ($types as $type) {
-        echo '<li>'.Format::link(csURL($session, 'cs_request_new.php', ['csTicketTypeID' => $type['csTicketTypeID']]), $type['name']);
-        if (!empty($type['description'])) {
-            echo ' - <span class="text-gray-600">'.htmlspecialchars($type['description']).'</span>';
-        }
-        echo '</li>';
-    }
-    echo '</ul>';
+    require __DIR__ . '/cs_portal.php';
     return;
 }
 
-// Step 2: the form of that type
-$type = $typeGateway->getByID($csTicketTypeID);
-if (empty($type) || $type['active'] != 'Y') {
+$type = $container->get(TicketTypeGateway::class)->getByID($csTicketTypeID);
+$isAdmin = csIsAdmin($guid, $connection2);
+
+// The request type must exist, be active and be open to the user's role category (admins can preview any).
+if (empty($type) || ($type['active'] != 'Y' && !$isAdmin)
+    || (!$isAdmin && !FormConfig::inAudience($type['audience'], csRoleCategory($session)))) {
     $page->addError(__('The specified record cannot be found.'));
     return;
 }
 
+$page->breadcrumbs->add(__('Customer Portal'), 'cs_portal.php');
 $page->breadcrumbs->add($type['name']);
 
 $form = Form::create('csRequest', $session->get('absoluteURL').'/modules/CustomerService/cs_request_newProcess.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csTicketTypeID', $csTicketTypeID);
 
-$form->addRow()->addHeading($type['name'], __($type['name']));
+$form->addRow()->addHeading($type['name'], ($type['icon'] ? $type['icon'].' ' : '').__($type['name']));
 if (!empty($type['description'])) {
     $form->addRow()->addContent(htmlspecialchars($type['description']));
 }
 
-$row = $form->addRow();
-    $row->addLabel('title', __('Title'));
-    $row->addTextField('title')->maxLength(200)->required();
-
-$row = $form->addRow();
-    $row->addLabel('description', __('Description'));
-    $row->addTextArea('description')->setRows(6);
-
-$row = $form->addRow();
-    $row->addLabel('priority', __('Priority'));
-    $row->addSelect('priority')->fromArray(['Low' => __('Low'), 'Medium' => __('Medium'), 'High' => __('High'), 'Urgent' => __('Urgent')])->selected('Medium')->required();
-
-$row = $form->addRow();
-    $row->addLabel('dateStart', __('Start Date'))->description(__('Optional. When the work should begin.'));
-    $row->addDate('dateStart');
-
-$row = $form->addRow();
-    $row->addLabel('dateDue', __('Due Date'))->description(__('Optional. When you need it done.'));
-    $row->addDate('dateDue');
-
-$fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
-CustomFields::addToForm($form, $fields);
-
 $fileUploader = new Gibbon\FileUploader($pdo, $session);
-$row = $form->addRow();
-    $row->addLabel('attachments', __('Attachments'))->description(sprintf(__('Optional. Up to %1$s files, e.g. screenshots or documents.'), Attachments::MAX_FILES));
-    $row->addFileUpload(Attachments::FIELD)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
+$customFields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
+
+// The form is exactly what the request type is configured to show (Manage Ticket Types > Request Form).
+foreach (FormConfig::items($type['formConfig'], $customFields) as $item) {
+    if ($item['kind'] == 'custom') {
+        CustomFields::addToForm($form, [$item['field']]);
+        continue;
+    }
+
+    $row = $form->addRow();
+    $label = $row->addLabel($item['key'], $item['label']);
+    if (!empty($item['help'])) {
+        $label->description($item['help']);
+    }
+
+    switch ($item['key']) {
+        case 'title':
+            $input = $row->addTextField('title')->maxLength(200);
+            break;
+        case 'description':
+            $input = $row->addTextArea('description')->setRows(6);
+            break;
+        case 'priority':
+            $input = $row->addSelect('priority')->fromArray(['Low' => __('Low'), 'Medium' => __('Medium'), 'High' => __('High'), 'Urgent' => __('Urgent')])->selected('Medium');
+            break;
+        case 'dateStart':
+        case 'dateDue':
+            $input = $row->addDate($item['key']);
+            break;
+        case 'attachments':
+            $input = $row->addFileUpload(Attachments::FIELD)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
+            $label->description(trim($item['help'].' '.sprintf(__('Up to %1$s files.'), Attachments::MAX_FILES)));
+            break;
+    }
+    if ($item['required']) {
+        $input->required();
+    }
+}
 
 $row = $form->addRow();
     $row->addFooter();

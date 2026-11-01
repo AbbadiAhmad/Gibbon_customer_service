@@ -38,6 +38,37 @@ function csRedirect($session, string $page, array $params = [], string $return =
     exit;
 }
 
+/**
+ * Gibbon's own permission check (isActionAccessible), for a page of this module.
+ * Pass $actionName to require that specific action (a page that is listed in several actions - e.g. the
+ * shared delete page - is then only open to roles that hold that action, not to any of them).
+ */
+function csAccess($guid, $connection2, string $page, string $actionName = ''): bool
+{
+    return isActionAccessible($guid, $connection2, '/modules/'.CS_MODULE.'/'.$page, $actionName);
+}
+
+/** Same sanitising Gibbon pages apply to their input (strips HTML/scripts). */
+function csSanitizeRequest($container): void
+{
+    $validator = $container->get(\Gibbon\Data\Validator::class);
+    $_GET = $validator->sanitize($_GET);
+}
+
+/** Process scripts only act on a POST (the CSRF token / nonce check of gibbon.php applies to POSTs). */
+function csRequirePost($session, string $page = 'cs_dashboard.php'): void
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        csRedirect($session, $page, [], 'error1');
+    }
+}
+
+/** Gibbon role category of the current role: Staff, Student, Parent or Other. */
+function csRoleCategory($session): string
+{
+    return (string)$session->get('gibbonRoleIDCurrentCategory');
+}
+
 function csPersonID($session): int
 {
     return (int)$session->get('gibbonPersonID');
@@ -200,40 +231,48 @@ function csDeleteTarget($container, $session, bool $isAdmin, string $entity, $id
 
     switch ($entity) {
         case 'team':
+            $action = 'Manage Teams';
             $gateway = $container->get($ns.'TeamGateway');
-            return ['allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_team_manage.php', []],
+            return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_team_manage.php', []],
                 'delete' => function () use ($gateway, $id) { return $gateway->deleteTeam($id); }];
         case 'type':
+            $action = 'Manage Ticket Types';
             $gateway = $container->get($ns.'TicketTypeGateway');
-            return ['allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_type_manage.php', []],
+            return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_type_manage.php', []],
                 'delete' => function () use ($gateway, $id) { return $gateway->deleteType($id); }];
         case 'role':
+            $action = 'Manage Roles';
             $gateway = $container->get($ns.'RoleGateway');
-            return ['allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_role_manage.php', []],
+            return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_role_manage.php', []],
                 'delete' => function () use ($gateway, $id) { return $gateway->deleteRole($id); }];
         case 'field':
+            $action = 'Manage Ticket Types';
             $gateway = $container->get($ns.'FieldGateway');
             $field = $gateway->getByID($id);
-            return ['allowed' => $isAdmin && !empty($field), 'back' => ['cs_type_edit.php', ['csTicketTypeID' => $field['csTicketTypeID'] ?? '']],
+            return ['action' => $action, 'allowed' => $isAdmin && !empty($field), 'back' => ['cs_type_edit.php', ['csTicketTypeID' => $field['csTicketTypeID'] ?? '']],
                 'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
         case 'rule':
+            $action = 'Manage Automation';
             $gateway = $container->get($ns.'RuleGateway');
-            return ['allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_rule_manage.php', []],
+            return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_rule_manage.php', []],
                 'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
         case 'space':
-            return ['allowed' => $isAdmin && $spaces->exists($id), 'back' => ['cs_space_manage.php', []],
+            $action = 'Manage Spaces';
+            return ['action' => $action, 'allowed' => $isAdmin && $spaces->exists($id), 'back' => ['cs_space_manage.php', []],
                 'delete' => function () use ($spaces, $id) { return $spaces->deleteSpace($id); }];
         case 'board':
+            $action = 'Manage Spaces';
             $gateway = $container->get($ns.'BoardGateway');
             $board = $gateway->getByID($id);
             $spaceID = $board['csSpaceID'] ?? 0;
-            return ['allowed' => !empty($board) && ($isAdmin || $spaces->hasPermission($person, $spaceID, 'manage_boards')),
+            return ['action' => $action, 'allowed' => !empty($board) && ($isAdmin || $spaces->hasPermission($person, $spaceID, 'manage_boards')),
                 'back' => ['cs_space_edit.php', ['csSpaceID' => $spaceID]],
                 'delete' => function () use ($gateway, $id) { return $gateway->deleteBoard($id); }];
         case 'member':
+            $action = 'Manage Spaces';
             $member = $spaces->getMember($id);
             $spaceID = $member['csSpaceID'] ?? 0;
-            return ['allowed' => !empty($member) && ($isAdmin || $spaces->hasPermission($person, $spaceID, 'manage_members')),
+            return ['action' => $action, 'allowed' => !empty($member) && ($isAdmin || $spaces->hasPermission($person, $spaceID, 'manage_members')),
                 'back' => ['cs_space_edit.php', ['csSpaceID' => $spaceID]],
                 'delete' => function () use ($spaces, $id) { return $spaces->removeMember($id); }];
     }

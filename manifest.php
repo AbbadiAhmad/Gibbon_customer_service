@@ -8,10 +8,10 @@ Copyright © 2010, Gibbon Foundation
 // Basic variables
 $name = 'CustomerService';      // Module name = folder name = namespace Gibbon\Module\CustomerService
 $description = 'Service desk for customer requests: forms, tickets, teams, spaces and boards';
-$entryURL = 'cs_dashboard.php';
+$entryURL = 'cs_portal.php';
 $type = 'Additional';
 $category = 'Other';
-$version = '0.3.0';
+$version = '0.4.0';
 $author = 'Ahmad';
 $url = '';
 
@@ -45,6 +45,10 @@ $moduleTables[] = "
         `description` text NULL,
         `csTeamID` int(6) unsigned NULL COMMENT 'Default team new tickets of this type are routed to',
         `workflow` text NULL COMMENT 'JSON: {transitions: {from: [to, ...]}, commentRequired: [status, ...]}',
+        `groupName` varchar(60) NULL COMMENT 'Heading the type is listed under on the customer portal',
+        `icon` varchar(16) NULL COMMENT 'Emoji shown on the portal card',
+        `audience` varchar(100) NULL COMMENT 'Comma separated Gibbon role categories allowed to raise it (Staff, Student, Parent, Other). Empty = everybody',
+        `formConfig` text NULL COMMENT 'JSON: settings of the basic request form fields (show, required, label, help, order)',
         `active` enum('Y','N') NOT NULL DEFAULT 'Y',
         PRIMARY KEY (`csTicketTypeID`),
         UNIQUE KEY `name` (`name`)
@@ -59,6 +63,7 @@ $moduleTables[] = "
         `fieldType` enum('varchar','text','number','date','select','checkboxes','radio','yesno') NOT NULL DEFAULT 'varchar',
         `options` text NULL COMMENT 'Max length for varchar, comma separated list for select/checkboxes/radio',
         `required` enum('N','Y') NOT NULL DEFAULT 'N',
+        `showOnForm` enum('Y','N') NOT NULL DEFAULT 'Y' COMMENT 'N = only the agents fill it in, the portal form does not show it',
         `description` varchar(255) NULL,
         `sequenceNumber` int(4) NOT NULL DEFAULT 0,
         PRIMARY KEY (`csFieldID`),
@@ -315,14 +320,21 @@ $csAdmin = [
 ];
 
 $actionRows[] = array_merge($csAll, [
-    'name' => 'My Dashboard', 'precedence' => '0', 'category' => 'Requests',
+    'name' => 'Customer Portal', 'precedence' => '0', 'category' => 'Requests',
+    'description' => 'Choose a request type and fill in its form',
+    'URLList' => 'cs_portal.php', 'entryURL' => 'cs_portal.php',
+    'entrySidebar' => 'Y', 'menuShow' => 'Y',
+]);
+
+$actionRows[] = array_merge($csAll, [
+    'name' => 'My Dashboard', 'precedence' => '1', 'category' => 'Requests',
     'description' => 'Overview of my requests and the tickets waiting on my boards',
     'URLList' => 'cs_dashboard.php', 'entryURL' => 'cs_dashboard.php',
     'entrySidebar' => 'Y', 'menuShow' => 'Y',
 ]);
 
 $actionRows[] = array_merge($csAll, [
-    'name' => 'Raise a Request', 'precedence' => '1', 'category' => 'Requests',
+    'name' => 'Raise a Request', 'precedence' => '2', 'category' => 'Requests',
     'description' => 'Raise a new request using the form of a ticket type',
     'URLList' => 'cs_request_new.php, cs_request_newProcess.php', 'entryURL' => 'cs_request_new.php',
     'entrySidebar' => 'Y', 'menuShow' => 'Y',
@@ -349,7 +361,8 @@ $actionRows[] = array_merge($csAll, [
     'entrySidebar' => 'Y', 'menuShow' => 'Y',
 ]);
 
-$actionRows[] = array_merge($csAll, [
+// Boards are a working tool of the staff: not offered to students / parents (membership of a space is still required).
+$actionRows[] = array_merge($csStaff, [
     'name' => 'Boards', 'precedence' => '3', 'category' => 'Service Desk',
     'description' => 'Work on tickets on the boards of the spaces you are a member of',
     'URLList' => 'cs_board_view.php', 'entryURL' => 'cs_board_view.php',
@@ -366,7 +379,7 @@ $actionRows[] = array_merge($csAdmin, [
 $actionRows[] = array_merge($csAdmin, [
     'name' => 'Manage Ticket Types', 'precedence' => '11', 'category' => 'Configuration',
     'description' => 'Define ticket types and the form fields of each type',
-    'URLList' => 'cs_type_manage.php, cs_type_edit.php, cs_type_process.php, cs_field_edit.php, cs_field_process.php, cs_delete.php, cs_delete_process.php',
+    'URLList' => 'cs_type_manage.php, cs_type_edit.php, cs_type_process.php, cs_field_edit.php, cs_field_process.php, cs_form_edit.php, cs_form_process.php, cs_delete.php, cs_delete_process.php',
     'entryURL' => 'cs_type_manage.php', 'entrySidebar' => 'Y', 'menuShow' => 'Y',
 ]);
 
