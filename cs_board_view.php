@@ -68,8 +68,10 @@ $blockedIDs = $container->get(LinkGateway::class)->selectBlockedIDs($ticketIDs);
 
 // Group tickets by column; tickets whose status matches no column go to an extra lane so none disappear.
 $lanes = [];
+$laneCategory = [];
 foreach ($columns as $column) {
     $lanes[$column['name']] = [];
+    $laneCategory[$column['name']] = $column['category'];
 }
 $unmapped = [];
 foreach ($tickets as $ticket) {
@@ -87,7 +89,10 @@ $columnNames = array_column($columns, 'name');
 
 echo '<div class="cs-board">';
 foreach ($lanes as $laneName => $laneTickets) {
-    echo '<div class="cs-lane"><h3>'.htmlspecialchars($laneName).' <span class="cs-count">'.count($laneTickets).'</span></h3>';
+    $category = $laneCategory[$laneName] ?? '';
+    echo '<div class="cs-lane'.($category ? ' cs-cat-'.strtolower(str_replace(' ', '', $category)) : '').'"><h3>'.htmlspecialchars($laneName)
+        .' <span class="cs-count">'.count($laneTickets).'</span>'
+        .($category ? ' <span class="cs-category">'.htmlspecialchars(__($category)).'</span>' : '').'</h3>';
 
     foreach ($laneTickets as $t) {
         echo '<div class="cs-card">';

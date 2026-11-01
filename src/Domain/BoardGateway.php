@@ -46,22 +46,31 @@ class BoardGateway extends QueryableGateway
         return $this->db()->select($sql)->fetchAll();
     }
 
+    /** Columns in order, each with the category of its status (from the status registry). */
     public function selectColumns($csBoardID): array
     {
-        return $this->db()->select("SELECT * FROM gibbonCsBoardColumn WHERE csBoardID=:id ORDER BY sequenceNumber, csBoardColumnID", ['id' => $csBoardID])->fetchAll();
+        $sql = "SELECT gibbonCsBoardColumn.*, COALESCE(gibbonCsStatus.category, 'In Progress') AS category
+                FROM gibbonCsBoardColumn LEFT JOIN gibbonCsStatus ON (gibbonCsStatus.name=gibbonCsBoardColumn.name)
+                WHERE gibbonCsBoardColumn.csBoardID=:id ORDER BY gibbonCsBoardColumn.sequenceNumber, gibbonCsBoardColumn.csBoardColumnID";
+        return $this->db()->select($sql, ['id' => $csBoardID])->fetchAll();
     }
 
-    /** Replace the columns with the given ordered list of names (duplicates and blanks dropped). */
-    public function replaceColumns($csBoardID, array $names): void
+    /**
+     * Replace the columns. Each is ['name' => status name, 'category' => To Do|In Progress|Done].
+     * A status that does not exist yet is created in the registry; for an existing status the category chosen
+     * here is applied everywhere (a status has one category on all boards). Duplicates and blanks are dropped.
+     */
+    public function replaceColumns($csBoardID, array $columns, StatusGateway $statuses): void
     {
         $seen = [];
         $this->db()->delete("DELETE FROM gibbonCsBoardColumn WHERE csBoardID=:id", ['id' => $csBoardID]);
-        foreach ($names as $name) {
-            $name = mb_substr(trim($name), 0, 60);
+        foreach ($columns as $column) {
+            $name = mb_substr(trim((string)($column['name'] ?? '')), 0, 60);
             if ($name === '' || isset($seen[mb_strtolower($name)])) {
                 continue;
             }
             $seen[mb_strtolower($name)] = true;
+            $statuses->upsert($name, (string)($column['category'] ?? ''));
             $this->db()->insert(
                 "INSERT INTO gibbonCsBoardColumn (csBoardID, name, sequenceNumber) VALUES (:id, :name, :seq)",
                 ['id' => $csBoardID, 'name' => $name, 'seq' => count($seen)]

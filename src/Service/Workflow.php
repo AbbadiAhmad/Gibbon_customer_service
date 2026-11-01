@@ -14,15 +14,60 @@ namespace Gibbon\Module\CustomerService\Service;
  *
  * - A status that has an entry may only move to the listed statuses.
  * - A status without an entry may move anywhere (so an empty workflow = no restrictions).
- * - Moving to a "done" status (Resolved / Closed) always needs a resolution note;
+ * - Moving to a status of the Done category (Resolved, Closed, Declined...) always needs a resolution note;
  *   commentRequired adds other statuses that need a comment.
  */
 class Workflow
 {
-    /** Statuses that mean "work is finished". */
-    const DONE = ['Resolved', 'Closed'];
+    /** Every status belongs to one of these categories (set per status, shared by all boards). */
+    const CATEGORIES = ['To Do', 'In Progress', 'Done'];
+    /** Category of a status that nobody has classified yet. */
+    const DEFAULT_CATEGORY = 'In Progress';
+    /** SQL: the names of all statuses that mean "work is finished". Use as `status NOT IN (...)`. */
+    const DONE_SQL = "(SELECT name FROM gibbonCsStatus WHERE category='Done')";
+    /** Statuses assumed when the registry cannot be read (tests, before the upgrade ran). */
+    const FALLBACK = ['New' => 'To Do', 'In Progress' => 'In Progress', 'Waiting' => 'In Progress', 'Resolved' => 'Done', 'Closed' => 'Done'];
+
     /** Status a reopened ticket goes back to. */
     const REOPEN_STATUS = 'New';
+
+    private static $statusMap;
+
+    public static function categoryOptions(): array
+    {
+        return array_combine(self::CATEGORIES, array_map('__', self::CATEGORIES));
+    }
+
+    /** Give the status => category map (tests, or after the registry changed: null reloads it). */
+    public static function setStatusMap(?array $map): void
+    {
+        self::$statusMap = $map;
+    }
+
+    /** status name => category, read once per request from the gibbonCsStatus table. */
+    public static function statusMap(): array
+    {
+        if (self::$statusMap === null) {
+            self::$statusMap = self::FALLBACK;
+            try {
+                $container = $GLOBALS['container'] ?? null;
+                if ($container) {
+                    $map = $container->get(\Gibbon\Module\CustomerService\Domain\StatusGateway::class)->selectMap();
+                    if (!empty($map)) {
+                        self::$statusMap = $map;
+                    }
+                }
+            } catch (\Throwable $e) {
+                error_log('CustomerService: status registry not readable: '.$e->getMessage());
+            }
+        }
+        return self::$statusMap;
+    }
+
+    public static function category(string $status): string
+    {
+        return self::statusMap()[$status] ?? self::DEFAULT_CATEGORY;
+    }
 
     public static function decode($json): array
     {
@@ -89,9 +134,10 @@ class Workflow
         return $changes;
     }
 
+    /** Is the status in the Done category? */
     public static function isDone(string $status): bool
     {
-        return in_array($status, self::DONE, true);
+        return self::category($status) === 'Done';
     }
 
     public static function isAllowed($json, string $from, string $to): bool

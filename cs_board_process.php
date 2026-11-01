@@ -8,7 +8,9 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Data\Validator;
 use Gibbon\Module\CustomerService\Domain\BoardGateway;
 use Gibbon\Module\CustomerService\Domain\SpaceGateway;
+use Gibbon\Module\CustomerService\Domain\StatusGateway;
 use Gibbon\Module\CustomerService\Service\FilterForm;
+use Gibbon\Module\CustomerService\Service\Workflow;
 
 $_POST['address'] = '/modules/CustomerService/cs_space_manage.php';
 
@@ -48,8 +50,15 @@ $editParams = empty($csBoardID) ? ['csSpaceID' => $csSpaceID] : ['csBoardID' => 
 
 $conditions = FilterForm::collect($_POST);
 
-$columns = preg_split('/\R/', (string)($_POST['columns'] ?? ''));
-$columns = array_values(array_filter(array_map('trim', $columns), 'strlen'));
+// Columns: status name + category, in the order of the rows; blank rows are skipped.
+$columns = [];
+for ($i = 0; $i < 12; $i++) {
+    $name = trim($_POST['colName'.$i] ?? '');
+    if ($name !== '') {
+        $category = $_POST['colCategory'.$i] ?? '';
+        $columns[] = ['name' => $name, 'category' => in_array($category, Workflow::CATEGORIES, true) ? $category : Workflow::DEFAULT_CATEGORY];
+    }
+}
 
 $data = [
     'csSpaceID'   => $csSpaceID,
@@ -74,5 +83,5 @@ if (!$ok) {
     csRedirect($session, 'cs_board_edit.php', $editParams, 'error2');
 }
 
-$boards->replaceColumns($csBoardID, $columns);
+$boards->replaceColumns($csBoardID, $columns, $container->get(StatusGateway::class));
 csRedirect($session, 'cs_space_edit.php', ['csSpaceID' => $csSpaceID], 'success0');

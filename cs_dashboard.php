@@ -64,8 +64,7 @@ if (!empty($boards)) {
 // My work: open tickets assigned to me, most urgent due date first.
 $mine = $container->get(TicketGateway::class)->selectByFilter([
     ['field' => 'assignee', 'op' => 'equals', 'value' => $session->get('username')],
-    ['field' => 'status', 'op' => 'not_equals', 'value' => 'Resolved'],
-    ['field' => 'status', 'op' => 'not_equals', 'value' => 'Closed'],
+    ['field' => 'category', 'op' => 'not_equals', 'value' => 'Done'],
 ], null, 100);
 if (!empty($mine)) {
     usort($mine, function ($a, $b) {

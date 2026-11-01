@@ -1,3 +1,14 @@
+v0.6.0
+------
+- Default data for a school: space "School Office", teams (Front Office, Admissions, Staff Services), request types Absence Report,
+  School Registration, School Leaving, General Question (families) and Staff Request, Material Request (staff) with forms,
+  workflows and checklist rules, six boards (one generic board with every status)
+- Status categories To Do / In Progress / Done: every status belongs to one category, boards add their own statuses; "finished"
+  now means category Done (reminders, blockers, subtasks, open filters), no longer the names Resolved / Closed
+- Ticket page: Comments / History / All activity tabs; history lines show old -> new values
+- Board filter field "Status category"
+- tests/: database tests (install, upgrade chain first release -> latest vs fresh install, queries and automation against real MariaDB)
+
 v0.5.0
 ------
 - Database tables renamed to the Gibbon convention (csTeam -> gibbonCsTeam, ...). The upgrade renames them in place and keeps all data.

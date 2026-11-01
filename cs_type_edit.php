@@ -58,7 +58,7 @@ $row = $form->addRow();
     $row->addTextField('groupName')->maxLength(60)->setValue($values['groupName']);
 
 $row = $form->addRow();
-    $row->addLabel('icon', __('Icon'))->description(__('One emoji shown on the portal card, e.g. a key or a laptop.'));
+    $row->addLabel('icon', __('Icon'))->description(__('One symbol shown on the portal card, for example a check mark or an envelope. Use a plain symbol: emoji with 4 bytes do not save on databases with the utf8 character set.'));
     $row->addTextField('icon')->maxLength(8)->setValue($values['icon']);
 
 $row = $form->addRow();

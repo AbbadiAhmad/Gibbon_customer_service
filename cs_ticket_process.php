@@ -170,7 +170,8 @@ switch ($action) {
             $people = csAssignableUsers($container, $session, $ticket, $isAdmin);
             if (($assignee === 0 || isset($people[$assignee])) && $assignee !== (int)$ticket['gibbonPersonIDAssignee']) {
                 $changes['gibbonPersonIDAssignee'] = $assignee ?: null;
-                $log[] = $assignee ? sprintf(__('Assigned to %1$s'), $people[$assignee]) : __('Unassigned');
+                $oldAssignee = csPersonName($ticket['assigneePreferredName'], $ticket['assigneeSurname']) ?: __('Unassigned');
+                $log[] = sprintf(__('Assignee changed from %1$s to %2$s'), $oldAssignee, $assignee ? $people[$assignee] : __('Unassigned'));
             }
         }
         if ($can(Permissions::EDIT_TICKET)) {
@@ -183,7 +184,7 @@ switch ($action) {
             $teams = $container->get(TeamGateway::class)->selectOptions();
             if (($team === 0 || isset($teams[$team])) && $team !== (int)$ticket['csTeamID']) {
                 $changes['csTeamID'] = $team ?: null;
-                $log[] = $team ? sprintf(__('Team changed to %1$s'), $teams[$team]) : __('Team removed');
+                $log[] = sprintf(__('Team changed from %1$s to %2$s'), $ticket['teamName'] ?: __('none'), $team ? $teams[$team] : __('none'));
             }
         }
 
@@ -198,7 +199,7 @@ switch ($action) {
                 }
                 if ($date !== ($ticket[$column] ?: null)) {
                     $changes[$column] = $date;
-                    $log[] = $date ? sprintf(__('%1$s set to %2$s'), $label, Format::date($date)) : sprintf(__('%1$s removed'), $label);
+                    $log[] = sprintf(__('%1$s changed from %2$s to %3$s'), $label, Format::date($ticket[$column]) ?: __('none'), $date ? Format::date($date) : __('none'));
                 }
             }
             $start = $changes['dateStart'] ?? $ticket['dateStart'];
@@ -232,13 +233,17 @@ switch ($action) {
         }
         $changed = [];
         foreach ($fields as $field) {
-            if (($ticket['customData'][$field['fieldKey']] ?? '') != $values[$field['fieldKey']]) {
-                $changed[] = $field['label'];
+            $old = $ticket['customData'][$field['fieldKey']] ?? '';
+            if ($old != $values[$field['fieldKey']]) {
+                $changed[] = sprintf(__('%1$s changed from %2$s to %3$s'), $field['label'],
+                    CustomFields::format($field, $old) ?: __('empty'), CustomFields::format($field, $values[$field['fieldKey']]) ?: __('empty'));
             }
         }
         if (!empty($changed)) {
             $tickets->updateTicket($csTicketID, ['customData' => array_merge($ticket['customData'], $values)]);
-            $activity->log($csTicketID, $person, sprintf(__('Fields updated: %1$s'), implode(', ', $changed)), 'Event', 'Internal');
+            foreach ($changed as $line) {
+                $activity->log($csTicketID, $person, $line, 'Event', 'Internal');
+            }
         }
         $back('success0');
         break;
@@ -259,7 +264,7 @@ switch ($action) {
         break;
 
     case 'confirm':
-        if (!$isReporter || $ticket['status'] !== 'Resolved') {
+        if (!$isReporter || !Workflow::isDone($ticket['status']) || $ticket['status'] === 'Closed') {
             $back('error0');
         }
         $changeStatus('Closed', '', false);

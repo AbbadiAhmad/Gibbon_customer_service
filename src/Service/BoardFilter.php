@@ -26,7 +26,7 @@ class BoardFilter
 {
     const OPERATORS = ['equals', 'not_equals', 'contains', 'not_contains', 'empty', 'not_empty', 'before', 'after'];
 
-    const DONE_SQL = "('Resolved','Closed')";
+    const DONE_SQL = Workflow::DONE_SQL;
 
     /** Core ticket fields => SQL expression (see TicketGateway for the joins). */
     public static function coreFields(): array
@@ -52,6 +52,7 @@ class BoardFilter
             'blocked' => __('Blocked by an open ticket (Y/N)'),
             'subtask' => __('Is a subtask (Y/N)'),
             'tag'     => __('Tag'),
+            'category' => __('Status category (To Do / In Progress / Done)'),
         ];
     }
 
@@ -190,6 +191,15 @@ class BoardFilter
 
             case 'subtask':
                 return self::flag("gibbonCsTicket.csTicketIDParent IS NOT NULL", $op, $value);
+
+            case 'category':
+                // A status nobody classified counts as In Progress.
+                $expr = "COALESCE((SELECT category FROM gibbonCsStatus WHERE gibbonCsStatus.name=gibbonCsTicket.status), '".Workflow::DEFAULT_CATEGORY."')";
+                if (!in_array($op, ['equals', 'not_equals'], true) || !in_array($value, Workflow::CATEGORIES, true)) {
+                    return null;
+                }
+                $params[$param] = $value;
+                return $op == 'equals' ? "{$expr} = :{$param}" : "{$expr} <> :{$param}";
 
             case 'tag':
                 $exists = "EXISTS (SELECT 1 FROM gibbonCsTicketTag AS tt JOIN gibbonCsTag AS tg ON (tg.csTagID=tt.csTagID) WHERE tt.csTicketID=gibbonCsTicket.csTicketID";

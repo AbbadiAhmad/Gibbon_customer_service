@@ -6,12 +6,13 @@ the project skills in [`.claude/skills/`](../.claude/skills) (summarised in [`CL
 
 ## Status - read this first
 
-* Everything was written against the Gibbon v31 core source and the Sepa module as reference, and checked with `php -l`
-  plus stand-alone scripts for the pure logic (`BoardFilter`, `Workflow`, `FormConfig`, `Attachments`, action discovery,
-  rule form reading).
-* **It has never been run inside a Gibbon instance.** SQL was never executed against a database, and no page has been
-  rendered. Expect small mismatches with Gibbon's form/table APIs on first install, and test each role.
-* Setting up a local Gibbon needs `composer install` of Gibbon core, which was blocked in the authoring environment.
+* Written against the Gibbon v31 core source and the Sepa module as reference.
+* **Verified against a real MariaDB (`tests/`)**: the install (`manifest.php` tables + default data), the upgrade chain from the first
+  release to the current one (schema identical to a fresh install), and the module's own gateways, filters, form configuration, workflow and
+  automation engine on the default data (64 checks). Run them with a throw-away database: see `tests/bootstrap.php`.
+* **Not verified: anything that needs Gibbon itself.** No page or process script has been rendered or submitted (forms, tables, CSRF,
+  permissions, notifications, uploads, the module installer). Gibbon core could not be installed in the authoring environment
+  (`composer install` was blocked), so expect small mismatches with Gibbon's form/table APIs on first install, and test each role.
 
 ## Version history
 
@@ -22,6 +23,7 @@ the project skills in [`.claude/skills/`](../.claude/skills) (summarised in [`CL
 | 0.3.0 | Automation rules (modular actions), start/due dates + reminders, subtasks, checklists, ticket links, tags, watchers |
 | 0.4.0 | Customer portal, request-form builder, request-type audience, agent field editing, access hardening |
 | 0.5.0 | Tables renamed `csX` -> `gibbonCsX` (Gibbon convention) |
+| 0.6.0 | Status categories (To Do / In Progress / Done) + status registry, default school data (space, teams, 6 request types, boards, rules), ticket tabs (Comments / History / All), DB tests |
 
 ## Domain model
 
@@ -38,6 +40,7 @@ Ticket (type, status, priority, reporter, assignee, team, customData JSON, dates
   ---< Checklist ---< ChecklistItem          ---< TicketTag >--- Tag
   ---< TicketWatcher                         ---< TicketLink (FROM blocks|duplicates|relates TO)
 
+Status (name, category To Do | In Progress | Done)   - registry; board columns and tickets refer to it by name
 AutomationRule (trigger, conditions JSON, actions JSON, optional ticket type)
 SavedFilter (per user ticket search)
 ```
@@ -86,6 +89,7 @@ requirement, open-subtask and open-blocker guards, `Workflow::statusChanges()` b
 | Dashboard hook / cron | `hook_dashboard.php`, `cli_reminders.php`, `cli_autoClose.php` |
 | Data access | `src/Domain/*Gateway.php` (one per table group) |
 | Logic without UI | `src/Service`: `BoardFilter` (conditions -> SQL), `Workflow`, `FormConfig`, `CustomFields`, `Permissions`, `Notifier`, `Attachments`, `FilterForm` |
+| Defaults / tests | `src/Install/DefaultData.php` (the only description of the installed defaults), `tests/` (database tests) |
 | Automation | `src/Automation`: `AutomationEngine`, `AutomationContext`, `ActionRegistry`, `BaseAction`, `ActionForm`, `Actions/*` |
 
 ## Key decisions
@@ -94,6 +98,11 @@ requirement, open-subtask and open-blocker guards, `Workflow::statusChanges()` b
   and (partly) search. A condition on a custom field a ticket's type lacks evaluates as "empty" and never errors.
 * **Custom fields are stored as JSON** on the ticket (`customData`, keyed by `fieldKey`) and filtered with `JSON_EXTRACT`; the same
   key on several types is the same field for filters.
+* **Status categories**: a status is just a name on the ticket; its category (To Do / In Progress / Done) comes from the registry
+  `gibbonCsStatus`, shared by all boards. "Finished" is `category = Done` everywhere (SQL: `Workflow::DONE_SQL`, PHP: `Workflow::isDone()`),
+  never a hard-coded list of names. Boards add statuses through their column editor.
+* **Default data** is generated from one PHP description (`DefaultData`) into INSERT statements by `manifest.php`; icons are 3-byte
+  symbols because Gibbon's DB connection is `utf8`. Upgrades never insert default data (existing installs keep their own).
 * **Workflow** is optional JSON per type (allowed moves, comment-required statuses); Resolved/Closed always need a resolution note.
 * **Automation actions are plug-ins**: one class per action in `src/Automation/Actions/`, discovered by scanning the folder; the
   rule editor form is generated from each action's `params()`. Depth and run counters stop loops.

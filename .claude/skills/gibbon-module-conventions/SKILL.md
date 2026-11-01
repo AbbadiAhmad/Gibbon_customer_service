@@ -64,6 +64,16 @@ require_once __DIR__ . '/moduleFunctions.php';
 * Notifications: `$container->get(NotificationSender::class)->addNotification($personID, $text, $moduleName, '/index.php?q=...')`, then `sendNotifications()`.
 * CLI/cron scripts: refuse unless `PHP_SAPI === 'cli'` *before* requiring `gibbon.php`.
 
+## Character set
+Gibbon connects to MySQL with `charset=utf8` (3 bytes per character): seed data and defaults must not contain 4-byte characters (emoji). Use BMP symbols.
+
+## Default data
+Installed defaults are described once, in `src/Install/DefaultData.php`, and turned into INSERTs by `manifest.php` (explicit ids so rows can reference each other).
+Names used across defaults (statuses, teams, types) must stay in sync with the boards/workflows that mention them. Upgrades do not insert defaults.
+
 ## Verifying
-Without a live Gibbon you can only: `php -l` every file, run the pure classes (`src/Service`, `src/Automation`) with stub `__()` and a fake container,
-and cross-check table names between `manifest.php` and the gateways. Say exactly that was done; never claim the page "works".
+1. `php -l` every file.
+2. **Database tests** (need a throw-away MariaDB/MySQL, see `tests/bootstrap.php`): `php tests/install.php` (manifest tables + defaults execute),
+   `php tests/upgrade.php` (first release + every CHANGEDB step == fresh install schema), `php tests/logic.php` (real gateways/filters/workflow/automation on the
+   default data, Gibbon base classes stubbed). Run them after any schema, query, default-data or CHANGEDB change and add checks for new behaviour.
+3. Pages and process scripts need a live Gibbon; without one, say so. Never claim a page "works" from 1 and 2 alone.

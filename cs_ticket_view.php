@@ -111,6 +111,85 @@ if ($isDone && !empty($ticket['resolution'])) {
     echo '<h3>'.__('Resolution').'</h3><p>'.nl2br(htmlspecialchars($ticket['resolution'])).'</p>';
 }
 
+// ---- Comments / History / All (tabs, like Jira) ---------------------------------------------------
+$activities = $container->get(ActivityGateway::class)->selectByTicket($ticket['csTicketID'], $canInternal);
+$comments = array_values(array_filter($activities, function ($a) { return $a['kind'] == 'Comment'; }));
+$events = array_values(array_filter($activities, function ($a) { return $a['kind'] == 'Event'; }));
+
+$renderComment = function (array $a) use ($renderAttachments, $attachments) {
+    $who = htmlspecialchars(csPersonName($a['preferredName'], $a['surname']) ?: __('System'));
+    $internal = $a['visibility'] == 'Internal';
+    $html = '<div class="cs-comment'.($internal ? ' cs-internal' : '').'">';
+    $html .= '<div class="cs-comment-head"><b>'.$who.'</b> &middot; '.Format::dateTimeReadable($a['timestamp']).($internal ? ' &middot; <b>'.__('Internal note').'</b>' : '').'</div>';
+    $html .= nl2br(htmlspecialchars($a['body']));
+    if (!empty($attachments[(int)$a['csTicketActivityID']])) {
+        $html .= $renderAttachments($attachments[(int)$a['csTicketActivityID']]);
+    }
+    return $html.'</div>';
+};
+$renderEvent = function (array $a) {
+    $who = htmlspecialchars(csPersonName($a['preferredName'], $a['surname']) ?: __('System'));
+    return '<div class="cs-event">&bull; '.htmlspecialchars($a['body']).($a['visibility'] == 'Internal' ? ' <span class="cs-internal-tag">'.__('internal').'</span>' : '')
+        .' <i>('.$who.', '.Format::dateTimeReadable($a['timestamp']).')</i></div>';
+};
+
+// Comments: oldest first, with the form to add one.
+$commentsHtml = empty($comments) ? '<p class="text-gray-600">'.__('No comments yet.').'</p>' : implode('', array_map($renderComment, $comments));
+
+if ($isReporter || $can[Permissions::COMMENT]) {
+    $fileUploader = new Gibbon\FileUploader($pdo, $session);
+
+    $form = Form::create('csComment', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form->addHiddenValue('address', $session->get('address'));
+    $form->addHiddenValue('action', 'comment');
+    $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
+    $row = $form->addRow();
+        $row->addLabel('body', __('Add a comment'));
+        $row->addTextArea('body')->setRows(4)->required();
+
+    if ($can[Permissions::COMMENT]) {
+        $row = $form->addRow();
+            $row->addLabel('visibility', __('Visibility'))->description(__('Internal notes are only visible to the people working on the ticket, never to the requester.'));
+            $row->addSelect('visibility')->fromArray(['Public' => __('Reply to the requester'), 'Internal' => __('Internal note')])->selected('Public');
+    }
+
+    $row = $form->addRow();
+        $row->addLabel('attachments', __('Attachments'));
+        $row->addFileUpload(Attachments::FIELD)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
+
+    $row = $form->addRow();
+        $row->addFooter();
+        $row->addSubmit(__('Comment'));
+    $commentsHtml .= $form->getOutput();
+}
+
+// History: every change of the ticket, newest first (status, assignee, priority, team, dates, fields, tags, links...).
+if (empty($events)) {
+    $historyHtml = '<p class="text-gray-600">'.__('No changes yet.').'</p>';
+} else {
+    $historyHtml = '<table class="cs-history"><thead><tr><th>'.__('When').'</th><th>'.__('Who').'</th><th>'.__('Change').'</th></tr></thead><tbody>';
+    foreach (array_reverse($events) as $a) {
+        $historyHtml .= '<tr><td>'.Format::dateTimeReadable($a['timestamp']).'</td>'
+            .'<td>'.htmlspecialchars(csPersonName($a['preferredName'], $a['surname']) ?: __('System')).'</td>'
+            .'<td>'.htmlspecialchars($a['body']).($a['visibility'] == 'Internal' ? ' <span class="cs-internal-tag">'.__('internal').'</span>' : '').'</td></tr>';
+    }
+    $historyHtml .= '</tbody></table>';
+}
+
+// All: comments and changes together, oldest first.
+$allHtml = empty($activities) ? '<p class="text-gray-600">'.__('No activity yet.').'</p>' : implode('', array_map(function ($a) use ($renderComment, $renderEvent) {
+    return $a['kind'] == 'Comment' ? $renderComment($a) : $renderEvent($a);
+}, $activities));
+
+echo '<div class="cs-tabs">'
+    .'<input type="radio" name="csTab" id="csTabComments" checked><label for="csTabComments">'.__('Comments').' ('.count($comments).')</label>'
+    .'<input type="radio" name="csTab" id="csTabHistory"><label for="csTabHistory">'.__('History').' ('.count($events).')</label>'
+    .'<input type="radio" name="csTab" id="csTabAll"><label for="csTabAll">'.__('All activity').' ('.count($activities).')</label>'
+    .'<div class="cs-panel" id="csPanelComments">'.$commentsHtml.'</div>'
+    .'<div class="cs-panel" id="csPanelHistory">'.$historyHtml.'</div>'
+    .'<div class="cs-panel" id="csPanelAll">'.$allHtml.'</div>'
+    .'</div>';
+
 // ---- Requester: confirm or reopen a finished ticket ----------------------------------
 if ($isReporter && $isDone) {
     $form = Form::create('csReopen', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
@@ -126,7 +205,7 @@ if ($isReporter && $isDone) {
         $col->addSubmit(__('Reopen'))->setID('reopenSubmit');
     echo $form->getOutput();
 
-    if ($ticket['status'] == 'Resolved') {
+    if ($ticket['status'] != 'Closed') {
         $form = Form::create('csConfirm', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'confirm');
@@ -178,7 +257,7 @@ if ($can[Permissions::EDIT_TICKET] || $can[Permissions::TRANSITION] || $can[Perm
     if ($can[Permissions::TRANSITION]) {
         $row = $form->addRow();
             $row->addLabel('comment', __('Comment / Resolution Note'))
-                ->description(sprintf(__('Required when moving to %1$s (the resolution note, visible to the requester) and to statuses the workflow marks as needing a comment.'), implode(' / ', Workflow::DONE)));
+                ->description(sprintf(__('Required when moving to %1$s (the resolution note, visible to the requester) and to statuses the workflow marks as needing a comment.'), __('Done')));
             $row->addTextArea('comment')->setRows(3);
     }
     $row = $form->addRow();
@@ -417,56 +496,6 @@ if ($can[Permissions::EDIT_TICKET] && !empty($typeFields)) {
     $row = $form->addRow();
         $row->addFooter();
         $row->addSubmit(__('Save Fields'));
-    echo $form->getOutput();
-}
-
-// ---- Activity --------------------------------------------------------------
-echo '<h3>'.__('Activity').'</h3>';
-$activities = $container->get(ActivityGateway::class)->selectByTicket($ticket['csTicketID'], $canInternal);
-if (empty($activities)) {
-    echo '<p class="text-gray-600">'.__('No activity yet.').'</p>';
-}
-foreach ($activities as $a) {
-    $who = htmlspecialchars(csPersonName($a['preferredName'], $a['surname']) ?: __('System'));
-    $when = Format::dateTimeReadable($a['timestamp']);
-    if ($a['kind'] == 'Event') {
-        echo '<div class="text-sm text-gray-600 py-1">&bull; '.htmlspecialchars($a['body']).' <i>('.$who.', '.$when.')</i></div>';
-    } else {
-        $internal = $a['visibility'] == 'Internal';
-        echo '<div class="border rounded p-3 my-2'.($internal ? ' bg-yellow-50 border-yellow-400' : '').'">';
-        echo '<div class="text-sm text-gray-600 mb-1"><b>'.$who.'</b> &middot; '.$when.($internal ? ' &middot; <b>'.__('Internal note').'</b>' : '').'</div>';
-        echo nl2br(htmlspecialchars($a['body']));
-        if (!empty($attachments[(int)$a['csTicketActivityID']])) {
-            echo $renderAttachments($attachments[(int)$a['csTicketActivityID']]);
-        }
-        echo '</div>';
-    }
-}
-
-if ($isReporter || $can[Permissions::COMMENT]) {
-    $fileUploader = new Gibbon\FileUploader($pdo, $session);
-
-    $form = Form::create('csComment', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
-    $form->addHiddenValue('address', $session->get('address'));
-    $form->addHiddenValue('action', 'comment');
-    $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
-    $row = $form->addRow();
-        $row->addLabel('body', __('Add a comment'));
-        $row->addTextArea('body')->setRows(4)->required();
-
-    if ($can[Permissions::COMMENT]) {
-        $row = $form->addRow();
-            $row->addLabel('visibility', __('Visibility'))->description(__('Internal notes are only visible to the people working on the ticket, never to the requester.'));
-            $row->addSelect('visibility')->fromArray(['Public' => __('Reply to the requester'), 'Internal' => __('Internal note')])->selected('Public');
-    }
-
-    $row = $form->addRow();
-        $row->addLabel('attachments', __('Attachments'));
-        $row->addFileUpload(Attachments::FIELD)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
-
-    $row = $form->addRow();
-        $row->addFooter();
-        $row->addSubmit(__('Comment'));
     echo $form->getOutput();
 }
 

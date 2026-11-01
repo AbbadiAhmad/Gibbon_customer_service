@@ -110,6 +110,44 @@ who can view the boards that show the ticket, never to the requester, and never 
 filters, over the tickets you can see (your own + the boards of your spaces). Quick views (my open requests, assigned to
 me, unassigned, all open, resolved) and **saved filters** (per user) are on the same page.
 
+## What a fresh installation contains
+
+Everything below is created by the installer (`src/Install/DefaultData.php`) and can be changed or deleted in the module:
+
+* **Space** *School Office* with **teams** *Front Office* (L1: triage, questions, absences), *Admissions* (registrations, leaving)
+  and *Staff Services* (staff requests, materials). Add yourself and your colleagues in *Manage Teams* / *Manage Spaces*
+  (Administrators see every space and board without being a member).
+* **Request types** (portal groups *Families* and *Staff*, each with its own form and workflow):
+
+  | Type | For | Form (besides summary / description) | Workflow |
+  |---|---|---|---|
+  | Absence Report | parents, staff | child, class, absent from/until, reason, phone, doctor's note | New -> In Progress -> Resolved |
+  | School Registration | parents, staff | child, birth date, year, previous school, siblings, phone, desired start date, documents | New -> Documents Requested -> Interview Planned -> Resolved / Declined (Waiting in between) |
+  | School Leaving | parents, staff | child, class, reason, new school, documents needed, last day at school | New -> In Progress -> Resolved (Waiting in between) |
+  | General Question | everybody | topic, child | New -> In Progress -> Resolved (Waiting in between) |
+  | Staff Request | staff | kind of request, from / needed by | New -> In Progress / Awaiting Approval -> Resolved / Declined |
+  | Material Request | staff | item, quantity, room, budget code, needed by | New -> Awaiting Approval -> Ordered -> Resolved / Declined |
+
+  Agent-only fields (e.g. "entered in the attendance register", "documents received", "fees settled") are on the ticket, not on the portal form.
+  Registrations and leavings get a ready-made **checklist** (automation rules).
+* **Boards**: *All requests* (every status), *Absences*, *Registrations*, *Leaving*, *Questions*, *Staff Services*.
+* **Roles**: Space Admin, Agent, Viewer.
+
+Upgrading an existing installation adds the status registry but not these defaults (your data stays as it is).
+
+## Statuses and their categories
+
+Every status belongs to one of three base categories: **To Do**, **In Progress** or **Done**. A board shows one column per status; you can add
+your own statuses to a board (*Manage Spaces > board > Status Columns*) and give each a category. A status has the same category on every board
+(it is kept in one registry), so changing the category of an existing status changes it everywhere. "Finished" always means category **Done**:
+reminders stop, blockers and open subtasks are released, the requester may reopen it, and a resolution note is required to get there.
+
+## The ticket page
+
+Like Jira: details and description on top, then three tabs - **Comments** (with the form to add one, public reply or internal note, with files),
+**History** (every change with who and when: status, assignee, priority, team, dates, fields, tags, links, automation; old and new value) and
+**All activity** (both together). Internal comments and internal history lines are only shown to the people working on the ticket.
+
 ## Customer portal and request forms (like Jira Service Management)
 
 * **Customer Portal** is the first page of the module. It lists the request types as cards, grouped (IT, Facilities...), with a

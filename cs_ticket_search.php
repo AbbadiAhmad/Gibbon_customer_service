@@ -9,6 +9,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Module\CustomerService\Domain\SavedFilterGateway;
+use Gibbon\Module\CustomerService\Domain\StatusGateway;
 use Gibbon\Module\CustomerService\Domain\TicketGateway;
 use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
 
@@ -79,10 +80,9 @@ $row = $form->addRow();
     $row->addLabel('search', __('Search For'))->description(__('Title, description or reference (e.g. CS-12)'));
     $row->addTextField('search')->setValue($filters['search'] ?? '');
 
-$statuses = array_combine($tickets->selectStatuses(), $tickets->selectStatuses());
 $row = $form->addRow();
     $row->addLabel('status', __('Status'));
-    $row->addSelect('status')->fromArray($statuses ?: [])->selected($filters['status'] ?? '')->placeholder();
+    $row->addSelect('status')->fromArray($container->get(StatusGateway::class)->selectGrouped())->selected($filters['status'] ?? '')->placeholder();
 
 $row = $form->addRow();
     $row->addLabel('csTicketTypeID', __('Type'));

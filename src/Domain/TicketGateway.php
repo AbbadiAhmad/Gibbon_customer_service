@@ -41,7 +41,7 @@ class TicketGateway extends QueryableGateway
     {
         $sql = self::SELECT." WHERE gibbonCsTicket.gibbonPersonIDReporter=:person";
         if ($openOnly) {
-            $sql .= " AND gibbonCsTicket.status NOT IN ('Resolved','Closed')";
+            $sql .= " AND gibbonCsTicket.status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done')";
         }
         $sql .= " ORDER BY gibbonCsTicket.timestampCreated DESC LIMIT ".(int)$limit;
         return array_map([$this, 'decode'], $this->db()->select($sql, ['person' => $gibbonPersonID])->fetchAll());
@@ -122,10 +122,10 @@ class TicketGateway extends QueryableGateway
             $query->where('gibbonCsTicket.gibbonPersonIDReporter = :fMine')->bindValue('fMine', $gibbonPersonID);
         }
         if (($f['open'] ?? '') === 'Y') {
-            $query->where("gibbonCsTicket.status NOT IN ('Resolved','Closed')");
+            $query->where("gibbonCsTicket.status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done')");
         }
         if (($f['overdue'] ?? '') === 'Y') {
-            $query->where("(gibbonCsTicket.dateDue < CURDATE() AND gibbonCsTicket.status NOT IN ('Resolved','Closed'))");
+            $query->where("(gibbonCsTicket.dateDue < CURDATE() AND gibbonCsTicket.status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done'))");
         }
         if (!empty($f['tag'])) {
             $query->where('EXISTS (SELECT 1 FROM gibbonCsTicketTag AS ft JOIN gibbonCsTag AS fg ON (fg.csTagID=ft.csTagID) WHERE ft.csTicketID=gibbonCsTicket.csTicketID AND fg.name = :fTag)')
@@ -166,7 +166,7 @@ class TicketGateway extends QueryableGateway
         if (empty($csTicketIDs)) {
             return [];
         }
-        $sql = "SELECT csTicketIDParent, SUM(status IN ('Resolved','Closed')) AS doneCount, COUNT(*) AS total FROM gibbonCsTicket
+        $sql = "SELECT csTicketIDParent, SUM(status IN (SELECT name FROM gibbonCsStatus WHERE category='Done')) AS doneCount, COUNT(*) AS total FROM gibbonCsTicket
                 WHERE csTicketIDParent IN (".implode(',', $csTicketIDs).") GROUP BY csTicketIDParent";
         $out = [];
         foreach ($this->db()->select($sql)->fetchAll() as $row) {
@@ -177,14 +177,14 @@ class TicketGateway extends QueryableGateway
 
     public function countOpenSubtasks($csTicketID): int
     {
-        return (int)$this->db()->selectOne("SELECT COUNT(*) FROM gibbonCsTicket WHERE csTicketIDParent=:id AND status NOT IN ('Resolved','Closed')", ['id' => $csTicketID]);
+        return (int)$this->db()->selectOne("SELECT COUNT(*) FROM gibbonCsTicket WHERE csTicketIDParent=:id AND status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done')", ['id' => $csTicketID]);
     }
 
     /** Open tickets due within $days days (including today) that have not had their reminder yet. */
     public function selectDueSoon(int $days): array
     {
         $sql = self::SELECT." WHERE gibbonCsTicket.dateDue IS NOT NULL AND gibbonCsTicket.dateDue >= CURDATE() AND gibbonCsTicket.dateDue <= DATE_ADD(CURDATE(), INTERVAL ".(int)$days." DAY)
-                AND gibbonCsTicket.status NOT IN ('Resolved','Closed') AND gibbonCsTicket.dueReminderSent IS NULL";
+                AND gibbonCsTicket.status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done') AND gibbonCsTicket.dueReminderSent IS NULL";
         return array_map([$this, 'decode'], $this->db()->select($sql)->fetchAll());
     }
 
@@ -192,7 +192,7 @@ class TicketGateway extends QueryableGateway
     public function selectOverdue(): array
     {
         $sql = self::SELECT." WHERE gibbonCsTicket.dateDue IS NOT NULL AND gibbonCsTicket.dateDue < CURDATE()
-                AND gibbonCsTicket.status NOT IN ('Resolved','Closed') AND gibbonCsTicket.overdueNoticeSent IS NULL";
+                AND gibbonCsTicket.status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done') AND gibbonCsTicket.overdueNoticeSent IS NULL";
         return array_map([$this, 'decode'], $this->db()->select($sql)->fetchAll());
     }
 

@@ -11,7 +11,7 @@ $description = 'Service desk for customer requests: forms, tickets, teams, space
 $entryURL = 'cs_portal.php';
 $type = 'Additional';
 $category = 'Other';
-$version = '0.5.0';
+$version = '0.6.0';
 $author = 'Ahmad';
 $url = '';
 
@@ -277,23 +277,22 @@ $moduleTables[] = "
       KEY `triggerKey` (`triggerKey`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
-// Seed data: default roles, permissions, a team, a ticket type and a space with a board.
-$moduleTables[] = "INSERT INTO `gibbonCsRole` (`csRoleID`, `name`, `description`) VALUES
-    (1, 'Space Admin', 'Full control of a space: members, boards and all tickets'),
-    (2, 'Agent', 'Triages and works on tickets (e.g. the L1 team)'),
-    (3, 'Viewer', 'Can see the boards of the space and comment');";
+$moduleTables[] = "
+    CREATE TABLE `gibbonCsStatus` (
+        `csStatusID` int(6) unsigned NOT NULL AUTO_INCREMENT,
+        `name` varchar(60) NOT NULL COMMENT 'Ticket status, also the name of the board column that shows it',
+        `category` enum('To Do','In Progress','Done') NOT NULL DEFAULT 'In Progress' COMMENT 'Every status belongs to one of the three base categories',
+        `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`csStatusID`),
+        UNIQUE KEY `name` (`name`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
-$moduleTables[] = "INSERT INTO `gibbonCsRolePermission` (`csRoleID`, `permission`) VALUES
-    (1, 'view_board'), (1, 'comment'), (1, 'edit_ticket'), (1, 'transition_ticket'), (1, 'assign_ticket'), (1, 'delete_ticket'), (1, 'manage_boards'), (1, 'manage_members'),
-    (2, 'view_board'), (2, 'comment'), (2, 'edit_ticket'), (2, 'transition_ticket'), (2, 'assign_ticket'),
-    (3, 'view_board'), (3, 'comment');";
-
-$moduleTables[] = "INSERT INTO `gibbonCsTeam` (`csTeamID`, `name`, `description`) VALUES (1, 'L1 Support', 'First line: triage incoming requests and move them forward');";
-$moduleTables[] = "INSERT INTO `gibbonCsTicketType` (`csTicketTypeID`, `name`, `description`, `csTeamID`) VALUES (1, 'General Request', 'Anything that does not fit another request type', 1);";
-$moduleTables[] = "INSERT INTO `gibbonCsSpace` (`csSpaceID`, `name`, `description`) VALUES (1, 'Customer Service', 'Default space');";
-$moduleTables[] = "INSERT INTO `gibbonCsBoard` (`csBoardID`, `csSpaceID`, `name`, `description`, `filter`) VALUES (1, 1, 'All requests', 'Every request, grouped by status', NULL);";
-$moduleTables[] = "INSERT INTO `gibbonCsBoardColumn` (`csBoardID`, `name`, `sequenceNumber`) VALUES
-    (1, 'New', 1), (1, 'In Progress', 2), (1, 'Waiting', 3), (1, 'Resolved', 4), (1, 'Closed', 5);";
+// Default data: statuses, roles, a school office space with boards, teams, request types (forms + workflows), automation rules.
+// See src/Install/DefaultData.php - that file is the only place that describes it.
+require_once __DIR__.'/src/Install/DefaultData.php';
+foreach (\Gibbon\Module\CustomerService\Install\DefaultData::statements() as $csDefaultStatement) {
+    $moduleTables[] = $csDefaultStatement;
+}
 
 // ---------------------------------------------------------------------------
 // Actions

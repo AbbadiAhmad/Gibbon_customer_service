@@ -8,5 +8,5 @@ Copyright © 2010, Gibbon Foundation
 /**
  * Sets version information
  */
-$moduleVersion = '0.5.0';
+$moduleVersion = '0.6.0';
 $coreVersion = '28.0.00';

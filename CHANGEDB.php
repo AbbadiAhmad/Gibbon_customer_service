@@ -131,3 +131,18 @@ DELETE gibbonPermission FROM gibbonPermission JOIN gibbonAction ON (gibbonAction
 $count++;
 $sql[$count][0] = "0.5.0";
 $sql[$count][1] = "RENAME TABLE `csTeam` TO `gibbonCsTeam`, `csTeamMember` TO `gibbonCsTeamMember`, `csTicketType` TO `gibbonCsTicketType`, `csField` TO `gibbonCsField`, `csRole` TO `gibbonCsRole`, `csRolePermission` TO `gibbonCsRolePermission`, `csSpace` TO `gibbonCsSpace`, `csSpaceMember` TO `gibbonCsSpaceMember`, `csBoard` TO `gibbonCsBoard`, `csBoardColumn` TO `gibbonCsBoardColumn`, `csTicket` TO `gibbonCsTicket`, `csTicketActivity` TO `gibbonCsTicketActivity`, `csTicketAttachment` TO `gibbonCsTicketAttachment`, `csSavedFilter` TO `gibbonCsSavedFilter`, `csTag` TO `gibbonCsTag`, `csTicketTag` TO `gibbonCsTicketTag`, `csTicketWatcher` TO `gibbonCsTicketWatcher`, `csTicketLink` TO `gibbonCsTicketLink`, `csChecklist` TO `gibbonCsChecklist`, `csChecklistItem` TO `gibbonCsChecklistItem`, `csAutomationRule` TO `gibbonCsAutomationRule`;";
+
+// v0.6.0 - status categories (To Do / In Progress / Done): registry of statuses; existing statuses are classified, custom ones as In Progress
+$count++;
+$sql[$count][0] = "0.6.0";
+$sql[$count][1] = "CREATE TABLE `gibbonCsStatus` (
+  `csStatusID` int(6) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(60) NOT NULL COMMENT 'Ticket status, also the name of the board column that shows it',
+  `category` enum('To Do','In Progress','Done') NOT NULL DEFAULT 'In Progress' COMMENT 'Every status belongs to one of the three base categories',
+  `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`csStatusID`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;end
+INSERT IGNORE INTO `gibbonCsStatus` (`name`, `category`, `sequenceNumber`) VALUES ('New', 'To Do', 1), ('In Progress', 'In Progress', 2), ('Waiting', 'In Progress', 3), ('Resolved', 'Done', 4), ('Closed', 'Done', 5);end
+INSERT IGNORE INTO `gibbonCsStatus` (`name`, `category`, `sequenceNumber`) SELECT DISTINCT `name`, 'In Progress', 0 FROM `gibbonCsBoardColumn`;end
+INSERT IGNORE INTO `gibbonCsStatus` (`name`, `category`, `sequenceNumber`) SELECT DISTINCT `status`, 'In Progress', 0 FROM `gibbonCsTicket`;";

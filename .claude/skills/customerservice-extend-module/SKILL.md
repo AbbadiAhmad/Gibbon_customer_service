@@ -27,12 +27,16 @@ Read `docs/ARCHITECTURE.md` first (model, who can see what, file map). Also foll
    deleted records are skipped, not fatal. Notifications and automation failures are caught and logged, they never break the user's request.
 6. User text through `__()`; escape on output.
 7. Update `README.md` (feature description), `CHANGELOG.txt`, and `docs/ARCHITECTURE.md` if the model, a decision or the file map changed.
-8. Verify and report honestly: `for f in $(find . -name '*.php'); do php -l $f; done`; run new pure logic with a small stub script; cross-check table names
-   (`manifest.php` created tables vs `gibbonCs...` used in code). State that no live Gibbon run happened unless one did.
+8. Verify and report honestly: `php -l` all files, then `php tests/install.php`, `php tests/upgrade.php`, `php tests/logic.php` against a throw-away MariaDB
+   (start one with `mariadbd --datadir=<new dir> --port=3399 --pid-file=<dir>/m.pid`; create databases `cs_test` and `cs_chain`). Add a check to `tests/logic.php`
+   for every new query/rule. State that no live Gibbon run happened unless one did.
 9. Commit on the working branch with a message that says what and why; do not open a pull request unless asked.
 
 ## Conventions worth keeping
-* Status names are free text matching board columns; `New` is the entry status, `Resolved`/`Closed` are "done" (`Workflow::DONE`), reopen goes back to `New`.
+* Status names are free text matching board columns; `New` is the entry status; reopen goes back to `New`. Every status has a category in `gibbonCsStatus`
+  (To Do / In Progress / Done) and "finished" means category Done - use `Workflow::isDone()` / `Workflow::DONE_SQL`, never a list of names. A board column editor
+  creates statuses; a new status must be given a category.
+* Default data lives only in `src/Install/DefaultData.php`; keep names consistent between boards, workflows and types; no emoji (utf8 connection).
 * Admin = holds *Manage Ticket Types*. Space admins act through space roles, not through that action.
 * One status-change path (`$changeStatus` in `cs_ticket_process.php`) - extend it instead of writing a second one; automation uses `AutomationContext::changeStatus`.
 * Events written by people or automation to the activity log: public only if the requester should see them; configuration-ish events are `Internal`.

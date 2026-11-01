@@ -65,7 +65,7 @@ class LinkGateway extends QueryableGateway
             return [];
         }
         $sql = "SELECT DISTINCT gibbonCsTicketLink.csTicketIDTo FROM gibbonCsTicketLink JOIN gibbonCsTicket AS blocker ON (blocker.csTicketID=gibbonCsTicketLink.csTicketIDFrom)
-                WHERE gibbonCsTicketLink.linkType='blocks' AND blocker.status NOT IN ('Resolved','Closed') AND gibbonCsTicketLink.csTicketIDTo IN (".implode(',', $csTicketIDs).")";
+                WHERE gibbonCsTicketLink.linkType='blocks' AND blocker.status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done') AND gibbonCsTicketLink.csTicketIDTo IN (".implode(',', $csTicketIDs).")";
         return array_map('intval', $this->db()->select($sql)->fetchAll(\PDO::FETCH_COLUMN));
     }
 
@@ -74,7 +74,7 @@ class LinkGateway extends QueryableGateway
     {
         $sql = "SELECT blocker.csTicketID, blocker.title, blocker.status FROM gibbonCsTicketLink
                 JOIN gibbonCsTicket AS blocker ON (blocker.csTicketID=gibbonCsTicketLink.csTicketIDFrom)
-                WHERE gibbonCsTicketLink.linkType='blocks' AND gibbonCsTicketLink.csTicketIDTo=:id AND blocker.status NOT IN ('Resolved','Closed')";
+                WHERE gibbonCsTicketLink.linkType='blocks' AND gibbonCsTicketLink.csTicketIDTo=:id AND blocker.status NOT IN (SELECT name FROM gibbonCsStatus WHERE category='Done')";
         return $this->db()->select($sql, ['id' => $csTicketID])->fetchAll();
     }
 

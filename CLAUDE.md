@@ -12,7 +12,8 @@ Rules for changing the code live in project skills - use them:
 * `customerservice-extend-module` - checklist for adding a feature or changing the schema here
 * `customerservice-automation-actions` - adding automation actions and triggers
 
-Honest status: nothing has been run in a live Gibbon yet (see ARCHITECTURE.md "Status"). Do not claim runtime verification;
-say what was checked (`php -l`, stand-alone logic scripts).
+Honest status (see ARCHITECTURE.md "Status"): the SQL, upgrades and the module's own logic are tested against a real MariaDB
+(`tests/`, run them after every schema or query change); nothing that needs Gibbon itself (pages, forms, CSRF, permissions) has run in a
+live Gibbon yet. Do not claim more than what was checked - say which of `php -l`, `tests/*` or a live Gibbon run was used.
 
 Work on the branch you are given; `main` holds the released state.
