@@ -6,18 +6,18 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\CustomerService\Domain\BoardGateway;
-use Gibbon\Module\CustomerService\Domain\StatusGateway;
-use Gibbon\Module\CustomerService\Domain\SpaceGateway;
-use Gibbon\Module\CustomerService\Service\BoardFilter;
-use Gibbon\Module\CustomerService\Service\FilterForm;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\BoardGateway;
+use Gibbon\Module\administration\Domain\StatusGateway;
+use Gibbon\Module\administration\Domain\SpaceGateway;
+use Gibbon\Module\administration\Service\BoardFilter;
+use Gibbon\Module\administration\Service\FilterForm;
+use Gibbon\Module\administration\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_board_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_board_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -61,7 +61,7 @@ $page->breadcrumbs->add(empty($csBoardID) ? __('Add Board') : __('Edit Board'));
 
 $conditions = BoardFilter::decode($values['filter']);
 
-$form = Form::create('csBoard', $session->get('absoluteURL').'/modules/CustomerService/cs_board_process.php');
+$form = Form::create('csBoard', $session->get('absoluteURL').'/modules/administration/cs_board_process.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csBoardID', $csBoardID);
 $form->addHiddenValue('csSpaceID', $csSpaceID);

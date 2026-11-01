@@ -7,13 +7,13 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Domain\DataSet;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_type_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -24,7 +24,7 @@ $types = $container->get(TicketTypeGateway::class)->selectAllWithCounts();
 
 $table = DataTable::create('csTypes');
 $table->setTitle(__('Ticket Types'));
-$table->addHeaderAction('add', __('Add'))->setURL('/modules/CustomerService/cs_type_edit.php')->displayLabel();
+$table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_type_edit.php')->displayLabel();
 
 $table->addColumn('name', __('Name'));
 $table->addColumn('description', __('Description'));
@@ -36,9 +36,9 @@ $table->addColumn('active', __('Active'))->format(function ($t) {
 $table->addActionColumn()
     ->addParam('csTicketTypeID')
     ->format(function ($type, $actions) {
-        $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_type_edit.php');
-        $actions->addAction('view', __('Request Form'))->setURL('/modules/CustomerService/cs_form_edit.php');
-        $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
+        $actions->addAction('edit', __('Edit'))->setURL('/modules/administration/cs_type_edit.php');
+        $actions->addAction('view', __('Request Form'))->setURL('/modules/administration/cs_form_edit.php');
+        $actions->addAction('delete', __('Delete'))->setURL('/modules/administration/cs_delete.php')
             ->addParam('entity', 'type')->addParam('id', $type['csTicketTypeID']);
     });
 

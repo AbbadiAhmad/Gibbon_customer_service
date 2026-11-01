@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Service;
+namespace Gibbon\Module\administration\Service;
 
 /**
  * The request form of a ticket type, configured like a Jira Service Management request type:

@@ -4,7 +4,7 @@ Customers (students, parents, staff) raise **requests** through forms; the reque
 ticket on the **boards** of the support teams, where the L1 team triages it and moves it forward.
 Similar in spirit to the basic functions of Jira Service Management.
 
-Module name / folder: `CustomerService` (namespace `Gibbon\Module\CustomerService`).
+Module name / folder: `administration` (namespace `Gibbon\Module\administration`).
 
 ## Documentation
 
@@ -15,8 +15,8 @@ Module name / folder: `CustomerService` (namespace `Gibbon\Module\CustomerServic
 
 ## Install
 
-1. Copy (or clone) this repository to `<gibbon>/modules/CustomerService`.
-2. In Gibbon go to **System Admin > Manage Modules**, find *CustomerService* under "Not Installed" and install it.
+1. Copy (or clone) this repository to `<gibbon>/modules/administration`.
+2. In Gibbon go to **System Admin > Manage Modules**, find *administration* under "Not Installed" and install it.
 3. **User Admin > Manage Permissions**: review which Gibbon roles can use the module's actions
    (end-user actions are enabled for every role by default, configuration actions for Administrators).
 4. Reload Gibbon (Gibbon caches the menu per session).
@@ -101,7 +101,7 @@ who can view the boards that show the ticket, never to the requester, and never 
   board dropdown only offers moves that need no note). It is stored on the ticket and shown to the requester.
 * The requester sees **Close Request** / **Reopen** on a Resolved ticket (and **Reopen** on a Closed one). Reopening sets
   the status back to `New`, clears the resolution and notifies the team.
-* Auto-close: `php modules/CustomerService/cli_autoClose.php 14` closes tickets that stayed Resolved for 14 days
+* Auto-close: `php modules/administration/cli_autoClose.php 14` closes tickets that stayed Resolved for 14 days
   (run it from cron).
 
 ## Search
@@ -178,7 +178,7 @@ define on a type (Manage Ticket Types) are extra fields on top of these.
 
 * Start and due date are optional on the request form and editable by agents. **Overdue / Due today** markers show on
   boards, the dashboard, search results, subtasks and the ticket page.
-* Run `php modules/CustomerService/cli_reminders.php 1` once a day from cron: tickets due within N days (default 1) get one
+* Run `php modules/administration/cli_reminders.php 1` once a day from cron: tickets due within N days (default 1) get one
   "due soon" reminder, overdue tickets one "overdue" notice. They go to whoever works on the ticket and to the watchers and
   fire the `ticket_due_soon` / `ticket_overdue` automation triggers. Changing the due date restarts the reminders.
 
@@ -225,10 +225,10 @@ Actions are plug-ins: add **one class file** to `src/Automation/Actions/` and it
 you declare - no registration, no form code.
 
 ```php
-namespace Gibbon\Module\CustomerService\Automation\Actions;
+namespace Gibbon\Module\administration\Automation\Actions;
 
-use Gibbon\Module\CustomerService\Automation\AutomationContext;
-use Gibbon\Module\CustomerService\Automation\BaseAction;
+use Gibbon\Module\administration\Automation\AutomationContext;
+use Gibbon\Module\administration\Automation\BaseAction;
 
 class SetPriorityUrgent extends BaseAction            // key is derived: set_priority_urgent
 {

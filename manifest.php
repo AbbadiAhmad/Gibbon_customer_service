@@ -6,7 +6,7 @@ Copyright © 2010, Gibbon Foundation
 */
 
 // Basic variables
-$name = 'CustomerService';      // Module name = folder name = namespace Gibbon\Module\CustomerService
+$name = 'administration';      // Module name = folder name = namespace Gibbon\Module\administration
 $description = 'Service desk for customer requests: forms, tickets, teams, spaces and boards';
 $entryURL = 'cs_portal.php';
 $type = 'Additional';
@@ -290,7 +290,7 @@ $moduleTables[] = "
 // Default data: statuses, roles, a school office space with boards, teams, request types (forms + workflows), automation rules.
 // See src/Install/DefaultData.php - that file is the only place that describes it.
 require_once __DIR__.'/src/Install/DefaultData.php';
-foreach (\Gibbon\Module\CustomerService\Install\DefaultData::statements() as $csDefaultStatement) {
+foreach (\Gibbon\Module\administration\Install\DefaultData::statements() as $csDefaultStatement) {
     $moduleTables[] = $csDefaultStatement;
 }
 

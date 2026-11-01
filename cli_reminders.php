@@ -5,14 +5,14 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-use Gibbon\Module\CustomerService\Automation\AutomationEngine;
-use Gibbon\Module\CustomerService\Domain\ActivityGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\Notifier;
+use Gibbon\Module\administration\Automation\AutomationEngine;
+use Gibbon\Module\administration\Domain\ActivityGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\Notifier;
 
 /**
  * Due date reminders. Run it once a day from cron:
- *   php /path/to/gibbon/modules/CustomerService/cli_reminders.php 1
+ *   php /path/to/gibbon/modules/administration/cli_reminders.php 1
  *
  * - Tickets due within N days (default 1 = today and tomorrow) get ONE "due soon" reminder.
  * - Tickets past their due date get ONE "overdue" notice.

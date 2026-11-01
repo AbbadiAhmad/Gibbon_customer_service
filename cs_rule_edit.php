@@ -6,18 +6,18 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\CustomerService\Automation\ActionForm;
-use Gibbon\Module\CustomerService\Automation\AutomationEngine;
-use Gibbon\Module\CustomerService\Domain\RuleGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\BoardFilter;
-use Gibbon\Module\CustomerService\Service\FilterForm;
+use Gibbon\Module\administration\Automation\ActionForm;
+use Gibbon\Module\administration\Automation\AutomationEngine;
+use Gibbon\Module\administration\Domain\RuleGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\BoardFilter;
+use Gibbon\Module\administration\Service\FilterForm;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_rule_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_rule_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -37,7 +37,7 @@ if (!empty($csAutomationRuleID)) {
 $page->breadcrumbs->add(__('Manage Automation'), 'cs_rule_manage.php');
 $page->breadcrumbs->add(empty($csAutomationRuleID) ? __('Add Rule') : __('Edit Rule'));
 
-$form = Form::create('csRule', $session->get('absoluteURL').'/modules/CustomerService/cs_rule_process.php');
+$form = Form::create('csRule', $session->get('absoluteURL').'/modules/administration/cs_rule_process.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csAutomationRuleID', $csAutomationRuleID);
 

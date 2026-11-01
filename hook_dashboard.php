@@ -7,6 +7,10 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Services\Format;
 
+// The dashboards include this file from a method that defines $session, $guid and $connection2 but not $container;
+// the container is the global one created in gibbon.php.
+global $container;
+
 // Only Gibbon includes this file (dashboard hook). Requested directly there is no session / container: stop.
 if (!isset($session, $container, $guid, $connection2)) {
     http_response_code(403);

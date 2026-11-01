@@ -5,11 +5,11 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Domain;
+namespace Gibbon\Module\administration\Domain;
 
 use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryableGateway;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Service\Workflow;
 
 /**
  * The registry of ticket statuses. Every status belongs to one category (To Do / In Progress / Done) and

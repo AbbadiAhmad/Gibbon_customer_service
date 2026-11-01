@@ -5,14 +5,14 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Service;
+namespace Gibbon\Module\administration\Service;
 
 use Gibbon\Comms\NotificationSender;
-use Gibbon\Module\CustomerService\Domain\BoardGateway;
-use Gibbon\Module\CustomerService\Domain\SpaceGateway;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Domain\WatcherGateway;
+use Gibbon\Module\administration\Domain\BoardGateway;
+use Gibbon\Module\administration\Domain\SpaceGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Domain\WatcherGateway;
 
 /**
  * Sends Gibbon notifications (in-app, plus e-mail for users who enabled notification e-mails)
@@ -125,7 +125,7 @@ class Notifier
             }
 
             $sender = $this->container->get(NotificationSender::class);
-            $link = '/index.php?q=/modules/CustomerService/cs_ticket_view.php&csTicketID='.(int)$ticket['csTicketID'];
+            $link = '/index.php?q=/modules/administration/cs_ticket_view.php&csTicketID='.(int)$ticket['csTicketID'];
             $message = csTicketRef($ticket['csTicketID']).' '.$ticket['title'].' - '.$text;
 
             foreach ($recipients as $person) {
@@ -133,7 +133,7 @@ class Notifier
             }
             $sender->sendNotifications();
         } catch (\Throwable $e) {
-            error_log('CustomerService notification failed: '.$e->getMessage());
+            error_log('administration notification failed: '.$e->getMessage());
         }
     }
 }

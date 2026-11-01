@@ -8,19 +8,19 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Domain\DataSet;
 use Gibbon\Forms\Form;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\CustomFields;
-use Gibbon\Module\CustomerService\Service\FormConfig;
+use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\CustomFields;
+use Gibbon\Module\administration\Service\FormConfig;
 use Gibbon\Services\Format;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_type_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -40,7 +40,7 @@ if (!empty($csTicketTypeID)) {
 $page->breadcrumbs->add(__('Manage Ticket Types'), 'cs_type_manage.php');
 $page->breadcrumbs->add(empty($csTicketTypeID) ? __('Add Ticket Type') : __('Edit Ticket Type'));
 
-$form = Form::create('csType', $session->get('absoluteURL').'/modules/CustomerService/cs_type_process.php');
+$form = Form::create('csType', $session->get('absoluteURL').'/modules/administration/cs_type_process.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csTicketTypeID', $csTicketTypeID);
 
@@ -103,7 +103,7 @@ if (!empty($csTicketTypeID)) {
     $table = DataTable::create('csFields');
     $table->setTitle(__('Form Fields'));
     $table->addMetaData('blankSlate', __('This type has no extra fields yet. Requesters only fill in title, description and priority.'));
-    $table->addHeaderAction('add', __('Add'))->setURL('/modules/CustomerService/cs_field_edit.php')
+    $table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_field_edit.php')
         ->addParam('csTicketTypeID', $csTicketTypeID)->displayLabel();
 
     $table->addColumn('sequenceNumber', __('Order'));
@@ -119,8 +119,8 @@ if (!empty($csTicketTypeID)) {
         ->addParam('csFieldID')
         ->addParam('csTicketTypeID', $csTicketTypeID)
         ->format(function ($field, $actions) {
-            $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_field_edit.php');
-            $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
+            $actions->addAction('edit', __('Edit'))->setURL('/modules/administration/cs_field_edit.php');
+            $actions->addAction('delete', __('Delete'))->setURL('/modules/administration/cs_delete.php')
                 ->addParam('entity', 'field')->addParam('id', $field['csFieldID']);
         });
 

@@ -7,7 +7,7 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -19,7 +19,7 @@ if (!csAccess($guid, $connection2, 'cs_portal.php')) {
 }
 
 $page->breadcrumbs->add(__('Customer Portal'));
-$page->stylesheets->add('module-cs', 'modules/CustomerService/css/module.css');
+$page->stylesheets->add('module-cs', 'modules/administration/css/module.css');
 
 echo '<h2>'.__('How can we help you?').'</h2>';
 

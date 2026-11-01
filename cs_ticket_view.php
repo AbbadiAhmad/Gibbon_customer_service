@@ -8,26 +8,26 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\ActivityGateway;
+use Gibbon\Module\administration\Domain\ActivityGateway;
 use Gibbon\Domain\DataSet;
-use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
-use Gibbon\Module\CustomerService\Domain\ChecklistGateway;
-use Gibbon\Module\CustomerService\Domain\LinkGateway;
-use Gibbon\Module\CustomerService\Domain\TagGateway;
-use Gibbon\Module\CustomerService\Domain\WatcherGateway;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\Attachments;
-use Gibbon\Module\CustomerService\Service\CustomFields;
-use Gibbon\Module\CustomerService\Service\Permissions;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\AttachmentGateway;
+use Gibbon\Module\administration\Domain\ChecklistGateway;
+use Gibbon\Module\administration\Domain\LinkGateway;
+use Gibbon\Module\administration\Domain\TagGateway;
+use Gibbon\Module\administration\Domain\WatcherGateway;
+use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\Attachments;
+use Gibbon\Module\administration\Service\CustomFields;
+use Gibbon\Module\administration\Service\Permissions;
+use Gibbon\Module\administration\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_view.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_ticket_view.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -54,7 +54,7 @@ foreach ([Permissions::COMMENT, Permissions::EDIT_TICKET, Permissions::TRANSITIO
 $canInternal = csCanSeeInternal($container, $session, $ticket, $isAdmin);
 $isDone = Workflow::isDone($ticket['status']);
 
-$page->stylesheets->add('module-cs', 'modules/CustomerService/css/module.css');
+$page->stylesheets->add('module-cs', 'modules/administration/css/module.css');
 $page->breadcrumbs->add(__('My Dashboard'), 'cs_dashboard.php');
 $page->breadcrumbs->add(csTicketRef($ticket['csTicketID']));
 
@@ -139,7 +139,7 @@ $commentsHtml = empty($comments) ? '<p class="text-gray-600">'.__('No comments y
 if ($isReporter || $can[Permissions::COMMENT]) {
     $fileUploader = new Gibbon\FileUploader($pdo, $session);
 
-    $form = Form::create('csComment', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form = Form::create('csComment', $session->get('absoluteURL').'/modules/administration/cs_ticket_process.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', 'comment');
     $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -192,7 +192,7 @@ echo '<div class="cs-tabs">'
 
 // ---- Requester: confirm or reopen a finished ticket ----------------------------------
 if ($isReporter && $isDone) {
-    $form = Form::create('csReopen', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form = Form::create('csReopen', $session->get('absoluteURL').'/modules/administration/cs_ticket_process.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', 'reopen');
     $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -206,7 +206,7 @@ if ($isReporter && $isDone) {
     echo $form->getOutput();
 
     if ($ticket['status'] != 'Closed') {
-        $form = Form::create('csConfirm', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+        $form = Form::create('csConfirm', $session->get('absoluteURL').'/modules/administration/cs_ticket_process.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'confirm');
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -219,7 +219,7 @@ if ($isReporter && $isDone) {
 
 // ---- Triage ----------------------------------------------------------------
 if ($can[Permissions::EDIT_TICKET] || $can[Permissions::TRANSITION] || $can[Permissions::ASSIGN]) {
-    $form = Form::create('csTriage', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form = Form::create('csTriage', $session->get('absoluteURL').'/modules/administration/cs_ticket_process.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', 'update');
     $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -271,7 +271,7 @@ if ($can[Permissions::EDIT_TICKET] || $can[Permissions::TRANSITION] || $can[Perm
 // ---- Watch -------------------------------------------------------------------------
 $watchers = $container->get(WatcherGateway::class);
 $watching = $watchers->isWatching($ticket['csTicketID'], csPersonID($session));
-$form = Form::createBlank('csWatch', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+$form = Form::createBlank('csWatch', $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('action', $watching ? 'unwatch' : 'watch');
 $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -280,7 +280,7 @@ echo $form->getOutput();
 
 // Small POST form with one button (remove link, delete checklist...), CSRF-protected like every Gibbon form.
 $miniForm = function (string $id, string $action, array $hidden, string $label) use ($session, $ticket) {
-    $form = Form::createBlank($id, $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+    $form = Form::createBlank($id, $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', $action);
     $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -323,7 +323,7 @@ if ($canInternal) {
         echo $table->render(new DataSet($subtasks));
     }
     if ($canEdit && empty($ticket['csTicketIDParent'])) {
-        $form = Form::create('csSubtaskAdd', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+        $form = Form::create('csSubtaskAdd', $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'subtask_add');
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -350,7 +350,7 @@ if ($canInternal) {
         $items = array_column($list['items'], 'text', 'csChecklistItemID');
         $doneIDs = array_column(array_filter($list['items'], function ($i) { return $i['done'] == 'Y'; }), 'csChecklistItemID');
 
-        $form = Form::create('csChecklist'.$list['csChecklistID'], $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+        $form = Form::create('csChecklist'.$list['csChecklistID'], $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'checklist_save');
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -380,7 +380,7 @@ if ($canInternal) {
         }
     }
     if ($canEdit) {
-        $form = Form::create('csChecklistAdd', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+        $form = Form::create('csChecklistAdd', $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'checklist_add');
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -414,7 +414,7 @@ if ($canInternal) {
         echo '</div>';
     }
     if ($canEdit) {
-        $form = Form::create('csLinkAdd', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+        $form = Form::create('csLinkAdd', $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'link_add');
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -439,7 +439,7 @@ if ($canInternal) {
         return '<span class="cs-tag">'.Format::link(csURL($session, 'cs_ticket_search.php', ['tag' => $tag]), htmlspecialchars($tag)).'</span>';
     }, $tags)).'</p>';
     if ($canEdit) {
-        $form = Form::create('csTags', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+        $form = Form::create('csTags', $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'tags');
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -471,7 +471,7 @@ if ($canInternal) {
         echo '</div>';
     }
     if ($canEdit) {
-        $form = Form::create('csWatcherAdd', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_extrasProcess.php');
+        $form = Form::create('csWatcherAdd', $session->get('absoluteURL').'/modules/administration/cs_ticket_extrasProcess.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'watcher_add');
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -487,7 +487,7 @@ if ($canInternal) {
 
 // ---- Agents edit the custom fields (including the ones the requester never sees) ------------------------
 if ($can[Permissions::EDIT_TICKET] && !empty($typeFields)) {
-    $form = Form::create('csFields', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form = Form::create('csFields', $session->get('absoluteURL').'/modules/administration/cs_ticket_process.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', 'fields');
     $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
@@ -501,7 +501,7 @@ if ($can[Permissions::EDIT_TICKET] && !empty($typeFields)) {
 
 // ---- Delete ----------------------------------------------------------------
 if ($can[Permissions::DELETE_TICKET]) {
-    $form = Form::create('csDeleteTicket', $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+    $form = Form::create('csDeleteTicket', $session->get('absoluteURL').'/modules/administration/cs_ticket_process.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', 'delete');
     $form->addHiddenValue('csTicketID', $ticket['csTicketID']);

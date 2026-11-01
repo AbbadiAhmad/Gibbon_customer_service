@@ -7,10 +7,10 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\CustomFields;
-use Gibbon\Module\CustomerService\Service\FormConfig;
+use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\CustomFields;
+use Gibbon\Module\administration\Service\FormConfig;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -42,7 +42,7 @@ $core = FormConfig::core($type['formConfig']);
 $customFields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
 $typeLabels = CustomFields::typeLabels();
 
-$form = Form::create('csFormEditor', $session->get('absoluteURL').'/modules/CustomerService/cs_form_process.php');
+$form = Form::create('csFormEditor', $session->get('absoluteURL').'/modules/administration/cs_form_process.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csTicketTypeID', $csTicketTypeID);
 

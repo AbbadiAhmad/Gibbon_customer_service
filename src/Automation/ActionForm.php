@@ -5,10 +5,10 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Automation;
+namespace Gibbon\Module\administration\Automation;
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
 
 /**
  * Builds the action slots of the rule editor from the parameter definitions of the registered actions,

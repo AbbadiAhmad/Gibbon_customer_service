@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Service;
+namespace Gibbon\Module\administration\Service;
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;

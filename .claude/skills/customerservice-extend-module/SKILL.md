@@ -1,9 +1,9 @@
 ---
 name: customerservice-extend-module
-description: Checklist for adding a feature, page, setting or table to the CustomerService Gibbon module - where code goes, the schema/upgrade/docs steps, naming, tolerance rules, how to verify without a live Gibbon. Use before any change to this repository.
+description: Checklist for adding a feature, page, setting or table to the administration Gibbon module - where code goes, the schema/upgrade/docs steps, naming, tolerance rules, how to verify without a live Gibbon. Use before any change to this repository.
 ---
 
-# Extending CustomerService
+# Extending administration
 
 Read `docs/ARCHITECTURE.md` first (model, who can see what, file map). Also follow `gibbon-module-conventions` and `gibbon-access-control`.
 

@@ -5,15 +5,15 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-use Gibbon\Module\CustomerService\Domain\ActivityGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\Notifier;
+use Gibbon\Module\administration\Domain\ActivityGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\Notifier;
 
 /**
  * Closes tickets that have been "Resolved" for N days without the requester reopening them.
  *
  * Run from cron, e.g. every night:
- *   php /path/to/gibbon/modules/CustomerService/cli_autoClose.php 14
+ *   php /path/to/gibbon/modules/administration/cli_autoClose.php 14
  * The optional argument is the number of days (default 14).
  */
 // Command line only - refuse before anything is loaded.

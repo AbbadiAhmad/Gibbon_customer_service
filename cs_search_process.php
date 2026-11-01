@@ -6,9 +6,9 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Domain\SavedFilterGateway;
+use Gibbon\Module\administration\Domain\SavedFilterGateway;
 
-$_POST['address'] = '/modules/CustomerService/cs_ticket_search.php';
+$_POST['address'] = '/modules/administration/cs_ticket_search.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -19,7 +19,7 @@ $_POST = $container->get(Validator::class)->sanitize($_POST);
 $action = $_POST['action'] ?? '';
 $person = csPersonID($session);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_search.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_ticket_search.php')) {
     csRedirect($session, 'cs_dashboard.php', [], 'error0');
 }
 

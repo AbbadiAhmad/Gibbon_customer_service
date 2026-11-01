@@ -5,12 +5,12 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Automation;
+namespace Gibbon\Module\administration\Automation;
 
-use Gibbon\Module\CustomerService\Domain\ActivityGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\Notifier;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\ActivityGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\Notifier;
+use Gibbon\Module\administration\Service\Workflow;
 
 /**
  * What an action may do to the ticket. Every change is written to the ticket activity as an internal

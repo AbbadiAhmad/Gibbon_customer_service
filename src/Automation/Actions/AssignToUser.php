@@ -5,10 +5,10 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Automation\Actions;
+namespace Gibbon\Module\administration\Automation\Actions;
 
-use Gibbon\Module\CustomerService\Automation\AutomationContext;
-use Gibbon\Module\CustomerService\Automation\BaseAction;
+use Gibbon\Module\administration\Automation\AutomationContext;
+use Gibbon\Module\administration\Automation\BaseAction;
 
 class AssignToUser extends BaseAction
 {

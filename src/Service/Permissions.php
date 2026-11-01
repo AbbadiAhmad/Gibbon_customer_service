@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Service;
+namespace Gibbon\Module\administration\Service;
 
 /**
  * Catalog of the permissions that can be assigned to a (space) role.

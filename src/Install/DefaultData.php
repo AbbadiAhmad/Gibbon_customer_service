@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Install;
+namespace Gibbon\Module\administration\Install;
 
 /**
  * The data a fresh installation starts with: a school office (space), teams, request types for families and staff

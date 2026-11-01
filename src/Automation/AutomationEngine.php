@@ -5,11 +5,11 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Automation;
+namespace Gibbon\Module\administration\Automation;
 
-use Gibbon\Module\CustomerService\Domain\RuleGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\BoardFilter;
+use Gibbon\Module\administration\Domain\RuleGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\BoardFilter;
 
 /**
  * Runs the automation rules of a trigger:
@@ -86,7 +86,7 @@ class AutomationEngine
                 $ticket = $tickets->getTicket($csTicketID) ?: $ticket;
             }
         } catch (\Throwable $e) {
-            error_log('CustomerService automation failed: '.$e->getMessage());
+            error_log('administration automation failed: '.$e->getMessage());
         }
 
         return $ran;
@@ -105,7 +105,7 @@ class AutomationEngine
             try {
                 $action->execute($ctx->ticket(), (array)($definition['params'] ?? []), $ctx);
             } catch (\Throwable $e) {
-                error_log('CustomerService automation action '.$action->key().' failed: '.$e->getMessage());
+                error_log('administration automation action '.$action->key().' failed: '.$e->getMessage());
             }
             $ctx->reload();
         }

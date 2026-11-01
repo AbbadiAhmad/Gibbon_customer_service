@@ -1,6 +1,6 @@
 ---
 name: gibbon-module-conventions
-description: How a GibbonEdu module is built and the pitfalls found while building CustomerService - manifest.php, CHANGEDB.php upgrades, gateways, process scripts, CSRF, forms, tables, hooks, downloads. Use when creating or changing any Gibbon module page, process script, table, action or upgrade step.
+description: How a GibbonEdu module is built and the pitfalls found while building administration - manifest.php, CHANGEDB.php upgrades, gateways, process scripts, CSRF, forms, tables, hooks, downloads. Use when creating or changing any Gibbon module page, process script, table, action or upgrade step.
 ---
 
 # Gibbon module conventions

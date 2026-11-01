@@ -6,9 +6,9 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
 
-$_POST['address'] = '/modules/CustomerService/cs_team_manage.php';
+$_POST['address'] = '/modules/administration/cs_team_manage.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -18,7 +18,7 @@ csRequirePost($session);
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csTeamID = $_POST['csTeamID'] ?? '';
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_team_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_team_manage.php')) {
     csRedirect($session, 'cs_team_manage.php', [], 'error0');
 }
 

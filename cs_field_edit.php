@@ -6,15 +6,15 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\CustomFields;
+use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\CustomFields;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_field_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_field_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -42,7 +42,7 @@ $page->breadcrumbs->add(__('Manage Ticket Types'), 'cs_type_manage.php');
 $page->breadcrumbs->add($type['name'], 'cs_type_edit.php', ['csTicketTypeID' => $csTicketTypeID]);
 $page->breadcrumbs->add(empty($csFieldID) ? __('Add Field') : __('Edit Field'));
 
-$form = Form::create('csField', $session->get('absoluteURL').'/modules/CustomerService/cs_field_process.php');
+$form = Form::create('csField', $session->get('absoluteURL').'/modules/administration/cs_field_process.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csTicketTypeID', $csTicketTypeID);
 $form->addHiddenValue('csFieldID', $csFieldID);

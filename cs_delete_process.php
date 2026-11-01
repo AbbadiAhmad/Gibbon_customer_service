@@ -13,7 +13,7 @@ csRequirePost($session);
 $entity = $_POST['entity'] ?? '';
 $id = $_POST['id'] ?? '';
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_delete.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_delete.php')) {
     csRedirect($session, 'cs_dashboard.php', [], 'error0');
 }
 

@@ -8,22 +8,22 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\SavedFilterGateway;
-use Gibbon\Module\CustomerService\Domain\StatusGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Domain\SavedFilterGateway;
+use Gibbon\Module\administration\Domain\StatusGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_search.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_ticket_search.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
 
 $page->breadcrumbs->add(__('Search Tickets'));
-$page->stylesheets->add('module-cs', 'modules/CustomerService/css/module.css');
+$page->stylesheets->add('module-cs', 'modules/administration/css/module.css');
 
 $isAdmin = csIsAdmin($guid, $connection2);
 $person = csPersonID($session);
@@ -62,7 +62,7 @@ if (!empty($saved)) {
         $params = json_decode($s['params'], true) ?: [];
         echo '<span class="mr-4">'.Format::link(csURL($session, 'cs_ticket_search.php', $params), htmlspecialchars($s['name']));
 
-        $form = Form::createBlank('deleteFilter'.$s['csSavedFilterID'], $session->get('absoluteURL').'/modules/CustomerService/cs_search_process.php');
+        $form = Form::createBlank('deleteFilter'.$s['csSavedFilterID'], $session->get('absoluteURL').'/modules/administration/cs_search_process.php');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('action', 'delete');
         $form->addHiddenValue('csSavedFilterID', $s['csSavedFilterID']);
@@ -154,7 +154,7 @@ echo $table->render($results);
 
 // ---- Save the current search --------------------------------------------------------
 if (!empty($filters)) {
-    $form = Form::create('csSaveFilter', $session->get('absoluteURL').'/modules/CustomerService/cs_search_process.php');
+    $form = Form::create('csSaveFilter', $session->get('absoluteURL').'/modules/administration/cs_search_process.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('action', 'save');
     foreach ($filters as $key => $value) {

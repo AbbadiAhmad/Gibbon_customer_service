@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Domain;
+namespace Gibbon\Module\administration\Domain;
 
 use Gibbon\Domain\Traits\TableAware;
 use Gibbon\Domain\QueryableGateway;
@@ -37,7 +37,7 @@ class TicketTypeGateway extends QueryableGateway
     public function selectForAudience(string $roleCategory, bool $all = false): array
     {
         return array_values(array_filter($this->selectActive(), function ($type) use ($roleCategory, $all) {
-            return $all || \Gibbon\Module\CustomerService\Service\FormConfig::inAudience($type['audience'], $roleCategory);
+            return $all || \Gibbon\Module\administration\Service\FormConfig::inAudience($type['audience'], $roleCategory);
         }));
     }
 

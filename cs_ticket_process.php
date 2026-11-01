@@ -7,22 +7,22 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
-use Gibbon\Module\CustomerService\Domain\ActivityGateway;
-use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
-use Gibbon\Module\CustomerService\Automation\AutomationEngine;
-use Gibbon\Module\CustomerService\Domain\BoardGateway;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
-use Gibbon\Module\CustomerService\Domain\LinkGateway;
-use Gibbon\Module\CustomerService\Domain\SpaceGateway;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\Attachments;
-use Gibbon\Module\CustomerService\Service\CustomFields;
-use Gibbon\Module\CustomerService\Service\Notifier;
-use Gibbon\Module\CustomerService\Service\Permissions;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\ActivityGateway;
+use Gibbon\Module\administration\Domain\AttachmentGateway;
+use Gibbon\Module\administration\Automation\AutomationEngine;
+use Gibbon\Module\administration\Domain\BoardGateway;
+use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\LinkGateway;
+use Gibbon\Module\administration\Domain\SpaceGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\Attachments;
+use Gibbon\Module\administration\Service\CustomFields;
+use Gibbon\Module\administration\Service\Notifier;
+use Gibbon\Module\administration\Service\Permissions;
+use Gibbon\Module\administration\Service\Workflow;
 
-$_POST['address'] = '/modules/CustomerService/cs_ticket_view.php';
+$_POST['address'] = '/modules/administration/cs_ticket_view.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -43,7 +43,7 @@ $back = function (string $return) use ($session, $csTicketID, $csBoardID) {
     csRedirect($session, 'cs_ticket_view.php', ['csTicketID' => $csTicketID], $return);
 };
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_view.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_ticket_view.php')) {
     csRedirect($session, 'cs_dashboard.php', [], 'error0');
 }
 

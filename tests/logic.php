@@ -39,12 +39,12 @@ namespace Stub {
 namespace {
     require __DIR__.'/bootstrap.php';
     function __($s, $p = []) { return $s; }
-    spl_autoload_register(function ($c) { $p = 'Gibbon\\Module\\CustomerService\\'; if (strpos($c, $p) === 0) { $f = dirname(__DIR__).'/src/'.str_replace('\\', '/', substr($c, strlen($p))).'.php'; if (is_file($f)) require $f; } });
+    spl_autoload_register(function ($c) { $p = 'Gibbon\\Module\\administration\\'; if (strpos($c, $p) === 0) { $f = dirname(__DIR__).'/src/'.str_replace('\\', '/', substr($c, strlen($p))).'.php'; if (is_file($f)) require $f; } });
     require dirname(__DIR__).'/moduleFunctions.php';
 
-    use Gibbon\Module\CustomerService\Domain\{TicketGateway, TicketTypeGateway, FieldGateway, BoardGateway, StatusGateway, SpaceGateway, RoleGateway, TeamGateway, LinkGateway, TagGateway, WatcherGateway, ChecklistGateway, ActivityGateway, RuleGateway};
-    use Gibbon\Module\CustomerService\Service\{Workflow, FormConfig, BoardFilter, CustomFields};
-    use Gibbon\Module\CustomerService\Automation\AutomationEngine;
+    use Gibbon\Module\administration\Domain\{TicketGateway, TicketTypeGateway, FieldGateway, BoardGateway, StatusGateway, SpaceGateway, RoleGateway, TeamGateway, LinkGateway, TagGateway, WatcherGateway, ChecklistGateway, ActivityGateway, RuleGateway};
+    use Gibbon\Module\administration\Service\{Workflow, FormConfig, BoardFilter, CustomFields};
+    use Gibbon\Module\administration\Automation\AutomationEngine;
 
     $fail = 0; $n = 0;
     function check(string $what, $ok, $detail = '') { global $fail, $n; $n++; if (!$ok) { $fail++; echo "  FAIL: $what $detail\n"; } }

@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Automation;
+namespace Gibbon\Module\administration\Automation;
 
 /** Convenience base class: derives key() and label() from the class name and gives a generic describe(). */
 abstract class BaseAction implements AutomationAction
@@ -39,7 +39,7 @@ abstract class BaseAction implements AutomationAction
                     $value = $definition['options'][$value] ?? $value;
                     break;
                 case 'team':
-                    $value = $container->get(\Gibbon\Module\CustomerService\Domain\TeamGateway::class)->selectOptions()[(int)$value] ?? $value;
+                    $value = $container->get(\Gibbon\Module\administration\Domain\TeamGateway::class)->selectOptions()[(int)$value] ?? $value;
                     break;
                 case 'person':
                     $value = $this->personName($container, $value);

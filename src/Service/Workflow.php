@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Service;
+namespace Gibbon\Module\administration\Service;
 
 /**
  * Per ticket type workflow, stored as JSON in gibbonCsTicketType.workflow:
@@ -52,13 +52,13 @@ class Workflow
             try {
                 $container = $GLOBALS['container'] ?? null;
                 if ($container) {
-                    $map = $container->get(\Gibbon\Module\CustomerService\Domain\StatusGateway::class)->selectMap();
+                    $map = $container->get(\Gibbon\Module\administration\Domain\StatusGateway::class)->selectMap();
                     if (!empty($map)) {
                         self::$statusMap = $map;
                     }
                 }
             } catch (\Throwable $e) {
-                error_log('CustomerService: status registry not readable: '.$e->getMessage());
+                error_log('administration: status registry not readable: '.$e->getMessage());
             }
         }
         return self::$statusMap;

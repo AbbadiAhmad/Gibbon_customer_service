@@ -6,13 +6,13 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Domain\BoardGateway;
-use Gibbon\Module\CustomerService\Domain\SpaceGateway;
-use Gibbon\Module\CustomerService\Domain\StatusGateway;
-use Gibbon\Module\CustomerService\Service\FilterForm;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\BoardGateway;
+use Gibbon\Module\administration\Domain\SpaceGateway;
+use Gibbon\Module\administration\Domain\StatusGateway;
+use Gibbon\Module\administration\Service\FilterForm;
+use Gibbon\Module\administration\Service\Workflow;
 
-$_POST['address'] = '/modules/CustomerService/cs_space_manage.php';
+$_POST['address'] = '/modules/administration/cs_space_manage.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -23,7 +23,7 @@ $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csBoardID = $_POST['csBoardID'] ?? '';
 $csSpaceID = $_POST['csSpaceID'] ?? '';
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_board_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_board_edit.php')) {
     csRedirect($session, 'cs_space_manage.php', [], 'error0');
 }
 

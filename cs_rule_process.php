@@ -6,13 +6,13 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Automation\ActionForm;
-use Gibbon\Module\CustomerService\Automation\AutomationEngine;
-use Gibbon\Module\CustomerService\Domain\RuleGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\FilterForm;
+use Gibbon\Module\administration\Automation\ActionForm;
+use Gibbon\Module\administration\Automation\AutomationEngine;
+use Gibbon\Module\administration\Domain\RuleGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\FilterForm;
 
-$_POST['address'] = '/modules/CustomerService/cs_rule_manage.php';
+$_POST['address'] = '/modules/administration/cs_rule_manage.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -22,7 +22,7 @@ csRequirePost($session);
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csAutomationRuleID = $_POST['csAutomationRuleID'] ?? '';
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_rule_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_rule_edit.php')) {
     csRedirect($session, 'cs_rule_manage.php', [], 'error0');
 }
 

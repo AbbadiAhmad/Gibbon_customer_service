@@ -6,11 +6,11 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\FormConfig;
+use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\FormConfig;
 
-$_POST['address'] = '/modules/CustomerService/cs_type_manage.php';
+$_POST['address'] = '/modules/administration/cs_type_manage.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';

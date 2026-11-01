@@ -6,14 +6,14 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\CustomerService\Domain\RoleGateway;
-use Gibbon\Module\CustomerService\Service\Permissions;
+use Gibbon\Module\administration\Domain\RoleGateway;
+use Gibbon\Module\administration\Service\Permissions;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_role_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_role_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -35,7 +35,7 @@ if (!empty($csRoleID)) {
 $page->breadcrumbs->add(__('Manage Roles'), 'cs_role_manage.php');
 $page->breadcrumbs->add(empty($csRoleID) ? __('Add Role') : __('Edit Role'));
 
-$form = Form::create('csRole', $session->get('absoluteURL').'/modules/CustomerService/cs_role_process.php');
+$form = Form::create('csRole', $session->get('absoluteURL').'/modules/administration/cs_role_process.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csRoleID', $csRoleID);
 

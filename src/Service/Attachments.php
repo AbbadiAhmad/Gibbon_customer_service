@@ -5,10 +5,10 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Service;
+namespace Gibbon\Module\administration\Service;
 
 use Gibbon\FileUploader;
-use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
+use Gibbon\Module\administration\Domain\AttachmentGateway;
 
 /**
  * Reads uploaded files from a request (input name `attachments[]`) and stores them with Gibbon's FileUploader.

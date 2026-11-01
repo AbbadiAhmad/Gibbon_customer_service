@@ -1,13 +1,13 @@
 ---
 name: gibbon-access-control
-description: Security and permission rules for every entry point of the CustomerService Gibbon module - isActionAccessible, named actions, POST-only processes, CSRF, sanitising, ticket visibility, audience, internal data, downloads. Use whenever adding or reviewing a page, process script, download, hook or CLI script.
+description: Security and permission rules for every entry point of the administration Gibbon module - isActionAccessible, named actions, POST-only processes, CSRF, sanitising, ticket visibility, audience, internal data, downloads. Use whenever adding or reviewing a page, process script, download, hook or CLI script.
 ---
 
 # Access control rules (use Gibbon's own functions)
 
 Every file a browser can request must authorise itself. Checklist, in order:
 
-1. **Gibbon role permission**: first executable check is `isActionAccessible($guid, $connection2, '/modules/CustomerService/<page>.php')`
+1. **Gibbon role permission**: first executable check is `isActionAccessible($guid, $connection2, '/modules/administration/<page>.php')`
    (in this module: `csAccess($guid, $connection2, '<page>.php', '<Action name>')`).
    * Pages: on failure `$page->addError(__('You do not have access to this action.')); return;`
    * Process scripts: redirect with `return=error0`.

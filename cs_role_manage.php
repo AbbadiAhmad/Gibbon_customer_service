@@ -7,14 +7,14 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Domain\DataSet;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\RoleGateway;
-use Gibbon\Module\CustomerService\Service\Permissions;
+use Gibbon\Module\administration\Domain\RoleGateway;
+use Gibbon\Module\administration\Service\Permissions;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_role_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_role_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -26,7 +26,7 @@ $catalog = Permissions::catalog();
 
 $table = DataTable::create('csRoles');
 $table->setTitle(__('Roles'));
-$table->addHeaderAction('add', __('Add'))->setURL('/modules/CustomerService/cs_role_edit.php')->displayLabel();
+$table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_role_edit.php')->displayLabel();
 
 $table->addColumn('name', __('Name'));
 $table->addColumn('description', __('Description'));
@@ -39,8 +39,8 @@ $table->addColumn('permissions', __('Permissions'))->format(function ($role) use
 $table->addActionColumn()
     ->addParam('csRoleID')
     ->format(function ($role, $actions) {
-        $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_role_edit.php');
-        $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
+        $actions->addAction('edit', __('Edit'))->setURL('/modules/administration/cs_role_edit.php');
+        $actions->addAction('delete', __('Delete'))->setURL('/modules/administration/cs_delete.php')
             ->addParam('entity', 'role')->addParam('id', $role['csRoleID']);
     });
 

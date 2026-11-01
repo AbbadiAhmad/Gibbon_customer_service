@@ -7,13 +7,13 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Domain\DataSet;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\SpaceGateway;
+use Gibbon\Module\administration\Domain\SpaceGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_space_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_space_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -38,7 +38,7 @@ $table = DataTable::create('csSpaces');
 $table->setTitle(__('Spaces'));
 $table->addMetaData('blankSlate', __('There are no spaces you can manage.'));
 if ($isAdmin) {
-    $table->addHeaderAction('add', __('Add'))->setURL('/modules/CustomerService/cs_space_edit.php')->displayLabel();
+    $table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_space_edit.php')->displayLabel();
 }
 
 $table->addColumn('name', __('Name'));
@@ -51,9 +51,9 @@ $table->addColumn('active', __('Active'))->format(function ($s) {
 $table->addActionColumn()
     ->addParam('csSpaceID')
     ->format(function ($space, $actions) use ($isAdmin) {
-        $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_space_edit.php');
+        $actions->addAction('edit', __('Edit'))->setURL('/modules/administration/cs_space_edit.php');
         if ($isAdmin) {
-            $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
+            $actions->addAction('delete', __('Delete'))->setURL('/modules/administration/cs_delete.php')
                 ->addParam('entity', 'space')->addParam('id', $space['csSpaceID']);
         }
     });

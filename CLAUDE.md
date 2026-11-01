@@ -1,7 +1,7 @@
-# CustomerService - Gibbon module
+# administration - Gibbon module
 
-Service desk (requests, tickets, boards, automation) for Gibbon. Module folder/name `CustomerService`, namespace
-`Gibbon\Module\CustomerService`, tables `gibbonCs*`.
+Service desk (requests, tickets, boards, automation) for Gibbon. Module folder/name `administration`, namespace
+`Gibbon\Module\administration`, tables `gibbonCs*`.
 
 Read first: `docs/ARCHITECTURE.md` (what exists, status, decisions) and `README.md` (features).
 

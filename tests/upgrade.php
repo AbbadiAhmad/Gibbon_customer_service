@@ -16,7 +16,7 @@ $pdo->exec("CREATE TABLE gibbonModule (gibbonModuleID int auto_increment primary
 $pdo->exec("CREATE TABLE gibbonRole (gibbonRoleID int auto_increment primary key, category varchar(20))");
 $pdo->exec("CREATE TABLE gibbonAction (gibbonActionID int auto_increment primary key, gibbonModuleID int, name varchar(60), precedence int, category varchar(40), description text, URLList text, entryURL varchar(255), entrySidebar char(1), menuShow char(1), defaultPermissionAdmin char(1), defaultPermissionTeacher char(1), defaultPermissionStudent char(1), defaultPermissionParent char(1), defaultPermissionSupport char(1), categoryPermissionStaff char(1), categoryPermissionStudent char(1), categoryPermissionParent char(1), categoryPermissionOther char(1))");
 $pdo->exec("CREATE TABLE gibbonPermission (gibbonPermissionID int auto_increment primary key, gibbonRoleID int, gibbonActionID int)");
-$pdo->exec("INSERT INTO gibbonModule (name, entryURL) VALUES ('CustomerService', 'cs_dashboard.php')");
+$pdo->exec("INSERT INTO gibbonModule (name, entryURL) VALUES ('administration', 'cs_dashboard.php')");
 $pdo->exec("INSERT INTO gibbonRole (category) VALUES ('Staff'), ('Student'), ('Parent')");
 // the actions of 0.1.0 (the ones later steps copy or change) with permissions for every role
 $pdo->exec("INSERT INTO gibbonAction (gibbonModuleID,name,precedence,category,URLList,entryURL,entrySidebar,menuShow,defaultPermissionAdmin,defaultPermissionTeacher,defaultPermissionStudent,defaultPermissionParent,defaultPermissionSupport,categoryPermissionStaff,categoryPermissionStudent,categoryPermissionParent,categoryPermissionOther) VALUES

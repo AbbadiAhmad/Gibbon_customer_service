@@ -6,18 +6,18 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Automation\AutomationEngine;
-use Gibbon\Module\CustomerService\Domain\ActivityGateway;
-use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\Attachments;
-use Gibbon\Module\CustomerService\Service\CustomFields;
-use Gibbon\Module\CustomerService\Service\FormConfig;
-use Gibbon\Module\CustomerService\Service\Notifier;
+use Gibbon\Module\administration\Automation\AutomationEngine;
+use Gibbon\Module\administration\Domain\ActivityGateway;
+use Gibbon\Module\administration\Domain\AttachmentGateway;
+use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\Attachments;
+use Gibbon\Module\administration\Service\CustomFields;
+use Gibbon\Module\administration\Service\FormConfig;
+use Gibbon\Module\administration\Service\Notifier;
 
-$_POST['address'] = '/modules/CustomerService/cs_request_new.php';
+$_POST['address'] = '/modules/administration/cs_request_new.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';

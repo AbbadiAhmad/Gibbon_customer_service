@@ -1,6 +1,6 @@
 ---
 name: customerservice-automation-actions
-description: How to add an automation action or trigger to the CustomerService module (rule = trigger + conditions + actions). Actions are single class files discovered automatically. Use when asked for a new automatic behaviour, rule action, or trigger.
+description: How to add an automation action or trigger to the administration module (rule = trigger + conditions + actions). Actions are single class files discovered automatically. Use when asked for a new automatic behaviour, rule action, or trigger.
 ---
 
 # Automation actions and triggers
@@ -10,10 +10,10 @@ Engine: `src/Automation/AutomationEngine.php`; one action = one class in `src/Au
 
 ## New action = one file, nothing else
 ```php
-namespace Gibbon\Module\CustomerService\Automation\Actions;
+namespace Gibbon\Module\administration\Automation\Actions;
 
-use Gibbon\Module\CustomerService\Automation\AutomationContext;
-use Gibbon\Module\CustomerService\Automation\BaseAction;
+use Gibbon\Module\administration\Automation\AutomationContext;
+use Gibbon\Module\administration\Automation\BaseAction;
 
 class MyAction extends BaseAction                 // key is derived from the class name: my_action - it is STORED in rules, never rename a shipped class
 {

@@ -5,10 +5,10 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Service;
+namespace Gibbon\Module\administration\Service;
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\CustomerService\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\FieldGateway;
 
 /**
  * The "field / operator / value" rows used for board filters and for the conditions of automation rules.

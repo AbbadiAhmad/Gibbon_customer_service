@@ -8,13 +8,13 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Domain\DataSet;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\BoardGateway;
-use Gibbon\Module\CustomerService\Domain\SpaceGateway;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\BoardGateway;
+use Gibbon\Module\administration\Domain\SpaceGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\Workflow;
 
-const CS_MODULE = 'CustomerService';
+const CS_MODULE = 'administration';
 
 /** Parameters that make up a ticket search (and a saved filter). */
 const CS_SEARCH_PARAMS = ['search', 'status', 'csTicketTypeID', 'priority', 'assignee', 'mine', 'open', 'overdue', 'tag', 'watching'];
@@ -225,7 +225,7 @@ function csRenderMyRequests($container, $session, bool $openOnly = false, int $l
  */
 function csDeleteTarget($container, $session, bool $isAdmin, string $entity, $id): ?array
 {
-    $ns = 'Gibbon\\Module\\CustomerService\\Domain\\';
+    $ns = 'Gibbon\\Module\\administration\\Domain\\';
     $person = csPersonID($session);
     $spaces = $container->get($ns.'SpaceGateway');
 
@@ -301,7 +301,7 @@ function csParseDate($input)
 /** Overdue / due soon marker for a ticket row (empty string when there is nothing to flag). */
 function csDueBadge(array $ticket): string
 {
-    if (empty($ticket['dateDue']) || \Gibbon\Module\CustomerService\Service\Workflow::isDone($ticket['status'])) {
+    if (empty($ticket['dateDue']) || \Gibbon\Module\administration\Service\Workflow::isDone($ticket['status'])) {
         return '';
     }
     $today = date('Y-m-d');

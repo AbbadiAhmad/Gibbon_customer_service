@@ -12,7 +12,7 @@ require_once __DIR__ . '/moduleFunctions.php';
 csSanitizeRequest($container);
 
 // Generic delete confirmation for teams, ticket types, fields, roles, spaces, boards and space members.
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_delete.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_delete.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -33,5 +33,5 @@ if (!$target['allowed'] || !csAccess($guid, $connection2, 'cs_delete.php', $targ
 
 $page->breadcrumbs->add(__('Delete'));
 
-$form = DeleteForm::createForm($session->get('absoluteURL').'/modules/CustomerService/cs_delete_process.php');
+$form = DeleteForm::createForm($session->get('absoluteURL').'/modules/administration/cs_delete_process.php');
 echo $form->getOutput();

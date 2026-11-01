@@ -8,13 +8,13 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Domain\DataSet;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_dashboard.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_dashboard.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }

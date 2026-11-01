@@ -5,9 +5,9 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-use Gibbon\Module\CustomerService\Domain\AttachmentGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\Attachments;
+use Gibbon\Module\administration\Domain\AttachmentGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\Attachments;
 
 // Opened through export.php (no page layout): streams one attachment after checking the same access as the ticket page.
 require_once __DIR__ . '/../../gibbon.php';
@@ -15,7 +15,7 @@ require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_view.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_ticket_view.php')) {
     header('HTTP/1.1 403 Forbidden');
     echo __('You do not have access to this action.');
     exit;

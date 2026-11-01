@@ -7,16 +7,16 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Domain\DataSet;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Automation\ActionRegistry;
-use Gibbon\Module\CustomerService\Automation\AutomationEngine;
-use Gibbon\Module\CustomerService\Domain\RuleGateway;
-use Gibbon\Module\CustomerService\Service\BoardFilter;
+use Gibbon\Module\administration\Automation\ActionRegistry;
+use Gibbon\Module\administration\Automation\AutomationEngine;
+use Gibbon\Module\administration\Domain\RuleGateway;
+use Gibbon\Module\administration\Service\BoardFilter;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_rule_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_rule_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -31,7 +31,7 @@ $triggers = AutomationEngine::triggers();
 $table = DataTable::create('csRules');
 $table->setTitle(__('Automation Rules'));
 $table->addMetaData('blankSlate', __('There are no rules yet.'));
-$table->addHeaderAction('add', __('Add'))->setURL('/modules/CustomerService/cs_rule_edit.php')->displayLabel();
+$table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_rule_edit.php')->displayLabel();
 
 $table->addColumn('name', __('Name'));
 $table->addColumn('triggerKey', __('When'))->format(function ($r) use ($triggers) {
@@ -57,8 +57,8 @@ $table->addColumn('active', __('Active'))->format(function ($r) {
 $table->addActionColumn()
     ->addParam('csAutomationRuleID')
     ->format(function ($rule, $actions) {
-        $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_rule_edit.php');
-        $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
+        $actions->addAction('edit', __('Edit'))->setURL('/modules/administration/cs_rule_edit.php');
+        $actions->addAction('delete', __('Delete'))->setURL('/modules/administration/cs_delete.php')
             ->addParam('entity', 'rule')->addParam('id', $rule['csAutomationRuleID']);
     });
 

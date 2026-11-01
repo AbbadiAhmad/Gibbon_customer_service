@@ -6,13 +6,13 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_team_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_team_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -34,7 +34,7 @@ if (!empty($csTeamID)) {
 $page->breadcrumbs->add(__('Manage Teams'), 'cs_team_manage.php');
 $page->breadcrumbs->add(empty($csTeamID) ? __('Add Team') : __('Edit Team'));
 
-$form = Form::create('csTeam', $session->get('absoluteURL').'/modules/CustomerService/cs_team_process.php');
+$form = Form::create('csTeam', $session->get('absoluteURL').'/modules/administration/cs_team_process.php');
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('csTeamID', $csTeamID);
 

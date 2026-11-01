@@ -6,22 +6,22 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Automation\AutomationEngine;
-use Gibbon\Module\CustomerService\Domain\ActivityGateway;
-use Gibbon\Module\CustomerService\Domain\ChecklistGateway;
-use Gibbon\Module\CustomerService\Domain\LinkGateway;
-use Gibbon\Module\CustomerService\Domain\TagGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Domain\WatcherGateway;
-use Gibbon\Module\CustomerService\Service\Notifier;
-use Gibbon\Module\CustomerService\Service\Permissions;
+use Gibbon\Module\administration\Automation\AutomationEngine;
+use Gibbon\Module\administration\Domain\ActivityGateway;
+use Gibbon\Module\administration\Domain\ChecklistGateway;
+use Gibbon\Module\administration\Domain\LinkGateway;
+use Gibbon\Module\administration\Domain\TagGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Domain\WatcherGateway;
+use Gibbon\Module\administration\Service\Notifier;
+use Gibbon\Module\administration\Service\Permissions;
 
 /**
  * Everything on the ticket page that is not the main triage form: subtasks, checklists, tags, links and watchers.
  * Needs the same access as viewing the ticket; changing things needs the edit_ticket permission
  * (except following / unfollowing the ticket yourself).
  */
-$_POST['address'] = '/modules/CustomerService/cs_ticket_view.php';
+$_POST['address'] = '/modules/administration/cs_ticket_view.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -33,7 +33,7 @@ $action = $_POST['action'] ?? '';
 $csTicketID = $_POST['csTicketID'] ?? '';
 $person = csPersonID($session);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_ticket_view.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_ticket_view.php')) {
     csRedirect($session, 'cs_dashboard.php', [], 'error0');
 }
 

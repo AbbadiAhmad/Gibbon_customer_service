@@ -7,13 +7,13 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Domain\DataSet;
 use Gibbon\Tables\DataTable;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TeamGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_team_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_team_manage.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
@@ -24,7 +24,7 @@ $teams = $container->get(TeamGateway::class)->selectAllWithCounts();
 
 $table = DataTable::create('csTeams');
 $table->setTitle(__('Teams'));
-$table->addHeaderAction('add', __('Add'))->setURL('/modules/CustomerService/cs_team_edit.php')->displayLabel();
+$table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_team_edit.php')->displayLabel();
 
 $table->addColumn('name', __('Name'));
 $table->addColumn('description', __('Description'));
@@ -35,8 +35,8 @@ $table->addColumn('active', __('Active'))->format(function ($t) {
 $table->addActionColumn()
     ->addParam('csTeamID')
     ->format(function ($team, $actions) {
-        $actions->addAction('edit', __('Edit'))->setURL('/modules/CustomerService/cs_team_edit.php');
-        $actions->addAction('delete', __('Delete'))->setURL('/modules/CustomerService/cs_delete.php')
+        $actions->addAction('edit', __('Edit'))->setURL('/modules/administration/cs_team_edit.php');
+        $actions->addAction('delete', __('Delete'))->setURL('/modules/administration/cs_delete.php')
             ->addParam('entity', 'team')->addParam('id', $team['csTeamID']);
     });
 

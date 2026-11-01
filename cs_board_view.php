@@ -7,26 +7,26 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Module\CustomerService\Domain\BoardGateway;
-use Gibbon\Module\CustomerService\Domain\LinkGateway;
-use Gibbon\Module\CustomerService\Domain\SpaceGateway;
-use Gibbon\Module\CustomerService\Domain\TagGateway;
-use Gibbon\Module\CustomerService\Domain\TicketGateway;
-use Gibbon\Module\CustomerService\Service\BoardFilter;
-use Gibbon\Module\CustomerService\Service\Permissions;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\BoardGateway;
+use Gibbon\Module\administration\Domain\LinkGateway;
+use Gibbon\Module\administration\Domain\SpaceGateway;
+use Gibbon\Module\administration\Domain\TagGateway;
+use Gibbon\Module\administration\Domain\TicketGateway;
+use Gibbon\Module\administration\Service\BoardFilter;
+use Gibbon\Module\administration\Service\Permissions;
+use Gibbon\Module\administration\Service\Workflow;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_board_view.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_board_view.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
 
 $page->breadcrumbs->add(__('Boards'));
-$page->stylesheets->add('module-cs', 'modules/CustomerService/css/module.css');
+$page->stylesheets->add('module-cs', 'modules/administration/css/module.css');
 
 $isAdmin = csIsAdmin($guid, $connection2);
 $boards = csAccessibleBoards($container, $session, $isAdmin);
@@ -123,7 +123,7 @@ foreach ($lanes as $laneName => $laneTickets) {
         }
 
         if ($canMove) {
-            $form = Form::createBlank('move'.$t['csTicketID'], $session->get('absoluteURL').'/modules/CustomerService/cs_ticket_process.php');
+            $form = Form::createBlank('move'.$t['csTicketID'], $session->get('absoluteURL').'/modules/administration/cs_ticket_process.php');
             $form->addHiddenValue('address', $session->get('address'));
             $form->addHiddenValue('action', 'move');
             $form->addHiddenValue('csTicketID', $t['csTicketID']);

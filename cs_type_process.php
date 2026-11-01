@@ -6,12 +6,12 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Domain\TeamGateway;
-use Gibbon\Module\CustomerService\Domain\TicketTypeGateway;
-use Gibbon\Module\CustomerService\Service\FormConfig;
-use Gibbon\Module\CustomerService\Service\Workflow;
+use Gibbon\Module\administration\Domain\TeamGateway;
+use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Service\FormConfig;
+use Gibbon\Module\administration\Service\Workflow;
 
-$_POST['address'] = '/modules/CustomerService/cs_type_manage.php';
+$_POST['address'] = '/modules/administration/cs_type_manage.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -21,7 +21,7 @@ csRequirePost($session);
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csTicketTypeID = $_POST['csTicketTypeID'] ?? '';
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_type_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_type_edit.php')) {
     csRedirect($session, 'cs_type_manage.php', [], 'error0');
 }
 

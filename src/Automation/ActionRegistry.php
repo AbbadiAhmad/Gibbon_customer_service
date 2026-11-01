@@ -5,7 +5,7 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
-namespace Gibbon\Module\CustomerService\Automation;
+namespace Gibbon\Module\administration\Automation;
 
 /**
  * Finds the actions: every class in src/Automation/Actions/ that implements AutomationAction.

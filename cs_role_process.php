@@ -6,10 +6,10 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Data\Validator;
-use Gibbon\Module\CustomerService\Domain\RoleGateway;
-use Gibbon\Module\CustomerService\Service\Permissions;
+use Gibbon\Module\administration\Domain\RoleGateway;
+use Gibbon\Module\administration\Service\Permissions;
 
-$_POST['address'] = '/modules/CustomerService/cs_role_manage.php';
+$_POST['address'] = '/modules/administration/cs_role_manage.php';
 
 require_once __DIR__ . '/../../gibbon.php';
 require_once __DIR__ . '/moduleFunctions.php';
@@ -19,7 +19,7 @@ csRequirePost($session);
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $csRoleID = $_POST['csRoleID'] ?? '';
 
-if (!isActionAccessible($guid, $connection2, '/modules/CustomerService/cs_role_edit.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_role_edit.php')) {
     csRedirect($session, 'cs_role_manage.php', [], 'error0');
 }
 

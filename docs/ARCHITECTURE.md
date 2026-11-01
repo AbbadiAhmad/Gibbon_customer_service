@@ -1,6 +1,6 @@
 # Architecture and decisions
 
-Developer overview of the CustomerService module: what exists, how a request flows, why things are the way they are.
+Developer overview of the administration module: what exists, how a request flows, why things are the way they are.
 The user documentation (features, setup) is in the [README](../README.md); the rules to follow when changing the code are
 the project skills in [`.claude/skills/`](../.claude/skills) (summarised in [`CLAUDE.md`](../CLAUDE.md)).
 
