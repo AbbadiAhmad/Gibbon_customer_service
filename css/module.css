@@ -1,0 +1,39 @@
+.cs-board-picker { margin-bottom: 0.75rem; }
+.cs-board-picker > * { margin-right: 1.25rem; }
+.cs-board { display: flex; gap: 0.75rem; align-items: flex-start; overflow-x: auto; padding-bottom: 1rem; }
+.cs-lane { flex: 0 0 16rem; background: #f3f4f6; border-radius: 0.5rem; padding: 0.5rem; min-height: 6rem; }
+.cs-lane h3 { margin: 0 0 0.5rem 0; font-size: 0.9rem; text-transform: uppercase; color: #4b5563; border: 0; }
+.cs-count { background: #d1d5db; border-radius: 9999px; padding: 0 0.5rem; font-size: 0.75rem; }
+.cs-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85rem; }
+.cs-meta { color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; }
+.cs-card select { width: 100%; margin-top: 0.4rem; font-size: 0.75rem; }
+.cs-tag { display: inline-block; background: #e0e7ff; color: #3730a3; border-radius: 9999px; padding: 0 0.6rem; margin-right: 0.3rem; font-size: 0.8rem; }
+.cs-tag a { color: inherit; }
+.cs-portal { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+.cs-portal-card { display: flex; flex-direction: column; width: 15rem; padding: 0.9rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; text-decoration: none; color: inherit; }
+.cs-portal-card:hover { border-color: #6366f1; box-shadow: 0 1px 6px rgba(99, 102, 241, 0.25); }
+.cs-portal-icon { font-size: 1.6rem; }
+.cs-portal-name { font-weight: 600; margin-top: 0.3rem; }
+.cs-portal-desc { color: #6b7280; font-size: 0.8rem; margin-top: 0.2rem; }
+.cs-lane { border-top: 4px solid #9ca3af; }
+.cs-lane.cs-cat-todo { border-top-color: #9ca3af; }
+.cs-lane.cs-cat-inprogress { border-top-color: #3b82f6; }
+.cs-lane.cs-cat-done { border-top-color: #22c55e; }
+.cs-category { font-size: 0.65rem; font-weight: 400; color: #6b7280; margin-left: 0.3rem; }
+
+/* Ticket page tabs (Comments / History / All activity) - no JavaScript: radio buttons drive the panels */
+.cs-tabs { margin: 1rem 0; }
+.cs-tabs > input { position: absolute; opacity: 0; pointer-events: none; }
+.cs-tabs > label { display: inline-block; padding: 0.5rem 1rem; cursor: pointer; color: #6b7280; border-bottom: 3px solid transparent; }
+.cs-tabs > input:checked + label { color: #111827; font-weight: 600; border-bottom-color: #6366f1; }
+.cs-tabs > input:focus-visible + label { outline: 2px solid #6366f1; }
+.cs-panel { display: none; border-top: 1px solid #e5e7eb; padding-top: 0.75rem; }
+#csTabComments:checked ~ #csPanelComments, #csTabHistory:checked ~ #csPanelHistory, #csTabAll:checked ~ #csPanelAll { display: block; }
+.cs-comment { border: 1px solid #e5e7eb; border-radius: 0.4rem; padding: 0.75rem; margin: 0.5rem 0; }
+.cs-comment.cs-internal { background: #fefce8; border-color: #facc15; }
+.cs-comment-head { color: #6b7280; font-size: 0.85rem; margin-bottom: 0.25rem; }
+.cs-event { color: #4b5563; font-size: 0.85rem; padding: 0.15rem 0; }
+.cs-internal-tag { background: #fef9c3; color: #854d0e; border-radius: 0.25rem; padding: 0 0.3rem; font-size: 0.7rem; }
+table.cs-history { width: 100%; border-collapse: collapse; }
+table.cs-history th { text-align: left; color: #6b7280; font-weight: 600; padding: 0.35rem 0.5rem; border-bottom: 1px solid #e5e7eb; }
+table.cs-history td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #f3f4f6; vertical-align: top; }

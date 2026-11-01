@@ -1,0 +1,51 @@
+v0.6.0
+------
+- Default data for a school: space "School Office", teams (Front Office, Admissions, Staff Services), request types Absence Report,
+  School Registration, School Leaving, General Question (families) and Staff Request, Material Request (staff) with forms,
+  workflows and checklist rules, six boards (one generic board with every status)
+- Status categories To Do / In Progress / Done: every status belongs to one category, boards add their own statuses; "finished"
+  now means category Done (reminders, blockers, subtasks, open filters), no longer the names Resolved / Closed
+- Ticket page: Comments / History / All activity tabs; history lines show old -> new values
+- Board filter field "Status category"
+- tests/: database tests (install, upgrade chain first release -> latest vs fresh install, queries and automation against real MariaDB)
+
+v0.5.0
+------
+- Database tables renamed to the Gibbon convention (csTeam -> gibbonCsTeam, ...). The upgrade renames them in place and keeps all data.
+  Column names (csTeamID, ...) are unchanged.
+
+v0.4.0
+------
+- Customer Portal home (grouped request type cards, search) as the module's first page
+- Request form builder per request type: show/hide, required, labels, help text, order; fields hidden from the requester
+- Request types limited to role categories (Staff / Student / Parent / Other)
+- Agents can edit custom fields on the ticket
+- Security hardening: named-action check on shared pages, POST-only process scripts, GET sanitising, hook/cron/src protection
+- Boards action is staff-only by default
+
+v0.3.0
+------
+- Automation rules: trigger -> conditions -> actions; 10 built-in actions, new actions are one class file
+- Start / due dates on every ticket type, overdue markers, daily reminders (cli_reminders.php)
+- Subtasks and checklists
+- Linked tickets: blocks / is blocked by, duplicates, relates to; blocked tickets cannot be resolved
+- Tags (filterable) and watchers
+- Board filters: due/start date, overdue, blocked, subtask and tag conditions
+
+v0.2.0
+------
+- Notifications for new requests, status changes, assignments, comments and reopened requests
+- Attachments on requests and comments (served through an access check)
+- Internal notes (hidden from the requester)
+- Per ticket type workflow (allowed moves, comment required), resolution note, requester confirm / reopen
+- Auto-close of long Resolved tickets (cli_autoClose.php)
+- Ticket search with quick views and saved filters
+
+v0.1.0
+------
+Initial release of the Customer Service module:
+- Teams, ticket types and per-type custom fields
+- Spaces with boards, board filters and status columns
+- Roles with permissions, users assigned to roles per space
+- Request portal (raise a request, my requests), ticket view with comments and activity
+- Dashboard hooks (Staff / Student / Parent dashboards)
