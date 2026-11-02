@@ -9,10 +9,10 @@ use Gibbon\Domain\DataSet;
 use Gibbon\Forms\Form;
 use Gibbon\Tables\DataTable;
 use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\FormGateway;
 use Gibbon\Module\administration\Domain\TeamGateway;
 use Gibbon\Module\administration\Domain\TicketTypeGateway;
 use Gibbon\Module\administration\Service\CustomFields;
-use Gibbon\Module\administration\Service\FormConfig;
 use Gibbon\Services\Format;
 use Gibbon\Module\administration\Service\Workflow;
 
@@ -27,7 +27,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/administration/cs_type_ed
 
 $csTicketTypeID = $_GET['csTicketTypeID'] ?? '';
 $gateway = $container->get(TicketTypeGateway::class);
-$values = ['name' => '', 'description' => '', 'csTeamID' => '', 'active' => 'Y', 'workflow' => null, 'groupName' => '', 'icon' => '', 'audience' => ''];
+$values = ['name' => '', 'description' => '', 'csTeamID' => '', 'active' => 'Y', 'workflow' => null];
 
 if (!empty($csTicketTypeID)) {
     $values = $gateway->getByID($csTicketTypeID);
@@ -49,21 +49,8 @@ $row = $form->addRow();
     $row->addTextField('name')->maxLength(100)->required()->setValue($values['name']);
 
 $row = $form->addRow();
-    $row->addLabel('description', __('Description'))->description(__('Shown to the requester when choosing the request type.'));
+    $row->addLabel('description', __('Description'))->description(__('What kind of ticket this is. Forms that create tickets of this type have their own name and description.'));
     $row->addTextArea('description')->setRows(3)->setValue($values['description']);
-
-$form->addRow()->addHeading('Portal', __('Customer Portal'));
-$row = $form->addRow();
-    $row->addLabel('groupName', __('Group'))->description(__('Request types with the same group are listed together on the portal, e.g. IT, Facilities, Administration.'));
-    $row->addTextField('groupName')->maxLength(60)->setValue($values['groupName']);
-
-$row = $form->addRow();
-    $row->addLabel('icon', __('Icon'))->description(__('One symbol shown on the portal card, for example a check mark or an envelope. Use a plain symbol: emoji with 4 bytes do not save on databases with the utf8 character set.'));
-    $row->addTextField('icon')->maxLength(8)->setValue($values['icon']);
-
-$row = $form->addRow();
-    $row->addLabel('audience', __('Who Can Raise It'))->description(__('Limit the request type to some kinds of users. Leave all unticked for everybody.'));
-    $row->addCheckbox('audience')->fromArray(FormConfig::audienceOptions())->checked(array_filter(explode(',', (string)$values['audience'])));
 
 $row = $form->addRow();
     $row->addLabel('csTeamID', __('Default Team'))->description(__('New tickets of this type are routed to this team.'));
@@ -93,16 +80,21 @@ echo $form->getOutput();
 
 // Fields of this type
 if (!empty($csTicketTypeID)) {
-    echo '<p>'.Format::link(csURL($session, 'cs_form_edit.php', ['csTicketTypeID' => $csTicketTypeID]), __('Configure the request form'))
-        .' &middot; '.Format::link(csURL($session, 'cs_request_new.php', ['csTicketTypeID' => $csTicketTypeID]), __('Open the form as a requester sees it')).'</p>';
-    echo '<div class="message">'.__('Every ticket type has these basic fields by default: Title, Description, Priority, Start Date, Due Date and Attachments. The fields below are extra fields for this type.').'</div>';
+    // The forms are separate: they only point at this type. Show which forms create tickets of it.
+    $typeForms = $container->get(FormGateway::class)->selectByType($csTicketTypeID);
+    echo '<h3>'.__('Forms for This Ticket Type').'</h3><p>';
+    echo empty($typeForms) ? '<i>'.__('No form creates tickets of this type yet.').'</i> ' : implode(' &middot; ', array_map(function ($id, $name) use ($session) {
+        return Format::link(csURL($session, 'cs_form_edit.php', ['csFormID' => $id]), htmlspecialchars($name));
+    }, array_keys($typeForms), $typeForms)).' &middot; ';
+    echo Format::link(csURL($session, 'cs_form_edit.php', ['csTicketTypeID' => $csTicketTypeID]), __('Add a form for this type')).'</p>';
+    echo '<div class="message">'.__('The fields below are the extra fields the tickets of this type carry (besides title, description, priority, dates and attachments). They are not a form: a form decides which of them it asks for. Tick Internal for fields only the agents see.').'</div>';
 
     $fields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
     $typeLabels = CustomFields::typeLabels();
 
     $table = DataTable::create('csFields');
-    $table->setTitle(__('Form Fields'));
-    $table->addMetaData('blankSlate', __('This type has no extra fields yet. Requesters only fill in title, description and priority.'));
+    $table->setTitle(__('Ticket Fields'));
+    $table->addMetaData('blankSlate', __('This type has no extra fields yet.'));
     $table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_field_edit.php')
         ->addParam('csTicketTypeID', $csTicketTypeID)->displayLabel();
 

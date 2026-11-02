@@ -33,8 +33,9 @@ upgrades from 0.4.0 or older rename the old `cs...` tables in place (CHANGEDB 0.
 | Concept | Where | What it is |
 |---|---|---|
 | Team | Manage Teams | Named group of users (e.g. *L1 Support*). A ticket type can route new tickets to a default team. |
-| Ticket type | Manage Ticket Types | A kind of request (e.g. *Password reset*, *Bug*). Only active types can be requested. |
-| Field | Manage Ticket Types > edit type | Form field of one type: short/long text, number, date, dropdown, checkboxes, radio, yes/no; optionally required. |
+| Ticket type | Manage Ticket Types | What a ticket *is*: its default team, its workflow and the extra fields its tickets carry (e.g. *Absence Report*, *Bug*). Nothing about forms. |
+| Ticket field | Manage Ticket Types > edit type | An extra field of the tickets of a type: short/long text, number, date, dropdown, checkboxes, radio, yes/no. *Internal* fields are only for the agents. Used by boards, filters and rules. |
+| Form | Manage Forms | What people fill in to raise a ticket. Has its own questions, each filling in one field of the ticket, and its own visibility. Creates tickets of one ticket type. |
 | Space | Manage Spaces | A working space (e.g. *IT*, *Administration*) that contains boards and members. |
 | Role | Manage Roles | A named set of permissions (see below). |
 | Member | Manage Spaces > edit space | A user with one or more roles **in a space**. |
@@ -84,7 +85,7 @@ the requester writes), and a reopened request. The person who made the change is
 
 ## Attachments
 
-Up to 5 files on the request form and on every comment, stored with Gibbon's uploader (allowed file types follow
+Up to 5 files per file question of a form and on every comment, stored with Gibbon's uploader (allowed file types follow
 the Gibbon setting). Downloads go through an access check; attachments of internal notes are hidden from the requester.
 Deleting a ticket removes its files.
 
@@ -117,23 +118,23 @@ Everything below is created by the installer (`src/Install/DefaultData.php`) and
 * **Space** *School Office* with **teams** *Front Office* (L1: triage, questions, absences), *Admissions* (registrations, leaving)
   and *Staff Services* (staff requests, materials). Add yourself and your colleagues in *Manage Teams* / *Manage Spaces*
   (Administrators see every space and board without being a member).
-* **Request types** (portal groups *Families* and *Staff*, each with its own form and workflow):
+* **Ticket types** (team, workflow, extra fields) and the **forms** built on them (portal groups *Families* and *Staff*):
 
-  | Type | For | Form (besides summary / description) | Workflow |
-  |---|---|---|---|
-  | Absence Report | parents, staff | child, class, absent from/until, reason, phone, doctor's note | New -> In Progress -> Resolved |
-  | School Registration | parents, staff | child, birth date, year, previous school, siblings, phone, desired start date, documents | New -> Documents Requested -> Interview Planned -> Resolved / Declined (Waiting in between) |
-  | School Leaving | parents, staff | child, class, reason, new school, documents needed, last day at school | New -> In Progress -> Resolved (Waiting in between) |
-  | General Question | everybody | topic, child | New -> In Progress -> Resolved (Waiting in between) |
-  | Staff Request | staff | kind of request, from / needed by | New -> In Progress / Awaiting Approval -> Resolved / Declined |
-  | Material Request | staff | item, quantity, room, budget code, needed by | New -> Awaiting Approval -> Ordered -> Resolved / Declined |
+  | Form | Ticket type | For | Questions (besides the summary) | Workflow of the type |
+  |---|---|---|---|---|
+  | Report an absence | Absence Report | parents, staff | child, class, absent from/until, reason, phone, additional information, doctor's note | New -> In Progress -> Resolved |
+  | Register a child | School Registration | parents, staff | child, birth date, year, previous school, siblings, phone, desired start date, interests, remarks, documents | New -> Documents Requested -> Interview Planned -> Resolved / Declined (Waiting in between) |
+  | Leave the school | School Leaving | parents, staff | child, class, reason, new school, documents needed, last day at school, remarks | New -> In Progress -> Resolved (Waiting in between) |
+  | Ask a question | General Question | everybody | subject, topic, child, question, attachment | New -> In Progress -> Resolved (Waiting in between) |
+  | Staff request | Staff Request | staff | summary, kind of request, from / needed by, details, attachments | New -> In Progress / Awaiting Approval -> Resolved / Declined |
+  | Order material | Material Request | staff | item, quantity, room, budget code, needed by, urgency, reason | New -> Awaiting Approval -> Ordered -> Resolved / Declined |
 
-  Agent-only fields (e.g. "entered in the attendance register", "documents received", "fees settled") are on the ticket, not on the portal form.
+  Internal ticket fields (e.g. "entered in the attendance register", "documents received", "fees settled") are only for the agents: no form asks for them.
   Registrations and leavings get a ready-made **checklist** (automation rules).
 * **Boards**: *All requests* (every status), *Absences*, *Registrations*, *Leaving*, *Questions*, *Staff Services*.
 * **Roles**: Space Admin, Agent, Viewer.
 
-Upgrading an existing installation adds the status registry but not these defaults (your data stays as it is).
+Upgrading an existing installation never adds these defaults (your data stays as it is). It turns each existing ticket type into a form with the questions its old request form had.
 
 ## Statuses and their categories
 
@@ -159,17 +160,34 @@ Like Jira: details and description on top, then three tabs - **Comments** (with 
 **History** (every change with who and when: status, assignee, priority, team, dates, fields, tags, links, automation; old and new value) and
 **All activity** (both together). Internal comments and internal history lines are only shown to the people working on the ticket.
 
-## Customer portal and request forms (like Jira Service Management)
+## Forms (like Jira Service Management request types)
 
-* **Customer Portal** is the first page of the module. It lists the request types as cards, grouped (IT, Facilities...), with a
-  search box. Click a card to open its form; each form also has a direct link (shown on *Manage Ticket Types > Request Form*).
-* **Request form builder** (*Manage Ticket Types > Request Form* icon): per request type, choose which basic fields are shown
-  (Summary, Description, Priority, Start/Due date, Attachments), which are required, their labels and help text, and the order -
-  mixed with the type's custom fields. A custom field can be set to *Hidden*: the requester never sees it, the agents fill it in
-  on the ticket page (**Fields** form).
-* **Who can raise it**: a request type can be limited to Staff, Students, Parents or Other users (Gibbon role categories);
-  others neither see it on the portal nor can post to it.
-* Portal group and icon are set on the request type.
+**Forms are separate from ticket types.** A form is what people fill in; the ticket type decides what the created ticket is. One ticket type can have
+several forms (for example a short and a long one), and a form can ask for all the fields of the ticket or only some of them.
+
+* **Customer Portal** is the first page of the module: the forms the user may use, as cards grouped (Families, Staff...), with a search box.
+* **Manage Forms** (Administrators): name, description, the ticket type it creates, portal group and icon, order, active, confirmation text, and
+  *who can use it*. Then the **questions**: label, help text, input (short text, long text, number, date, dropdown, radio buttons, checkboxes,
+  yes/no, file upload, or information text), options, required, order.
+* **Every question fills in one field of the ticket** (the *Fills In* setting):
+
+  | Fills in | Behaviour |
+  |---|---|
+  | Title | the answers are joined with " - " (no question for it: the *title template* such as `Absence {child_name} from {absent_from}`, else the name of the form) |
+  | Description | each answer becomes a line `Question: answer`; choices and checkboxes are written as text (`Interested in: After-school care, School bus`). One long text alone is kept as it is |
+  | Priority | a dropdown whose options are Low / Medium / High / Urgent |
+  | Start date / Due date | a date question |
+  | Attachments | a file upload question |
+  | A field of the ticket type | the answer is checked against that field (options, date, number...); two questions for the same text field are put one under the other |
+
+  A question can only be mapped to something that can hold its answer; the editor says what is wrong. Answers for a field that no longer exists are dropped.
+* **Start from the ticket type**: a new form can begin with one question per ticket field ("recommended: delete or change what you do not need"), and
+  *Update From the Ticket Type* adds a question for each ticket field added to the type later.
+* **Visibility is a property of the form**, independent of the ticket type: tick **role categories** (Staff, Students, Parents, Other) and/or select **specific
+  roles**; a user may use the form when their category is ticked *or* their role is selected; nothing set = every registered user. Inactive forms are hidden.
+  A Gibbon login is always required.
+* **Share a form**: its edit page shows the link `index.php?q=/modules/administration/cs_request_new.php&form=<link name>`. People who may not use the form get "not found".
+* The ticket remembers its form (shown as *Raised with*), and the requester sees the form's confirmation text after sending.
 
 ## Security
 
@@ -180,14 +198,14 @@ whose boards show it. The shared delete page requires the action that owns the r
 `src/` is blocked from direct web access, `hook_dashboard.php` refuses to run outside Gibbon and the cron scripts refuse to run
 outside the command line. Boards are not offered to student / parent roles by default.
 
-## Basic fields of every ticket type
+## Fields of a ticket
 
-Every type has these fields by default: **Title, Description, Priority, Start Date, Due Date, Attachments**. The fields you
-define on a type (Manage Ticket Types) are extra fields on top of these.
+Every ticket has: **Title, Description, Priority, Start Date, Due Date, Attachments**. The *ticket fields* you define on a ticket type
+(Manage Ticket Types) are extra fields on top of these. A form may ask for any of them.
 
 ## Due dates and reminders
 
-* Start and due date are optional on the request form and editable by agents. **Overdue / Due today** markers show on
+* Start and due date can be asked by a form (mapped to the ticket) and are editable by agents. **Overdue / Due today** markers show on
   boards, the dashboard, search results, subtasks and the ticket page.
 * Run `php modules/administration/cli_reminders.php 1` once a day from cron: tickets due within N days (default 1) get one
   "due soon" reminder, overdue tickets one "overdue" notice. They go to whoever works on the ticket and to the watchers and

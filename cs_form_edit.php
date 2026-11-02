@@ -5,79 +5,189 @@ Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers a
 Copyright © 2010, Gibbon Foundation
 */
 
+use Gibbon\Domain\DataSet;
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
+use Gibbon\Tables\DataTable;
 use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\FormFieldGateway;
+use Gibbon\Module\administration\Domain\FormGateway;
 use Gibbon\Module\administration\Domain\TicketTypeGateway;
-use Gibbon\Module\administration\Service\CustomFields;
-use Gibbon\Module\administration\Service\FormConfig;
+use Gibbon\Module\administration\Service\FormAccess;
+use Gibbon\Module\administration\Service\FormMapper;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
 csSanitizeRequest($container);
 
-if (!csAccess($guid, $connection2, 'cs_form_edit.php', 'Manage Ticket Types')) {
+if (!csAccess($guid, $connection2, 'cs_form_edit.php')) {
     $page->addError(__('You do not have access to this action.'));
     return;
 }
 
-$csTicketTypeID = $_GET['csTicketTypeID'] ?? '';
-$type = $container->get(TicketTypeGateway::class)->getByID($csTicketTypeID);
-if (empty($type)) {
-    $page->addError(__('The specified record cannot be found.'));
-    return;
+$csFormID = $_GET['csFormID'] ?? '';
+$forms = $container->get(FormGateway::class);
+$types = $container->get(TicketTypeGateway::class);
+$values = ['name' => '', 'csTicketTypeID' => '', 'slug' => '', 'description' => '', 'groupName' => '', 'icon' => '', 'audience' => '', 'roles' => '',
+    'titleTemplate' => '', 'confirmationText' => '', 'sequenceNumber' => 10, 'active' => 'Y'];
+
+if (!empty($csFormID)) {
+    $values = $forms->getByID($csFormID);
+    if (empty($values)) {
+        $page->addError(__('The specified record cannot be found.'));
+        return;
+    }
 }
 
-$page->breadcrumbs->add(__('Manage Ticket Types'), 'cs_type_manage.php');
-$page->breadcrumbs->add($type['name'], 'cs_type_edit.php', ['csTicketTypeID' => $csTicketTypeID]);
-$page->breadcrumbs->add(__('Request Form'));
+$page->breadcrumbs->add(__('Manage Forms'), 'cs_form_manage.php');
+$page->breadcrumbs->add(empty($csFormID) ? __('Add Form') : $values['name']);
+echo csFlashOutput($session);
 
-$formUrl = csURL($session, 'cs_request_new.php', ['csTicketTypeID' => $csTicketTypeID]);
-echo '<p>'.__('This is the form requesters fill in on the customer portal. Choose what they see, what is required and in which order.').' '
-    .Format::link($formUrl, __('Open the form as a requester sees it')).'</p>';
-echo '<p class="text-gray-600">'.__('Direct link to this form').': <code>'.htmlspecialchars($formUrl).'</code></p>';
-
-$yesNo = ['Y' => __('Yes'), 'N' => __('No')];
-$core = FormConfig::core($type['formConfig']);
-$customFields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
-$typeLabels = CustomFields::typeLabels();
-
-$form = Form::create('csFormEditor', $session->get('absoluteURL').'/modules/administration/cs_form_process.php');
+// ---- The form itself: name, ticket type, visibility ------------------------------------------------
+$form = Form::create('csForm', $session->get('absoluteURL').'/modules/administration/cs_form_process.php');
 $form->addHiddenValue('address', $session->get('address'));
-$form->addHiddenValue('csTicketTypeID', $csTicketTypeID);
+$form->addHiddenValue('action', 'save');
+$form->addHiddenValue('csFormID', $csFormID);
 
-// ---- Basic fields --------------------------------------------------------------------
-$form->addRow()->addHeading('Basic', __('Basic Fields'))->append(__('Every request type has these. The summary is always shown and required.'));
-foreach ($core as $key => $c) {
-    $locked = in_array($key, FormConfig::LOCKED, true);
+$row = $form->addRow();
+    $row->addLabel('name', __('Name'))->description(__('What people see on the portal.'));
+    $row->addTextField('name')->maxLength(100)->required()->setValue($values['name']);
+
+$row = $form->addRow();
+    $row->addLabel('description', __('Description'))->description(__('Shown on the portal card and above the form.'));
+    $row->addTextArea('description')->setRows(2)->setValue($values['description']);
+
+$row = $form->addRow();
+    $row->addLabel('csTicketTypeID', __('Creates Tickets of Type'))->description(empty($csFormID)
+        ? __('The ticket type decides the team, the workflow and which extra fields a ticket has. The questions of this form fill in those fields.')
+        : __('Fixed once the form exists: the questions are mapped to the fields of this ticket type.'));
+if (empty($csFormID)) {
+    $row->addSelect('csTicketTypeID')->fromArray($types->selectOptions())->required()->placeholder()->selected($_GET['csTicketTypeID'] ?? '');
 
     $row = $form->addRow();
-    $row->addLabel('fmLabel_'.$key, FormConfig::defaults()[$key]['label'])->description($locked ? __('Always shown and required.') : '');
-    $col = $row->addColumn()->addClass('flex flex-wrap gap-2');
-    $col->addSelect('fmShow_'.$key)->fromArray([ 'Y' => __('Shown'), 'N' => __('Hidden')])->selected($c['show'] ? 'Y' : 'N')->setClass('w-24'.($locked ? ' hidden' : ''));
-    $col->addSelect('fmRequired_'.$key)->fromArray(['Y' => __('Required'), 'N' => __('Optional')])->selected($c['required'] ? 'Y' : 'N')->setClass('w-28'.($locked ? ' hidden' : ''));
-    $col->addTextField('fmLabel_'.$key)->maxLength(255)->setValue($c['label'])->setClass('flex-1')->placeholder(__('Label'));
-    $col->addTextField('fmHelp_'.$key)->maxLength(255)->setValue($c['help'])->setClass('flex-1')->placeholder(__('Help text'));
-    $col->addNumber('fmOrder_'.$key)->minimum(0)->maximum(9999)->setValue($c['order'])->setClass('w-20');
+        $row->addLabel('startWith', __('Start With'));
+        $row->addSelect('startWith')->fromArray([
+            'all'   => __('A question for every field of the ticket (recommended: delete or change what you do not need)'),
+            'empty' => __('An empty form'),
+        ])->selected('all');
+} else {
+    $row->addTextField('typeName')->setValue($types->getByID($values['csTicketTypeID'])['name'] ?? '')->readonly();
 }
 
-// ---- Custom fields -----------------------------------------------------------------
-$form->addRow()->addHeading('Custom', __('Custom Fields'))->append(__('Fields shown here are on the portal form. A field set to "Hidden" is only filled in by the agents on the ticket page. Labels, help text and options are edited on the field itself.'));
-if (empty($customFields)) {
-    $form->addRow()->addContent('<i>'.__('This type has no custom fields yet.').'</i>');
-}
-foreach ($customFields as $field) {
-    $row = $form->addRow();
-    $row->addLabel('fmShow_f'.$field['csFieldID'], $field['label'])->description($typeLabels[$field['fieldType']] ?? $field['fieldType']);
-    $col = $row->addColumn()->addClass('flex flex-wrap gap-2');
-    $col->addSelect('fmShow_f'.$field['csFieldID'])->fromArray(['Y' => __('Shown'), 'N' => __('Hidden')])->selected($field['showOnForm'])->setClass('w-24');
-    $col->addSelect('fmRequired_f'.$field['csFieldID'])->fromArray(['Y' => __('Required'), 'N' => __('Optional')])->selected($field['required'])->setClass('w-28');
-    $col->addContent(Format::link(csURL($session, 'cs_field_edit.php', ['csTicketTypeID' => $csTicketTypeID, 'csFieldID' => $field['csFieldID']]), __('Edit field')))->setClass('flex-1');
-    $col->addNumber('fmOrder_f'.$field['csFieldID'])->minimum(0)->maximum(9999)->setValue($field['sequenceNumber'])->setClass('w-20');
-}
+$form->addRow()->addHeading('Visibility', __('Who Can Use This Form'))
+    ->append(__('This is a property of the form, independent of the ticket type. Leave everything empty for every registered user (a Gibbon login is always needed). Otherwise a user may use the form when their role category is ticked OR their role is selected.'));
+
+$row = $form->addRow();
+    $row->addLabel('audience', __('Role Categories'));
+    $row->addCheckbox('audience')->fromArray(FormAccess::audienceOptions())->checked(FormAccess::parseList($values['audience']));
+
+$row = $form->addRow();
+    $row->addLabel('roles', __('Specific Roles'))->description(__('Hold Ctrl/Cmd to select several.'));
+    $row->addSelect('roles')->fromArray($forms->selectRoleOptions())->selectMultiple()->selected(FormAccess::parseList($values['roles']));
+
+$row = $form->addRow();
+    $row->addLabel('active', __('Active'))->description(__('An inactive form is hidden from the portal and cannot be submitted.'));
+    $row->addYesNo('active')->required()->selected($values['active']);
+
+$form->addRow()->addHeading('Portal', __('On the Portal'));
+$row = $form->addRow();
+    $row->addLabel('groupName', __('Group'))->description(__('Forms with the same group are listed together, e.g. Families, Staff.'));
+    $row->addTextField('groupName')->maxLength(60)->setValue($values['groupName']);
+
+$row = $form->addRow();
+    $row->addLabel('icon', __('Icon'))->description(__('One plain symbol, for example a check mark or an envelope (4-byte emoji do not save on databases with the utf8 character set).'));
+    $row->addTextField('icon')->maxLength(8)->setValue($values['icon']);
+
+$row = $form->addRow();
+    $row->addLabel('sequenceNumber', __('Order'))->description(__('Within its group; lower first.'));
+    $row->addNumber('sequenceNumber')->minimum(0)->maximum(9999)->required()->setValue($values['sequenceNumber']);
+
+$form->addRow()->addHeading('Ticket', __('The Ticket It Creates'));
+$row = $form->addRow();
+    $row->addLabel('titleTemplate', __('Title Template'))->description(__('Used when no question is mapped to the title. Write the key of a question in braces, e.g. "Absence {child_name} from {absent_from}". Without a template the name of the form is the title.'));
+    $row->addTextField('titleTemplate')->maxLength(200)->setValue($values['titleTemplate']);
+
+$row = $form->addRow();
+    $row->addLabel('confirmationText', __('Confirmation'))->description(__('Shown to the requester after sending.'));
+    $row->addTextArea('confirmationText')->setRows(2)->setValue($values['confirmationText']);
+
+$row = $form->addRow();
+    $row->addLabel('slug', __('Link Name'))->description(__('The readable part of the link you can share (letters, numbers, dashes). Leave empty to make it from the name.'));
+    $row->addTextField('slug')->maxLength(80)->setValue($values['slug']);
 
 $row = $form->addRow();
     $row->addFooter();
     $row->addSubmit();
 
 echo $form->getOutput();
+
+if (empty($csFormID)) {
+    return; // the questions come once the form exists
+}
+
+// ---- Share and preview -------------------------------------------------------------------------
+$shareUrl = $session->get('absoluteURL').'/index.php?q=/modules/administration/cs_request_new.php&form='.rawurlencode($values['slug']);
+echo '<h3>'.__('Share This Form').'</h3>';
+echo '<p>'.__('Anyone who is allowed to use the form can open this link (they log in first if they are not logged in):').'</p>';
+echo '<p><input type="text" readonly class="w-full" value="'.htmlspecialchars($shareUrl).'" onclick="this.select()"/></p>';
+echo '<p>'.Format::link(csURL($session, 'cs_request_new.php', ['csFormID' => $csFormID]), __('Open the form as a requester sees it')).'</p>';
+
+// ---- Questions ---------------------------------------------------------------------------------
+$typeFields = $container->get(FieldGateway::class)->selectByType($values['csTicketTypeID']);
+$questions = $container->get(FormFieldGateway::class)->selectByForm($csFormID);
+$inputTypes = FormMapper::inputTypes();
+
+$table = DataTable::create('csQuestions');
+$table->setTitle(__('Questions'));
+$table->addMetaData('blankSlate', __('This form has no questions yet.'));
+$table->addHeaderAction('add', __('Add'))->setURL('/modules/administration/cs_formfield_edit.php')->addParam('csFormID', $csFormID)->displayLabel();
+$table->addColumn('sequenceNumber', __('Order'));
+$table->addColumn('label', __('Question'))->format(function ($q) {
+    return htmlspecialchars($q['label']).($q['required'] == 'Y' ? ' *' : '').' <span class="text-gray-500 text-xs">{'.htmlspecialchars($q['fieldKey']).'}</span>';
+});
+$table->addColumn('inputType', __('Input'))->format(function ($q) use ($inputTypes) {
+    return htmlspecialchars($inputTypes[$q['inputType']] ?? $q['inputType']);
+});
+$table->addColumn('target', __('Fills in'))->format(function ($q) use ($typeFields) {
+    $label = FormMapper::targetLabel($q['target'], $typeFields);
+    return $label === '' ? '<i>'.__('nothing (information)').'</i>' : htmlspecialchars($label);
+});
+$table->addActionColumn()
+    ->addParam('csFormFieldID')
+    ->addParam('csFormID', $csFormID)
+    ->format(function ($q, $actions) {
+        $actions->addAction('edit', __('Edit'))->setURL('/modules/administration/cs_formfield_edit.php');
+        $actions->addAction('delete', __('Delete'))->setURL('/modules/administration/cs_delete.php')->addParam('entity', 'formfield')->addParam('id', $q['csFormFieldID']);
+    });
+echo $table->render(new DataSet($questions));
+
+// What the form covers: a form may cover all the fields of the ticket or only some of them.
+$mapped = array_column($questions, 'target');
+$coreLabels = ['title' => __('Title'), 'description' => __('Description'), 'priority' => __('Priority'), 'dateStart' => __('Start date'), 'dateDue' => __('Due date'), 'attachments' => __('Attachments')];
+$notCovered = [];
+foreach ($coreLabels as $target => $label) {
+    if (!in_array($target, $mapped, true)) {
+        $notCovered[] = $label;
+    }
+}
+$missingCustom = FormMapper::suggest($typeFields, $questions, false);
+foreach ($missingCustom as $suggestion) {
+    $notCovered[] = $suggestion['label'];
+}
+echo '<p class="text-gray-600">'.(empty($notCovered) ? __('This form covers every field of the ticket.') : sprintf(__('Not covered by this form (stay empty on new tickets): %1$s.'), htmlspecialchars(implode(', ', $notCovered)))).'</p>';
+if (!in_array('title', $mapped, true)) {
+    echo '<div class="warning">'.($values['titleTemplate'] ? sprintf(__('No question fills in the title: the template "%1$s" is used.'), htmlspecialchars($values['titleTemplate'])) : __('No question fills in the title and there is no title template: every ticket gets the name of the form as its title.')).'</div>';
+}
+
+// Bring the form up to date with its ticket type (a field was added to the type after the form was made).
+if (!empty($missingCustom)) {
+    $sync = Form::create('csFormSync', $session->get('absoluteURL').'/modules/administration/cs_form_process.php');
+    $sync->addHiddenValue('address', $session->get('address'));
+    $sync->addHiddenValue('action', 'sync');
+    $sync->addHiddenValue('csFormID', $csFormID);
+    $sync->setTitle(__('Update From the Ticket Type'));
+    $row = $sync->addRow();
+        $row->addContent(sprintf(__('Add a question for each ticket field the form does not cover yet: %1$s.'), htmlspecialchars(implode(', ', array_column($missingCustom, 'label')))));
+        $row->addSubmit(__('Add These Questions'));
+    echo $sync->getOutput();
+}

@@ -72,8 +72,9 @@ Installed defaults are described once, in `src/Install/DefaultData.php`, and tur
 Names used across defaults (statuses, teams, types) must stay in sync with the boards/workflows that mention them. Upgrades do not insert defaults.
 
 ## Verifying
+0. `tests/db-start.sh` starts the throw-away database used below (`mariadb-install-db` + `mariadbd`, no Gibbon needed).
 1. `php -l` every file.
 2. **Database tests** (need a throw-away MariaDB/MySQL, see `tests/bootstrap.php`): `php tests/install.php` (manifest tables + defaults execute),
-   `php tests/upgrade.php` (first release + every CHANGEDB step == fresh install schema), `php tests/logic.php` (real gateways/filters/workflow/automation on the
+   `php tests/upgrade.php` (first release + every CHANGEDB step == fresh install schema), `php tests/migrate.php` (a real snapshot of the previous release migrated, data checked), `php tests/logic.php` (real gateways/filters/workflow/automation on the
    default data, Gibbon base classes stubbed). Run them after any schema, query, default-data or CHANGEDB change and add checks for new behaviour.
 3. Pages and process scripts need a live Gibbon; without one, say so. Never claim a page "works" from 1 and 2 alone.

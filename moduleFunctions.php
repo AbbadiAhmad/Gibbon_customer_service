@@ -256,6 +256,17 @@ function csDeleteTarget($container, $session, bool $isAdmin, string $entity, $id
             $gateway = $container->get($ns.'RuleGateway');
             return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_rule_manage.php', []],
                 'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
+        case 'form':
+            $action = 'Manage Forms';
+            $gateway = $container->get($ns.'FormGateway');
+            return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_form_manage.php', []],
+                'delete' => function () use ($gateway, $id) { return $gateway->deleteForm($id); }];
+        case 'formfield':
+            $action = 'Manage Forms';
+            $gateway = $container->get($ns.'FormFieldGateway');
+            $question = $gateway->getByID($id);
+            return ['action' => $action, 'allowed' => $isAdmin && !empty($question), 'back' => ['cs_form_edit.php', ['csFormID' => $question['csFormID'] ?? '']],
+                'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
         case 'space':
             $action = 'Manage Spaces';
             return ['action' => $action, 'allowed' => $isAdmin && $spaces->exists($id), 'back' => ['cs_space_manage.php', []],
@@ -365,4 +376,21 @@ function csQuickCreatedNotice($container, $session): string
         return '';
     }
     return '<div class="success">'.__('Created').' '.\Gibbon\Services\Format::link(csURL($session, 'cs_ticket_view.php', ['csTicketID' => $ticket['csTicketID']]), csTicketRef($ticket['csTicketID']).' '.htmlspecialchars($ticket['title'])).'</div>';
+}
+
+/** A one-time message for the next page (e.g. why a form field was refused): Gibbon's return codes are too generic for that. */
+function csFlash($session, string $message): void
+{
+    $session->set('csFlash', $message);
+}
+
+/** The message set by csFlash() as an error box (and forgets it). */
+function csFlashOutput($session): string
+{
+    $message = $session->get('csFlash');
+    if (empty($message)) {
+        return '';
+    }
+    $session->forget('csFlash');
+    return '<div class="error">'.htmlspecialchars($message).'</div>';
 }

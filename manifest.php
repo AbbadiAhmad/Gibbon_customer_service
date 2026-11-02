@@ -11,7 +11,7 @@ $description = 'Service desk for customer requests: forms, tickets, teams, space
 $entryURL = 'cs_portal.php';
 $type = 'Additional';
 $category = 'Other';
-$version = '0.7.0';
+$version = '0.8.0';
 $author = 'Ahmad';
 $url = '';
 
@@ -45,10 +45,6 @@ $moduleTables[] = "
         `description` text NULL,
         `csTeamID` int(6) unsigned NULL COMMENT 'Default team new tickets of this type are routed to',
         `workflow` text NULL COMMENT 'JSON: {transitions: {from: [to, ...]}, commentRequired: [status, ...]}',
-        `groupName` varchar(60) NULL COMMENT 'Heading the type is listed under on the customer portal',
-        `icon` varchar(16) NULL COMMENT 'Emoji shown on the portal card',
-        `audience` varchar(100) NULL COMMENT 'Comma separated Gibbon role categories allowed to raise it (Staff, Student, Parent, Other). Empty = everybody',
-        `formConfig` text NULL COMMENT 'JSON: settings of the basic request form fields (show, required, label, help, order)',
         `active` enum('Y','N') NOT NULL DEFAULT 'Y',
         PRIMARY KEY (`csTicketTypeID`),
         UNIQUE KEY `name` (`name`)
@@ -63,7 +59,7 @@ $moduleTables[] = "
         `fieldType` enum('varchar','text','number','date','select','checkboxes','radio','yesno') NOT NULL DEFAULT 'varchar',
         `options` text NULL COMMENT 'Max length for varchar, comma separated list for select/checkboxes/radio',
         `required` enum('N','Y') NOT NULL DEFAULT 'N',
-        `showOnForm` enum('Y','N') NOT NULL DEFAULT 'Y' COMMENT 'N = only the agents fill it in, the portal form does not show it',
+        `internal` enum('N','Y') NOT NULL DEFAULT 'N' COMMENT 'Y = only the agents see and fill it in; the requester does not see it on the ticket and forms cannot map to it',
         `description` varchar(255) NULL,
         `sequenceNumber` int(4) NOT NULL DEFAULT 0,
         PRIMARY KEY (`csFieldID`),
@@ -142,6 +138,7 @@ $moduleTables[] = "
         `gibbonPersonIDReporter` int(10) unsigned zerofill NOT NULL,
         `gibbonPersonIDAssignee` int(10) unsigned zerofill NULL,
         `csTeamID` int(6) unsigned NULL,
+        `csFormID` int(6) unsigned NULL COMMENT 'The request form the ticket was raised with (NULL: quick create, subtask)',
         `customData` longtext NULL COMMENT 'JSON object of custom field values keyed by fieldKey',
         `resolution` text NULL COMMENT 'Resolution note given when the ticket was moved to Resolved / Closed',
         `timestampResolved` timestamp NULL DEFAULT NULL,
@@ -158,6 +155,7 @@ $moduleTables[] = "
         KEY `reporter` (`gibbonPersonIDReporter`),
         KEY `assignee` (`gibbonPersonIDAssignee`),
         KEY `csTeamID` (`csTeamID`),
+        KEY `csFormID` (`csFormID`),
         KEY `csTicketIDParent` (`csTicketIDParent`),
         KEY `dateDue` (`dateDue`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
@@ -278,6 +276,43 @@ $moduleTables[] = "
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 $moduleTables[] = "
+    CREATE TABLE `gibbonCsForm` (
+        `csFormID` int(6) unsigned NOT NULL AUTO_INCREMENT,
+        `csTicketTypeID` int(6) unsigned NOT NULL COMMENT 'The ticket type of the tickets this form creates',
+        `name` varchar(100) NOT NULL,
+        `slug` varchar(80) NOT NULL COMMENT 'Readable part of the shareable link',
+        `description` text NULL,
+        `groupName` varchar(60) NULL COMMENT 'Heading the form is listed under on the customer portal',
+        `icon` varchar(16) NULL COMMENT 'Symbol shown on the portal card',
+        `audience` varchar(100) NULL COMMENT 'Comma separated Gibbon role categories that may use the form (Staff, Student, Parent, Other)',
+        `roles` varchar(255) NULL COMMENT 'Comma separated gibbonRoleIDs that may use the form. Audience and roles empty = every registered user',
+        `titleTemplate` varchar(200) NULL COMMENT 'Title of the ticket when no question is mapped to it, e.g. Absence {child_name}',
+        `confirmationText` text NULL COMMENT 'Shown to the requester after sending',
+        `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+        `active` enum('Y','N') NOT NULL DEFAULT 'Y',
+        PRIMARY KEY (`csFormID`),
+        UNIQUE KEY `name` (`name`),
+        UNIQUE KEY `slug` (`slug`),
+        KEY `csTicketTypeID` (`csTicketTypeID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
+    CREATE TABLE `gibbonCsFormField` (
+        `csFormFieldID` int(8) unsigned NOT NULL AUTO_INCREMENT,
+        `csFormID` int(6) unsigned NOT NULL,
+        `fieldKey` varchar(50) NOT NULL COMMENT 'Unique in the form; the name of the input and the placeholder of the title template',
+        `label` varchar(150) NOT NULL,
+        `helpText` varchar(255) NULL,
+        `inputType` enum('varchar','text','number','date','select','radio','checkboxes','yesno','file','info') NOT NULL DEFAULT 'varchar',
+        `options` text NULL COMMENT 'Max length for short text, comma separated choices for select / radio / checkboxes',
+        `required` enum('N','Y') NOT NULL DEFAULT 'N',
+        `target` varchar(80) NOT NULL DEFAULT '' COMMENT 'The ticket field the answer goes to: title, description, priority, dateStart, dateDue, attachments, custom:<fieldKey of the ticket type>. Empty for information text',
+        `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`csFormFieldID`),
+        UNIQUE KEY `form_key` (`csFormID`, `fieldKey`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+$moduleTables[] = "
     CREATE TABLE `gibbonCsStatus` (
         `csStatusID` int(6) unsigned NOT NULL AUTO_INCREMENT,
         `name` varchar(60) NOT NULL COMMENT 'Ticket status, also the name of the board column that shows it',
@@ -386,8 +421,15 @@ $actionRows[] = array_merge($csAdmin, [
 $actionRows[] = array_merge($csAdmin, [
     'name' => 'Manage Ticket Types', 'precedence' => '11', 'category' => 'Configuration',
     'description' => 'Define ticket types and the form fields of each type',
-    'URLList' => 'cs_type_manage.php, cs_type_edit.php, cs_type_process.php, cs_field_edit.php, cs_field_process.php, cs_form_edit.php, cs_form_process.php, cs_delete.php, cs_delete_process.php',
+    'URLList' => 'cs_type_manage.php, cs_type_edit.php, cs_type_process.php, cs_field_edit.php, cs_field_process.php, cs_delete.php, cs_delete_process.php',
     'entryURL' => 'cs_type_manage.php', 'entrySidebar' => 'Y', 'menuShow' => 'Y',
+]);
+
+$actionRows[] = array_merge($csAdmin, [
+    'name' => 'Manage Forms', 'precedence' => '11', 'category' => 'Configuration',
+    'description' => 'Build the request forms: questions, what each question fills in on the ticket, and who can use the form',
+    'URLList' => 'cs_form_manage.php, cs_form_edit.php, cs_form_process.php, cs_formfield_edit.php, cs_formfield_process.php, cs_delete.php, cs_delete_process.php',
+    'entryURL' => 'cs_form_manage.php', 'entrySidebar' => 'Y', 'menuShow' => 'Y',
 ]);
 
 $actionRows[] = array_merge($csAdmin, [

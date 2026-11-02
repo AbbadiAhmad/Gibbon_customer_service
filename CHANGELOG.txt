@@ -1,3 +1,15 @@
+v0.8.0
+------
+- Forms are separate from ticket types: a form has its own questions, name, group, icon, visibility (role categories and/or specific roles),
+  link name, title template and confirmation text, and creates tickets of one ticket type
+- Every form question is mapped to one field of the ticket (title, description, priority, start/due date, attachments or a ticket field of the type);
+  several questions can fill in the same field (e.g. all choices and checkboxes written as text into the description); a form can cover all or some ticket fields
+- New pages: Manage Forms (forms + questions, share link, update from the ticket type); the old per-type request form builder is gone
+- Ticket types lost their portal settings (group, icon, audience, form config); "show on form" became the ticket field flag "Internal" (agents only)
+- Tickets remember the form they were raised with
+- Upgrade: every existing ticket type becomes a form with the questions its old request form had (labels, help, required, order, group, icon, audience kept)
+- tests/: migration test with a real 0.7.0 database (tests/fixtures), 155 logic checks, tests/db-start.sh
+
 v0.7.0
 ------
 - Quick create (Jira "Create" shortcut): type, title, summary and optional assignee in one step - own page (Quick Create action),

@@ -16,6 +16,7 @@ use Gibbon\Module\administration\Domain\LinkGateway;
 use Gibbon\Module\administration\Domain\TagGateway;
 use Gibbon\Module\administration\Domain\WatcherGateway;
 use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\FormGateway;
 use Gibbon\Module\administration\Domain\TeamGateway;
 use Gibbon\Module\administration\Domain\TicketGateway;
 use Gibbon\Module\administration\Service\Attachments;
@@ -67,6 +68,11 @@ $renderAttachments = function (array $list) use ($session) {
 };
 
 // ---- Details ---------------------------------------------------------------
+$raisedWith = empty($ticket['csFormID']) ? [] : $container->get(FormGateway::class)->getByID($ticket['csFormID']);
+// Right after sending: the confirmation text of the form the requester used.
+if ($isReporter && !empty($_GET['submitted']) && !empty($raisedWith['confirmationText'])) {
+    echo '<div class="success">'.nl2br(htmlspecialchars($raisedWith['confirmationText'])).'</div>';
+}
 if (!empty($ticket['csTicketIDParent'])) {
     echo '<p class="text-gray-600">'.__('Subtask of').' '.Format::link(csURL($session, 'cs_ticket_view.php', ['csTicketID' => $ticket['csTicketIDParent']]), csTicketRef($ticket['csTicketIDParent']).' '.htmlspecialchars($ticket['parentTitle'])).'</p>';
 }
@@ -75,6 +81,7 @@ echo '<h2>'.htmlspecialchars($ticket['title']).' <span class="text-gray-500 text
 echo '<table class="w-full mb-4"><tbody>';
 $details = [
     __('Type')         => htmlspecialchars($ticket['typeName']),
+    __('Raised with')  => htmlspecialchars($raisedWith['name'] ?? ''),
     __('Status')       => '<b>'.htmlspecialchars($ticket['status']).'</b>',
     __('Priority')     => csPriorityLabel($ticket['priority']),
     __('Requested by') => htmlspecialchars(csPersonName($ticket['reporterPreferredName'], $ticket['reporterSurname'])),
@@ -92,8 +99,8 @@ foreach ($details as $label => $value) {
 }
 $typeFields = $container->get(FieldGateway::class)->selectByType($ticket['csTicketTypeID']);
 foreach ($typeFields as $field) {
-    // Fields kept for the agents (not on the request form) are not shown to the requester.
-    if ($field['showOnForm'] == 'N' && !$canInternal) {
+    // Internal fields (agents only) are not shown to the requester.
+    if ($field['internal'] == 'Y' && !$canInternal) {
         continue;
     }
     $shown = CustomFields::format($field, $ticket['customData'][$field['fieldKey']] ?? null);

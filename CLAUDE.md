@@ -9,7 +9,7 @@ Rules for changing the code live in project skills - use them:
 
 * `gibbon-module-conventions` - how a Gibbon module is built (manifest, CHANGEDB, process scripts, forms, gotchas)
 * `gibbon-access-control` - the permission / security rules every entry point must follow
-* `customerservice-extend-module` - checklist for adding a feature or changing the schema here
+* `customerservice-extend-module` - checklist for adding a feature or changing the schema here (includes: forms are separate from ticket types)
 * `customerservice-automation-actions` - adding automation actions and triggers
 
 Honest status (see ARCHITECTURE.md "Status"): the SQL, upgrades and the module's own logic are tested against a real MariaDB

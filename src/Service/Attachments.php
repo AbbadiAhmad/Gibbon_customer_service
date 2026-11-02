@@ -40,10 +40,10 @@ class Attachments
     /**
      * @return int number of files that could not be stored
      */
-    public static function save(AttachmentGateway $gateway, FileUploader $uploader, $csTicketID, $csTicketActivityID, $gibbonPersonID): int
+    public static function save(AttachmentGateway $gateway, FileUploader $uploader, $csTicketID, $csTicketActivityID, $gibbonPersonID, string $field = self::FIELD): int
     {
         $failed = 0;
-        foreach (self::filesFromRequest() as $file) {
+        foreach (self::filesFromRequest($field) as $file) {
             $path = $uploader->uploadFromPost($file);
             if (empty($path)) {
                 $failed++;

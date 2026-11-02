@@ -7,7 +7,7 @@ Copyright © 2010, Gibbon Foundation
 
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Module\administration\Domain\TicketTypeGateway;
+use Gibbon\Module\administration\Domain\FormGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -32,32 +32,32 @@ $row = $form->addRow();
 $form->addRow()->addSearchSubmit($session, __('Clear Search'));
 echo $form->getOutput();
 
-// Only the request types open to the user's role category (administrators see every active type, to preview them).
-$types = $container->get(TicketTypeGateway::class)->selectForAudience(csRoleCategory($session), csIsAdmin($guid, $connection2));
+// Only the forms this user may use: each form decides that itself (role categories / roles). Administrators see all active forms, to preview them.
+$forms = $container->get(FormGateway::class)->selectVisible(csRoleCategory($session), $session->get('gibbonRoleIDCurrent'), csIsAdmin($guid, $connection2));
 if ($search !== '') {
-    $types = array_filter($types, function ($type) use ($search) {
-        return stripos($type['name'].' '.$type['description'].' '.$type['groupName'], $search) !== false;
+    $forms = array_filter($forms, function ($form) use ($search) {
+        return stripos($form['name'].' '.$form['description'].' '.$form['groupName'], $search) !== false;
     });
 }
 
-if (empty($types)) {
-    $page->addMessage($search !== '' ? __('No request type matches your search.') : __('No request types are available to you yet.'));
+if (empty($forms)) {
+    $page->addMessage($search !== '' ? __('No form matches your search.') : __('No forms are available to you yet.'));
 } else {
-    // Group the types like the Jira portal does
+    // Group the forms like the Jira portal does
     $groups = [];
-    foreach ($types as $type) {
-        $groups[$type['groupName'] ?: __('General')][] = $type;
+    foreach ($forms as $form) {
+        $groups[$form['groupName'] ?: __('General')][] = $form;
     }
     ksort($groups);
 
-    foreach ($groups as $group => $groupTypes) {
+    foreach ($groups as $group => $groupForms) {
         echo '<h3>'.htmlspecialchars($group).'</h3><div class="cs-portal">';
-        foreach ($groupTypes as $type) {
-            echo '<a class="cs-portal-card" href="'.csURL($session, 'cs_request_new.php', ['csTicketTypeID' => $type['csTicketTypeID']]).'">';
-            echo '<span class="cs-portal-icon">'.htmlspecialchars($type['icon'] ?: "\u{1F4DD}").'</span>';
-            echo '<span class="cs-portal-name">'.htmlspecialchars($type['name']).'</span>';
-            if (!empty($type['description'])) {
-                echo '<span class="cs-portal-desc">'.htmlspecialchars($type['description']).'</span>';
+        foreach ($groupForms as $form) {
+            echo '<a class="cs-portal-card" href="'.csURL($session, 'cs_request_new.php', ['csFormID' => $form['csFormID']]).'">';
+            echo '<span class="cs-portal-icon">'.htmlspecialchars($form['icon'] ?: "\u{270E}").'</span>';
+            echo '<span class="cs-portal-name">'.htmlspecialchars($form['name']).'</span>';
+            if (!empty($form['description'])) {
+                echo '<span class="cs-portal-desc">'.htmlspecialchars($form['description']).'</span>';
             }
             echo '</a>';
         }

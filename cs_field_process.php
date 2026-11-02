@@ -46,7 +46,7 @@ $data = [
     'options'        => trim($_POST['options'] ?? ''),
     'description'    => trim($_POST['description'] ?? ''),
     'required'       => ($_POST['required'] ?? 'N') == 'Y' ? 'Y' : 'N',
-    'showOnForm'     => ($_POST['showOnForm'] ?? 'Y') == 'N' ? 'N' : 'Y',
+    'internal'       => ($_POST['internal'] ?? 'N') == 'Y' ? 'Y' : 'N',
     'sequenceNumber' => (int)($_POST['sequenceNumber'] ?? 0),
 ];
 

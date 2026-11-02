@@ -27,11 +27,11 @@ Every file a browser can request must authorise itself. Checklist, in order:
    * Space management: global admin (`csIsAdmin()` = holds *Manage Ticket Types*) or the space permission `manage_members` / `manage_boards`;
      the space of a board/member is read from the stored record, never trusted from the request.
    * Quick create (`QuickCreate`): admin or `edit_ticket` in some space; the assignee must be in the people of the spaces where the user has `assign_ticket` (or the type's team) - validated in the service, not only in the form.
-   * Request types: active **and** inside the user's audience (`FormConfig::inAudience`) - checked on the portal, the form *and* the submit script.
+   * Forms: active (with an active ticket type) **and** allowed for the user (`FormAccess::allows`: role category OR specific role; nothing set = every registered user) - checked on the portal, when opening the form *and* in the submit script. Visibility belongs to the form, never to the ticket type.
    * IDs that arrive in the request (checklist, link, saved filter, attachment) are always re-read together with the owning ticket/user
      (`getForTicket`, `getOwned`, `removeLink($id, $ticketId)`).
-4. **Submit scripts re-derive what the form allowed**: `FormConfig::items()` decides which fields were shown; hidden fields are ignored, priority/status
-   come from the server defaults, never from a hidden input.
+4. **Submit scripts re-derive what the form allowed**: only the questions of the stored form are read and `FormMapper::map` re-checks every answer against the ticket field it is mapped to
+   (options, dates, numbers); status, reporter, team and form come from the server, never from the request.
 5. **Output**: escape with `htmlspecialchars` (names, titles, labels). Values going into SQL always use bindings - identifiers (field keys) are validated
    by `BoardFilter::isValidKey` before being used in a JSON path.
 6. **Files**: uploads only through `FileUploader`; downloads only via `cs_attachment.php` (ticket access + internal visibility check, `isSafePath`,

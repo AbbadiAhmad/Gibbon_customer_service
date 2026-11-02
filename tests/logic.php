@@ -42,8 +42,8 @@ namespace {
     spl_autoload_register(function ($c) { $p = 'Gibbon\\Module\\administration\\'; if (strpos($c, $p) === 0) { $f = dirname(__DIR__).'/src/'.str_replace('\\', '/', substr($c, strlen($p))).'.php'; if (is_file($f)) require $f; } });
     require dirname(__DIR__).'/moduleFunctions.php';
 
-    use Gibbon\Module\administration\Domain\{TicketGateway, TicketTypeGateway, FieldGateway, BoardGateway, StatusGateway, SpaceGateway, RoleGateway, TeamGateway, LinkGateway, TagGateway, WatcherGateway, ChecklistGateway, ActivityGateway, RuleGateway};
-    use Gibbon\Module\administration\Service\{Workflow, FormConfig, BoardFilter, CustomFields, QuickCreate};
+    use Gibbon\Module\administration\Domain\{TicketGateway, TicketTypeGateway, FieldGateway, FormGateway, FormFieldGateway, BoardGateway, StatusGateway, SpaceGateway, RoleGateway, TeamGateway, LinkGateway, TagGateway, WatcherGateway, ChecklistGateway, ActivityGateway, RuleGateway};
+    use Gibbon\Module\administration\Service\{Workflow, FormMapper, FormAccess, BoardFilter, CustomFields, QuickCreate};
     use Gibbon\Module\administration\Automation\AutomationEngine;
 
     $fail = 0; $n = 0;
@@ -64,25 +64,146 @@ namespace {
     check('unknown status is In Progress', Workflow::category('Whatever') == 'In Progress');
 
     $types = $c->get(TicketTypeGateway::class);
-    $names = fn($list) => implode(',', array_map(fn($t) => $t['name'], $list));
-    echo "  parent sees: ".$names($types->selectForAudience('Parent'))."\n";
-    check('parents see 4 family types', count($types->selectForAudience('Parent')) == 4);
-    check('staff see all 6', count($types->selectForAudience('Staff')) == 6);
-    check('students see only the general question', $names($types->selectForAudience('Student')) == 'General Question');
-
-    echo "== forms ==\n";
+    $fieldGateway = $c->get(FieldGateway::class);
+    echo "== ticket types ==\n";
+    check('6 active ticket types', count($types->selectActive()) == 6);
     foreach ($types->selectActive() as $t) {
-        $items = FormConfig::items($t['formConfig'], $c->get(FieldGateway::class)->selectByType($t['csTicketTypeID']));
-        $line = implode(' | ', array_map(fn($i) => $i['kind'] == 'core' ? $i['label'].($i['required'] ? '*' : '') : $i['field']['label'].($i['field']['required'] == 'Y' ? '*' : ''), $items));
-        echo "  {$t['name']}: $line\n";
-        check($t['name'].' form starts with the summary', $items[0]['key'] == 'title');
-        check($t['name'].' workflow decodes', !empty(Workflow::decode($t['workflow'])['transitions']));
+        check('type '.$t['name'].': workflow decodes', !empty(Workflow::decode($t['workflow'])['transitions']));
+        check('type '.$t['name'].': no portal settings any more (forms own them)', !array_key_exists('groupName', $t) && !array_key_exists('audience', $t) && !array_key_exists('formConfig', $t));
     }
-    $abs = $types->getByID(1); $absItems = FormConfig::items($abs['formConfig'], $c->get(FieldGateway::class)->selectByType(1));
-    check('absence form has no priority / dates', empty(array_filter($absItems, fn($i) => in_array($i['key'], ['priority','dateStart','dateDue']))));
-    check('agent-only field hidden from the absence form', empty(array_filter($absItems, fn($i) => $i['key'] == 'attendance_recorded')));
-    $leave = FormConfig::items($types->getByID(3)['formConfig'], $c->get(FieldGateway::class)->selectByType(3));
-    check('leaving form asks the last day (due date) as required', (bool)array_filter($leave, fn($i) => $i['key'] == 'dateDue' && $i['label'] == 'Last day at school' && $i['required']));
+    check('agent-only fields are internal', array_column(array_filter($fieldGateway->selectByType(1), fn($f) => $f['internal'] == 'Y'), 'fieldKey') == ['attendance_recorded']);
+
+    echo "== forms: visibility (a property of the form) ==\n";
+    $forms = $c->get(FormGateway::class);
+    $formNames = fn($list) => implode(', ', array_map(fn($f) => $f['name'], $list));
+    echo "  parent sees: ".$formNames($forms->selectVisible('Parent', 3))."\n";
+    check('6 default forms', count($forms->selectAllWithCounts()) == 6);
+    check('parents see the 3 family forms and the general question', count($forms->selectVisible('Parent', 3)) == 4);
+    check('staff see all 6', count($forms->selectVisible('Staff', 2)) == 6);
+    check('students see only the question form (open to everybody)', $formNames($forms->selectVisible('Student', 5)) == 'Ask a question');
+    check('empty audience and roles = every registered user', FormAccess::allows(['audience' => null, 'roles' => null], 'Other', 99));
+    $db->exec("UPDATE gibbonCsForm SET audience=NULL, roles='7,8' WHERE csFormID=6");
+    check('specific roles: a listed role may use it whatever its category', in_array('Order material', array_column($forms->selectVisible('Parent', 7), 'name')));
+    check('specific roles: an unlisted role may not, even in the right category', !in_array('Order material', array_column($forms->selectVisible('Staff', 9), 'name')));
+    $db->exec("UPDATE gibbonCsForm SET audience='Parent', roles='9' WHERE csFormID=6");
+    check('category OR role', FormAccess::allows($forms->getByID(6), 'Parent', 1) && FormAccess::allows($forms->getByID(6), 'Staff', 9) && !FormAccess::allows($forms->getByID(6), 'Staff', 1));
+    $db->exec("UPDATE gibbonCsForm SET audience='Staff', roles=NULL WHERE csFormID=6");
+    $db->exec("UPDATE gibbonCsForm SET active='N' WHERE csFormID=4");
+    check('an inactive form is hidden', !in_array('Ask a question', array_column($forms->selectVisible('Parent', 3), 'name')));
+    $db->exec("UPDATE gibbonCsForm SET active='Y' WHERE csFormID=4");
+    $db->exec("UPDATE gibbonCsTicketType SET active='N' WHERE csTicketTypeID=1");
+    check('a form of an inactive ticket type is hidden', !in_array('Report an absence', array_column($forms->selectVisible('Parent', 3), 'name')));
+    $db->exec("UPDATE gibbonCsTicketType SET active='Y' WHERE csTicketTypeID=1");
+    check('summary text', FormAccess::summary(['audience' => 'Staff', 'roles' => '7'], [7 => 'Teacher']) == 'Staff, Role: Teacher' && FormAccess::summary([], []) == 'Every registered user');
+    check('shareable link: by slug and by number', $forms->getByIdOrSlug('', 'absence')['csFormID'] == 1 && $forms->getByIdOrSlug(2, '')['slug'] == 'registration' && $forms->getByIdOrSlug('', 'nope') == []);
+
+    echo "== forms: questions and their mapping to the ticket ==\n";
+    $questionsOf = fn($id) => $c->get(FormFieldGateway::class)->selectByForm($id);
+    foreach ($forms->selectAllWithCounts() as $f) {
+        $typeFields = $fieldGateway->selectByType($f['csTicketTypeID']);
+        $questions = $questionsOf($f['csFormID']);
+        $problems = array_filter(array_map(fn($q) => FormMapper::validateMapping($q, $typeFields) ? $q['fieldKey'] : '', $questions));
+        $keys = array_column($questions, 'fieldKey');
+        check('form '.$f['name'].': '.count($questions).' questions, every mapping can hold its answer', empty($problems), implode(',', $problems));
+        check('form '.$f['name'].': a title source (a question or the template)', in_array('title', array_column($questions, 'target'), true) || !empty($f['titleTemplate']));
+        check('form '.$f['name'].': unique keys', count($keys) == count(array_unique($keys)));
+        echo "  {$f['name']} ({$f['typeName']}): ".implode(' | ', array_map(fn($q) => $q['label'].($q['required'] == 'Y' ? '*' : '').' -> '.FormMapper::targetLabel($q['target'], $typeFields), $questions))."\n";
+    }
+    $absType = $fieldGateway->selectByType(1);
+    $absQuestions = $questionsOf(1);
+    $absForm = $forms->getByID(1);
+
+    $r = FormMapper::map($absForm, $absQuestions, $absType, ['ff_child_name' => 'Anna Meier', 'ff_class_name' => '3b', 'ff_absent_from' => '2026-11-05', 'ff_reason' => 'Illness', 'ff_details' => 'Fever since Monday'], ['doctors_note']);
+    check('absence: no errors', $r['errors'] == [], json_encode($r['errors']));
+    check('absence: the title comes from the template', $r['title'] == 'Absence Anna Meier from 05/11/2026', $r['title']);
+    check('absence: one long text alone becomes the description as it is', $r['description'] == 'Fever since Monday');
+    check('absence: answers land in the ticket fields they are mapped to', $r['customData'] == ['child_name' => 'Anna Meier', 'class_name' => '3b', 'absent_from' => '2026-11-05', 'reason' => 'Illness'], json_encode($r['customData']));
+    check('absence: priority defaults to Medium, no dates', $r['priority'] == 'Medium' && $r['dateStart'] === null && $r['dateDue'] === null);
+    $r = FormMapper::map($absForm, $absQuestions, $absType, ['ff_child_name' => 'Anna', 'ff_absent_from' => '2026-11-05', 'ff_reason' => 'Hacker']);
+    check('a value that is not an option counts as empty (required -> error)', in_array('Reason', $r['errors']), json_encode($r['errors']));
+    $r = FormMapper::map($absForm, $absQuestions, $absType, ['ff_absent_from' => '2026-11-05', 'ff_reason' => 'Illness']);
+    check('required questions are reported by label', $r['errors'] == ["Child's name"], json_encode($r['errors']));
+    $r = FormMapper::map($absForm, $absQuestions, $absType, ['ff_child_name' => 'A', 'ff_absent_from' => '2026-13-45', 'ff_reason' => 'Illness']);
+    check('an invalid date is refused', in_array('Absent from', $r['errors']));
+    $r = FormMapper::map($absForm, $absQuestions, $absType, ['ff_child_name' => 'A', 'ff_absent_from' => '2026-11-05', 'ff_reason' => 'Illness'], []);
+    check('an optional file question may stay empty', $r['errors'] == []);
+
+    // Several questions mapped to the description; choices and checkboxes are written as text
+    $regForm = $forms->getByID(2); $regType = $fieldGateway->selectByType(2); $regQuestions = $questionsOf(2);
+    $r = FormMapper::map($regForm, $regQuestions, $regType, ['ff_child_first_name' => 'Ben', 'ff_child_last_name' => 'Mayer', 'ff_birth_date' => '2020-02-02', 'ff_year_group' => '1', 'ff_parent_phone' => '555',
+        'ff_desired_start' => '2027-08-15', 'ff_interests' => ['After-school care', 'School bus', 'Hacker'], 'ff_remarks' => 'Needs a ramp', 'ff_siblings_at_school' => 'Y']);
+    check('registration: no errors', $r['errors'] == [], json_encode($r['errors']));
+    check('registration: title from the template', $r['title'] == 'Registration Ben Mayer', $r['title']);
+    check('registration: two questions go to the description as "Question: answer" lines, invalid choice dropped', $r['description'] == "Interested in: After-school care, School bus\nAnything we should know?: Needs a ramp", json_encode($r['description']));
+    check('registration: start date and yes/no field', $r['dateStart'] == '2027-08-15' && $r['customData']['siblings_at_school'] == 'Y');
+    $legForm = $forms->getByID(3); $legType = $fieldGateway->selectByType(3);
+    $r = FormMapper::map($legForm, $questionsOf(3), $legType, ['ff_child_name' => 'Carl', 'ff_reason' => 'Moving away', 'ff_documents_needed' => ['Report card', 'Transfer form'], 'ff_last_day' => '2027-06-30']);
+    check('leaving: checkboxes into a checkboxes ticket field, last day into the due date', $r['customData']['documents_needed'] == ['Report card', 'Transfer form'] && $r['dateDue'] == '2027-06-30' && $r['title'] == 'Leaving Carl', json_encode($r));
+    $genForm = $forms->getByID(4); $genType = $fieldGateway->selectByType(4);
+    $r = FormMapper::map($genForm, $questionsOf(4), $genType, ['ff_subject' => 'School bus times', 'ff_topic' => 'Schedule and calendar', 'ff_question' => "Line 1\nLine 2"]);
+    check('general question: subject -> title, question -> description, topic -> ticket field', $r['title'] == 'School bus times' && $r['description'] == "Line 1\nLine 2" && $r['customData'] == ['topic' => 'Schedule and calendar'], json_encode($r));
+    $matForm = $forms->getByID(6); $matType = $fieldGateway->selectByType(6);
+    $r = FormMapper::map($matForm, $questionsOf(6), $matType, ['ff_item' => 'Chalk', 'ff_quantity' => '3', 'ff_needed_by' => '2026-12-01', 'ff_urgency' => 'High', 'ff_reason' => 'Run out']);
+    check('material: priority question, number field, template with a number', $r['priority'] == 'High' && $r['customData']['quantity'] === 3 && $r['title'] == 'Material: Chalk (3)', json_encode($r));
+    $r = FormMapper::map($matForm, $questionsOf(6), $matType, ['ff_item' => 'Chalk', 'ff_quantity' => 'many', 'ff_needed_by' => '2026-12-01', 'ff_urgency' => 'Urgent!!']);
+    check('material: text in a number question is refused, a wrong priority falls back to Medium', in_array('Quantity', $r['errors']) && $r['priority'] == 'Medium', json_encode($r));
+    $r = FormMapper::map(['name' => 'X'] , [['fieldKey' => 'a', 'label' => 'From', 'inputType' => 'date', 'options' => '', 'required' => 'N', 'target' => 'dateStart'], ['fieldKey' => 'b', 'label' => 'To', 'inputType' => 'date', 'options' => '', 'required' => 'N', 'target' => 'dateDue']], [], ['ff_a' => '2026-12-10', 'ff_b' => '2026-12-01']);
+    check('a due date before the start date is refused', in_array('Dates', $r['errors']));
+
+    // Grouping: several questions into one ticket field
+    $qs = [
+        ['fieldKey' => 'q1', 'label' => 'First name', 'inputType' => 'varchar', 'options' => '', 'required' => 'N', 'target' => 'title'],
+        ['fieldKey' => 'q2', 'label' => 'Last name', 'inputType' => 'varchar', 'options' => '', 'required' => 'N', 'target' => 'title'],
+        ['fieldKey' => 'q3', 'label' => 'Colour', 'inputType' => 'radio', 'options' => 'Red,Blue', 'required' => 'N', 'target' => 'description'],
+        ['fieldKey' => 'q4', 'label' => 'Happy?', 'inputType' => 'yesno', 'options' => '', 'required' => 'N', 'target' => 'description'],
+        ['fieldKey' => 'q5', 'label' => 'Note A', 'inputType' => 'varchar', 'options' => '', 'required' => 'N', 'target' => 'custom:child_name'],
+        ['fieldKey' => 'q6', 'label' => 'Note B', 'inputType' => 'varchar', 'options' => '', 'required' => 'N', 'target' => 'custom:child_name'],
+        ['fieldKey' => 'q7', 'label' => 'Unknown', 'inputType' => 'varchar', 'options' => '', 'required' => 'N', 'target' => 'custom:does_not_exist'],
+        ['fieldKey' => 'q8', 'label' => 'Agents only', 'inputType' => 'varchar', 'options' => '', 'required' => 'N', 'target' => 'custom:attendance_recorded'],
+        ['fieldKey' => 'q9', 'label' => 'Read this', 'inputType' => 'info', 'options' => 'Some text', 'required' => 'N', 'target' => ''],
+    ];
+    $r = FormMapper::map(['name' => 'Group test'], $qs, $absType, ['ff_q1' => 'Ada', 'ff_q2' => 'Lovelace', 'ff_q3' => 'Blue', 'ff_q4' => 'Y', 'ff_q5' => 'one', 'ff_q6' => 'two', 'ff_q7' => 'x', 'ff_q8' => 'y']);
+    check('grouping: two questions into the title', $r['title'] == 'Ada - Lovelace', $r['title']);
+    check('grouping: a radio and a yes/no into the description as text', $r['description'] == "Colour: Blue\nHappy?: Yes", json_encode($r['description']));
+    check('grouping: two text answers into one ticket field, one under the other', $r['customData']['child_name'] == "one\ntwo", json_encode($r['customData']));
+    check('answers for a missing or agents-only ticket field are dropped, information text is skipped', array_keys($r['customData']) == ['child_name'], json_encode($r['customData']));
+    $r = FormMapper::map(['name' => 'Fallback form', 'titleTemplate' => ''], [], [], []);
+    check('no title source: the name of the form', $r['title'] == 'Fallback form');
+
+    // Validation of a mapping when a question is saved
+    $v = fn($input, $options, $target) => FormMapper::validateMapping(['inputType' => $input, 'options' => $options, 'target' => $target], $absType);
+    check('mapping: text to description is fine', $v('varchar', '', 'description') === '');
+    check('mapping: a date input to a date field', $v('date', '', 'dateDue') === '' && $v('varchar', '', 'dateDue') !== '');
+    check('mapping: a date input to a custom date field, not to a select field', $v('date', '', 'custom:absent_from') === '' && $v('date', '', 'custom:reason') !== '');
+    check('mapping: options must be a subset of the ticket field options', $v('select', 'Illness,Other', 'custom:reason') === '' && $v('select', 'Illness,Mystery', 'custom:reason') !== '');
+    check('mapping: priority needs priority options', $v('select', 'Low,High', 'priority') === '' && $v('select', 'Low,Pink', 'priority') !== '' && $v('varchar', '', 'priority') !== '');
+    check('mapping: a file only fills in the attachments, and attachments only a file', $v('file', '', 'attachments') === '' && $v('file', '', 'description') !== '' && $v('varchar', '', 'attachments') !== '');
+    check('mapping: information text is mapped to nothing', $v('info', '', '') === '' && $v('info', '', 'description') !== '');
+    check('mapping: a choice needs options', $v('select', '', 'description') !== '');
+    check('mapping: an internal or unknown ticket field cannot be chosen', $v('yesno', '', 'custom:attendance_recorded') !== '' && $v('varchar', '', 'custom:nope') !== '');
+
+    // Starting a form from the ticket type, and bringing it up to date
+    $suggestAll = FormMapper::suggest($absType, [], true);
+    check('suggest for a new form: 6 basic fields + the 6 non-internal ticket fields', count($suggestAll) == 12 && !in_array('custom:attendance_recorded', array_column($suggestAll, 'target')), count($suggestAll));
+    check('suggest: nothing missing when the form covers the ticket type', FormMapper::suggest($absType, $absQuestions, false) == []);
+    $fieldGateway->insert(['csTicketTypeID' => 1, 'fieldKey' => 'transport', 'label' => 'Transport', 'fieldType' => 'select', 'options' => 'Bus,Car', 'required' => 'N', 'internal' => 'N', 'sequenceNumber' => 80]);
+    $sync = FormMapper::suggest($fieldGateway->selectByType(1), $absQuestions, false);
+    check('suggest: a field added to the type later is offered', count($sync) == 1 && $sync[0]['target'] == 'custom:transport' && $sync[0]['inputType'] == 'select' && $sync[0]['options'] == 'Bus,Car');
+    check('the suggested question is a valid mapping', FormMapper::validateMapping($sync[0], $fieldGateway->selectByType(1)) === '');
+    $c->get(FormFieldGateway::class)->addQuestions(1, $sync);
+    check('added to the form with the next order number', count($questionsOf(1)) == count($absQuestions) + 1 && FormMapper::suggest($fieldGateway->selectByType(1), $questionsOf(1), false) == []);
+
+    // A ticket built by a form remembers the form; deleting the form keeps the ticket
+    $r = FormMapper::map($absForm, $absQuestions, $absType, ['ff_child_name' => 'Zoe', 'ff_absent_from' => '2026-11-06', 'ff_reason' => 'Other']);
+    $built = (int)$c->get(TicketGateway::class)->createTicket(['csTicketTypeID' => 1, 'csFormID' => 1, 'title' => $r['title'], 'description' => $r['description'], 'status' => 'New', 'priority' => $r['priority'], 'gibbonPersonIDReporter' => 3, 'customData' => $r['customData']]);
+    check('the ticket stores the form it came from', (int)$c->get(TicketGateway::class)->getTicket($built)['csFormID'] == 1);
+    $db->exec("INSERT INTO gibbonCsForm (csFormID, csTicketTypeID, name, slug) VALUES (99, 1, 'Temp', 'temp')");
+    $db->exec("INSERT INTO gibbonCsFormField (csFormID, fieldKey, label, target) VALUES (99, 'a', 'A', 'description')");
+    $db->exec("UPDATE gibbonCsTicket SET csFormID=99 WHERE csTicketID=$built");
+    check('deleting a form removes its questions, keeps the tickets', $forms->deleteForm(99) && (int)$db->query("SELECT COUNT(*) FROM gibbonCsFormField WHERE csFormID=99")->fetchColumn() == 0
+        && $c->get(TicketGateway::class)->getTicket($built)['csFormID'] === null && !empty($c->get(TicketGateway::class)->getTicket($built)));
+    $db->exec("DELETE FROM gibbonCsTicket WHERE csTicketID=$built");
+    $db->exec("DELETE FROM gibbonCsField WHERE fieldKey='transport'"); $db->exec("DELETE FROM gibbonCsFormField WHERE csFormID=1 AND fieldKey='transport'");
 
     echo "== tickets, boards, categories ==\n";
     $tickets = $c->get(TicketGateway::class);
@@ -163,7 +284,7 @@ namespace {
     check('agent can assign to the people of the space', QuickCreate::assignees($c, 2, false) == [2 => 'Olga Office', 4 => 'Sam Staff'], json_encode(QuickCreate::assignees($c, 2, false)));
     check('viewer can assign nobody', QuickCreate::assignees($c, 4, false) == []);
     $typeOptions = QuickCreate::typeOptions($c);
-    check('type options are grouped by portal group', isset($typeOptions['Families'], $typeOptions['Staff']) && count($typeOptions['Families']) == 4 && count($typeOptions['Staff']) == 2);
+    check('quick create offers every active ticket type', count($typeOptions) == 6 && in_array('Absence Report', $typeOptions));
 
     Gibbon\Comms\NotificationSender::$sent = [];
     [$q1, $r1] = QuickCreate::create($c, 2, false, ['csTicketTypeID' => 1, 'title' => '  Phone call from Anna  ', 'summary' => 'Anna is ill until Friday', 'gibbonPersonIDAssignee' => 4]);

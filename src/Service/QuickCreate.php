@@ -41,16 +41,15 @@ class QuickCreate
         return empty($spaceIDs) ? [] : $spaces->selectPeopleInSpaces($spaceIDs);
     }
 
-    /** Active request types for the select, grouped by portal group. */
+    /** Active ticket types for the select (csTicketTypeID => name). */
     public static function typeOptions($container): array
     {
-        $groups = [];
+        $options = [];
         foreach ($container->get(TicketTypeGateway::class)->selectActive() as $type) {
-            $groups[$type['groupName'] ?: __('General')][$type['csTicketTypeID']] = $type['name'];
+            $options[$type['csTicketTypeID']] = $type['name'];
         }
-        ksort($groups);
 
-        return $groups;
+        return $options;
     }
 
     /**
