@@ -59,7 +59,7 @@ $form->addRow()->addHeading('If', __('If'))
 FilterForm::addRows($form, $container, BoardFilter::decode($values['conditions']), 'cond');
 
 $form->addRow()->addHeading('Then', __('Then'))->append(__('Actions run in order. Pick an action, then fill in its settings.'));
-ActionForm::addSlots($form, $container, $session->get('gibbonSchoolYearID'), (array)json_decode((string)$values['actions'], true));
+ActionForm::addSlots($form, $container, (array)json_decode((string)$values['actions'], true));
 
 $form->addRow()->addHeading('Order', __('Order'));
 $row = $form->addRow();

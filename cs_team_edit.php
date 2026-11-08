@@ -6,6 +6,7 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
+use Gibbon\Module\administration\Domain\PersonGateway;
 use Gibbon\Module\administration\Domain\TeamGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
@@ -52,7 +53,7 @@ $row = $form->addRow();
 
 $row = $form->addRow();
     $row->addLabel('members', __('Members'))->description(__('Hold Ctrl/Cmd to select several users.'));
-    $row->addSelectUsers('members', $session->get('gibbonSchoolYearID'))->selectMultiple()->selected($members);
+    $row->addSelect('members')->fromArray($container->get(PersonGateway::class)->selectOptions())->selectMultiple()->selected($members);
 
 $row = $form->addRow();
     $row->addFooter();

@@ -42,7 +42,7 @@ namespace {
     spl_autoload_register(function ($c) { $p = 'Gibbon\\Module\\administration\\'; if (strpos($c, $p) === 0) { $f = dirname(__DIR__).'/src/'.str_replace('\\', '/', substr($c, strlen($p))).'.php'; if (is_file($f)) require $f; } });
     require dirname(__DIR__).'/moduleFunctions.php';
 
-    use Gibbon\Module\administration\Domain\{TicketGateway, TicketTypeGateway, FieldGateway, FormGateway, FormFieldGateway, BoardGateway, StatusGateway, SpaceGateway, RoleGateway, TeamGateway, LinkGateway, TagGateway, WatcherGateway, ChecklistGateway, ActivityGateway, RuleGateway};
+    use Gibbon\Module\administration\Domain\{PersonGateway, TicketGateway, TicketTypeGateway, FieldGateway, FormGateway, FormFieldGateway, BoardGateway, StatusGateway, SpaceGateway, RoleGateway, TeamGateway, LinkGateway, TagGateway, WatcherGateway, ChecklistGateway, ActivityGateway, RuleGateway};
     use Gibbon\Module\administration\Service\{Workflow, FormMapper, FormAccess, BoardFilter, CustomFields, QuickCreate};
     use Gibbon\Module\administration\Automation\AutomationEngine;
 
@@ -53,7 +53,7 @@ namespace {
     $db->exec("SET FOREIGN_KEY_CHECKS=0"); foreach (['gibbonCsTicket','gibbonCsTicketActivity','gibbonCsChecklist','gibbonCsChecklistItem','gibbonCsTicketTag','gibbonCsTag','gibbonCsTicketWatcher','gibbonCsTicketLink','gibbonCsSpaceMember','gibbonCsTeamMember'] as $t) { $db->exec("TRUNCATE $t"); }
     $db->exec("DROP TABLE IF EXISTS gibbonPerson");
     $db->exec("CREATE TABLE gibbonPerson (gibbonPersonID int(10) unsigned zerofill primary key, preferredName varchar(40), surname varchar(40), username varchar(20), status varchar(10))");
-    $db->exec("INSERT INTO gibbonPerson VALUES (1,'Ada','Admin','ada','Full'),(2,'Olga','Office','olga','Full'),(3,'Paula','Parent','paula','Full'),(4,'Sam','Staff','sam','Full')");
+    $db->exec("INSERT INTO gibbonPerson VALUES (1,'Ada','Admin','ada','Full'),(2,'Olga','Office','olga','Full'),(3,'Paula','Parent','paula','Full'),(4,'Sam','Staff','sam','Full'),(5,'Lena','Left','lena','Left')");
 
     echo "== defaults ==\n";
     $statuses = $c->get(StatusGateway::class)->selectMap();
@@ -318,6 +318,13 @@ namespace {
     check('admin may create and assign across spaces', $r4 == 'success0' && (int)$tickets->getTicket($q4)['gibbonPersonIDAssignee'] == 2);
     $db->exec("INSERT INTO gibbonCsTeamMember (csTeamID, gibbonPersonID) VALUES (3, 3)");
     check('members of the type team can be assigned too', QuickCreate::create($c, 2, false, ['csTicketTypeID' => 5, 'title' => 'Team member', 'gibbonPersonIDAssignee' => 3])[1] == 'success0');
+
+    echo "== people pickers ==\n";
+    $people = $c->get(PersonGateway::class)->selectOptions();
+    check('people options: active users only, "Surname, Preferred (username)", keyed by id', count($people) == 4 && $people['0000000002'] == 'Office, Olga (olga)' && !isset($people['0000000005']), json_encode($people));
+    $slotPost = ['actionType0' => 'assign_to_user', 'act0_assign_to_user_person' => '0000000004', 'actionType1' => 'add_watcher', 'act1_add_watcher_person' => ''];
+    [$acts, $problems] = Gibbon\Module\administration\Automation\ActionForm::collect($slotPost, $c);
+    check('a person chosen in the rule editor is stored as posted, an empty required one is reported', $acts[0]['params']['person'] === '0000000004' && $problems == ['Add a watcher: Person'], json_encode([$acts, $problems]));
 
     echo "\n$n checks, $fail failed\n";
     exit($fail ? 1 : 0);

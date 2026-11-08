@@ -9,7 +9,8 @@ the project skills in [`.claude/skills/`](../.claude/skills) (summarised in [`CL
 * Written against the Gibbon v31 core source and the Sepa module as reference.
 * **Verified against a real MariaDB (`tests/`)**: the install (`manifest.php` tables + default data), the upgrade chain from the first
   release to the current one (schema identical to a fresh install), an upgrade WITH data (a real 0.7.0 database migrated to 0.8.0), and the module's own gateways, filters, form mapping, visibility, workflow and
-  automation engine on the default data (155 checks). Run them with a throw-away database: `tests/db-start.sh`, then `tests/install.php`, `upgrade.php`, `migrate.php`, `logic.php`.
+  automation engine on the default data (157 checks). Run them with a throw-away database: `tests/db-start.sh`, then `tests/install.php`, `upgrade.php`, `migrate.php`, `logic.php`, `static.php`.
+* **Live feedback so far** (the module was installed in a real Gibbon by its owner): the rule editor raised `Undefined Method: Trying to call selected on Layout\Element` because `addSelectUsers()` returned an error placeholder; replaced everywhere by `PersonGateway` + standard selects, and `tests/static.php` now forbids the call. Nothing else has been reported; that is not the same as verified.
 * **Not verified: anything that needs Gibbon itself.** No page or process script has been rendered or submitted (forms, tables, CSRF,
   permissions, notifications, uploads, the module installer). Gibbon core could not be installed in the authoring environment
   (`composer install` was blocked), so expect small mismatches with Gibbon's form/table APIs on first install, and test each role.

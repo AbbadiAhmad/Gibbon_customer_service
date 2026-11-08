@@ -10,6 +10,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Module\administration\Domain\BoardGateway;
+use Gibbon\Module\administration\Domain\PersonGateway;
 use Gibbon\Module\administration\Domain\RoleGateway;
 use Gibbon\Module\administration\Domain\SpaceGateway;
 use Gibbon\Module\administration\Service\BoardFilter;
@@ -107,7 +108,7 @@ if ($canMembers) {
 
     $row = $form->addRow();
         $row->addLabel('users', __('Users'))->description(__('Hold Ctrl/Cmd to select several users.'));
-        $row->addSelectUsers('users', $session->get('gibbonSchoolYearID'))->selectMultiple()->required();
+        $row->addSelect('users')->fromArray($container->get(PersonGateway::class)->selectOptions())->selectMultiple()->required();
 
     $row = $form->addRow();
         $row->addLabel('roles', __('Roles'))->description(__('Every selected user gets every selected role.'));

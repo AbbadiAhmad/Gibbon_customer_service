@@ -31,7 +31,8 @@ Read `docs/ARCHITECTURE.md` first (model, who can see what, file map). Also foll
 8. Verify and report honestly: `php -l` all files, then `php tests/install.php`, `php tests/upgrade.php`, `php tests/logic.php` against a throw-away MariaDB
    (`tests/db-start.sh` starts one on port 3399 and creates the databases), then `php tests/migrate.php` (upgrade with data). Add a check to `tests/logic.php`
    for every new query/rule. State that no live Gibbon run happened unless one did.
-9. Commit on the working branch with a message that says what and why; do not open a pull request unless asked.
+9. A live Gibbon run that reports an error is the best test there is: fix the cause, then add its pattern to `tests/static.php` (and a check to `tests/logic.php` if it is logic) so it cannot come back. Run `php tests/static.php` with the others.
+10. Commit on the working branch with a message that says what and why; do not open a pull request unless asked.
 
 ## Conventions worth keeping
 * Status names are free text matching board columns; `New` is the entry status; reopen goes back to `New`. Every status has a category in `gibbonCsStatus`

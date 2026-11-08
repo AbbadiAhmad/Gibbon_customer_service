@@ -1,3 +1,9 @@
+v0.8.0 (fix, no database change)
+------
+- Rule editor: the person pickers (assign to a person, notification, watcher) raised "Undefined Method: Trying to call selected on Layout\Element".
+  Gibbon's addSelectUsers() is no longer used anywhere (team members, space members, watchers, rule actions): one PersonGateway query feeds standard selects
+- tests/static.php: syntax of every file + calls known to fail in a live Gibbon
+
 v0.8.0
 ------
 - Forms are separate from ticket types: a form has its own questions, name, group, icon, visibility (role categories and/or specific roles),

@@ -44,6 +44,8 @@ Verified against the Gibbon v31 core source and the Sepa module. When unsure, re
 * Checkbox groups: `addCheckbox($name)->fromArray()->checked()` posts `name[]`; use unique names when several forms share a page.
   Show/hide rows: `$form->toggleVisibilityByClass($class)->onSelect($field)->when($value)`.
 * Dates: `Format::dateConvert()` **never fails** (returns the input) - validate with `checkdate` (`csParseDate()` here).
+* **People pickers**: do not use `addSelectUsers()` (it failed in a live Gibbon: the call returned an error placeholder, so the next `->selected()` raised "Undefined Method: Trying to call selected on Gibbon\Forms\Layout\Element"; it also runs its own heavy queries on every call). Use `PersonGateway::selectOptions()` once and `addSelectPerson($name)->fromArray($people)` (searchable single) or `addSelect($name)->fromArray($people)->selectMultiple()`.
+* That warning always means a form factory call returned an error placeholder ("Cannot createXxx..." text is printed in the form). Check the text on the page; `tests/static.php` lists the calls known to fail.
 * Role category of the user: `$session->get('gibbonRoleIDCurrentCategory')`. Person: `$session->get('gibbonPersonID')`.
 * Module CSS: `$page->stylesheets->add('id', 'modules/<Name>/css/module.css')` on the pages that need it.
 

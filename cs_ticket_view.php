@@ -13,6 +13,7 @@ use Gibbon\Domain\DataSet;
 use Gibbon\Module\administration\Domain\AttachmentGateway;
 use Gibbon\Module\administration\Domain\ChecklistGateway;
 use Gibbon\Module\administration\Domain\LinkGateway;
+use Gibbon\Module\administration\Domain\PersonGateway;
 use Gibbon\Module\administration\Domain\TagGateway;
 use Gibbon\Module\administration\Domain\WatcherGateway;
 use Gibbon\Module\administration\Domain\FieldGateway;
@@ -484,7 +485,7 @@ if ($canInternal) {
         $form->addHiddenValue('csTicketID', $ticket['csTicketID']);
         $row = $form->addRow();
             $row->addLabel('gibbonPersonID', __('Add Watcher'))->description(__('Watchers are notified about status changes and public comments.'));
-            $row->addSelectUsers('gibbonPersonID', $session->get('gibbonSchoolYearID'))->required()->placeholder();
+            $row->addSelectPerson('gibbonPersonID')->fromArray($container->get(PersonGateway::class)->selectOptions())->required()->placeholder();
         $row = $form->addRow();
             $row->addFooter();
             $row->addSubmit(__('Add'));
