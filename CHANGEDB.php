@@ -146,3 +146,63 @@ $sql[$count][1] = "CREATE TABLE `gibbonCsStatus` (
 INSERT IGNORE INTO `gibbonCsStatus` (`name`, `category`, `sequenceNumber`) VALUES ('New', 'To Do', 1), ('In Progress', 'In Progress', 2), ('Waiting', 'In Progress', 3), ('Resolved', 'Done', 4), ('Closed', 'Done', 5);end
 INSERT IGNORE INTO `gibbonCsStatus` (`name`, `category`, `sequenceNumber`) SELECT DISTINCT `name`, 'In Progress', 0 FROM `gibbonCsBoardColumn`;end
 INSERT IGNORE INTO `gibbonCsStatus` (`name`, `category`, `sequenceNumber`) SELECT DISTINCT `status`, 'In Progress', 0 FROM `gibbonCsTicket`;";
+
+// v0.7.0 - Quick Create action (staff only, same role permissions as Boards)
+$count++;
+$sql[$count][0] = "0.7.0";
+$sql[$count][1] = "INSERT INTO gibbonAction (gibbonModuleID, name, precedence, category, description, URLList, entryURL, entrySidebar, menuShow, defaultPermissionAdmin, defaultPermissionTeacher, defaultPermissionStudent, defaultPermissionParent, defaultPermissionSupport, categoryPermissionStaff, categoryPermissionStudent, categoryPermissionParent, categoryPermissionOther) SELECT gibbonModuleID, 'Quick Create', 4, 'Service Desk', 'Create a ticket in one step: type, title, summary and assignee', 'cs_ticket_quick.php, cs_ticket_quickProcess.php', 'cs_ticket_quick.php', entrySidebar, menuShow, defaultPermissionAdmin, defaultPermissionTeacher, defaultPermissionStudent, defaultPermissionParent, defaultPermissionSupport, categoryPermissionStaff, categoryPermissionStudent, categoryPermissionParent, categoryPermissionOther FROM gibbonAction WHERE name='Boards' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='administration');end
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID) SELECT p.gibbonRoleID, n.gibbonActionID FROM gibbonPermission AS p JOIN gibbonAction AS o ON o.gibbonActionID=p.gibbonActionID JOIN gibbonAction AS n ON n.name='Quick Create' AND n.gibbonModuleID=o.gibbonModuleID WHERE o.name='Boards' AND o.gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='administration');";
+
+// v0.8.0 - request forms are separate from ticket types: forms + questions with a mapping to the ticket fields. Every ticket type gets a form
+// with the questions its old request form had; portal group / icon / audience move to the form; "not on the form" fields become internal fields.
+$count++;
+$sql[$count][0] = "0.8.0";
+$sql[$count][1] = "ALTER TABLE `gibbonCsTicket` ADD COLUMN `csFormID` int(6) unsigned NULL COMMENT 'The request form the ticket was raised with (NULL: quick create, subtask)' AFTER `csTeamID`, ADD KEY `csFormID` (`csFormID`);end
+CREATE TABLE `gibbonCsForm` (
+  `csFormID` int(6) unsigned NOT NULL AUTO_INCREMENT,
+  `csTicketTypeID` int(6) unsigned NOT NULL COMMENT 'The ticket type of the tickets this form creates',
+  `name` varchar(100) NOT NULL,
+  `slug` varchar(80) NOT NULL COMMENT 'Readable part of the shareable link',
+  `description` text NULL,
+  `groupName` varchar(60) NULL COMMENT 'Heading the form is listed under on the customer portal',
+  `icon` varchar(16) NULL COMMENT 'Symbol shown on the portal card',
+  `audience` varchar(100) NULL COMMENT 'Comma separated Gibbon role categories that may use the form (Staff, Student, Parent, Other)',
+  `roles` varchar(255) NULL COMMENT 'Comma separated gibbonRoleIDs that may use the form. Audience and roles empty = every registered user',
+  `titleTemplate` varchar(200) NULL COMMENT 'Title of the ticket when no question is mapped to it, e.g. Absence {child_name}',
+  `confirmationText` text NULL COMMENT 'Shown to the requester after sending',
+  `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+  `active` enum('Y','N') NOT NULL DEFAULT 'Y',
+  PRIMARY KEY (`csFormID`),
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `slug` (`slug`),
+  KEY `csTicketTypeID` (`csTicketTypeID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;end
+CREATE TABLE `gibbonCsFormField` (
+  `csFormFieldID` int(8) unsigned NOT NULL AUTO_INCREMENT,
+  `csFormID` int(6) unsigned NOT NULL,
+  `fieldKey` varchar(50) NOT NULL COMMENT 'Unique in the form; the name of the input and the placeholder of the title template',
+  `label` varchar(150) NOT NULL,
+  `helpText` varchar(255) NULL,
+  `inputType` enum('varchar','text','number','date','select','radio','checkboxes','yesno','file','info') NOT NULL DEFAULT 'varchar',
+  `options` text NULL COMMENT 'Max length for short text, comma separated choices for select / radio / checkboxes',
+  `required` enum('N','Y') NOT NULL DEFAULT 'N',
+  `target` varchar(80) NOT NULL DEFAULT '' COMMENT 'The ticket field the answer goes to: title, description, priority, dateStart, dateDue, attachments, custom:<fieldKey of the ticket type>. Empty for information text',
+  `sequenceNumber` int(4) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`csFormFieldID`),
+  UNIQUE KEY `form_key` (`csFormID`, `fieldKey`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;end
+INSERT INTO `gibbonCsForm` (`csFormID`, `csTicketTypeID`, `name`, `slug`, `description`, `groupName`, `icon`, `audience`, `sequenceNumber`, `active`) SELECT `csTicketTypeID`, `csTicketTypeID`, `name`, CONCAT('form-', `csTicketTypeID`), `description`, `groupName`, `icon`, `audience`, `csTicketTypeID` * 10, `active` FROM `gibbonCsTicketType`;end
+INSERT INTO `gibbonCsFormField` (`csFormID`, `fieldKey`, `label`, `helpText`, `inputType`, `options`, `required`, `target`, `sequenceNumber`) SELECT f.`csFormID`, 'ticket_title', COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.title.label')), ''), 'Summary'), COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.title.help')), ''), NULL), 'varchar', '200', 'Y', 'title', COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.title.order')) AS SIGNED), 1) FROM `gibbonCsForm` f JOIN `gibbonCsTicketType` t ON (t.`csTicketTypeID`=f.`csTicketTypeID`) WHERE 1=1;end
+INSERT INTO `gibbonCsFormField` (`csFormID`, `fieldKey`, `label`, `helpText`, `inputType`, `options`, `required`, `target`, `sequenceNumber`) SELECT f.`csFormID`, 'ticket_description', COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.description.label')), ''), 'Description'), COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.description.help')), ''), NULL), 'text', NULL, IF(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.description.required')), 'false')='true', 'Y', 'N'), 'description', COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.description.order')) AS SIGNED), 2) FROM `gibbonCsForm` f JOIN `gibbonCsTicketType` t ON (t.`csTicketTypeID`=f.`csTicketTypeID`) WHERE 1=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.description.show')), 'true') <> 'false';end
+INSERT INTO `gibbonCsFormField` (`csFormID`, `fieldKey`, `label`, `helpText`, `inputType`, `options`, `required`, `target`, `sequenceNumber`) SELECT f.`csFormID`, 'ticket_priority', COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.priority.label')), ''), 'Priority'), COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.priority.help')), ''), NULL), 'select', 'Low,Medium,High,Urgent', IF(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.priority.required')), 'false')='true', 'Y', 'N'), 'priority', COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.priority.order')) AS SIGNED), 3) FROM `gibbonCsForm` f JOIN `gibbonCsTicketType` t ON (t.`csTicketTypeID`=f.`csTicketTypeID`) WHERE 1=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.priority.show')), 'true') <> 'false';end
+INSERT INTO `gibbonCsFormField` (`csFormID`, `fieldKey`, `label`, `helpText`, `inputType`, `options`, `required`, `target`, `sequenceNumber`) SELECT f.`csFormID`, 'ticket_start', COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateStart.label')), ''), 'Start Date'), COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateStart.help')), ''), 'Optional. When the work should begin.'), 'date', NULL, IF(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateStart.required')), 'false')='true', 'Y', 'N'), 'dateStart', COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateStart.order')) AS SIGNED), 4) FROM `gibbonCsForm` f JOIN `gibbonCsTicketType` t ON (t.`csTicketTypeID`=f.`csTicketTypeID`) WHERE 1=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateStart.show')), 'true') <> 'false';end
+INSERT INTO `gibbonCsFormField` (`csFormID`, `fieldKey`, `label`, `helpText`, `inputType`, `options`, `required`, `target`, `sequenceNumber`) SELECT f.`csFormID`, 'ticket_due', COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateDue.label')), ''), 'Due Date'), COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateDue.help')), ''), 'Optional. When you need it done.'), 'date', NULL, IF(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateDue.required')), 'false')='true', 'Y', 'N'), 'dateDue', COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateDue.order')) AS SIGNED), 5) FROM `gibbonCsForm` f JOIN `gibbonCsTicketType` t ON (t.`csTicketTypeID`=f.`csTicketTypeID`) WHERE 1=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.dateDue.show')), 'true') <> 'false';end
+INSERT INTO `gibbonCsFormField` (`csFormID`, `fieldKey`, `label`, `helpText`, `inputType`, `options`, `required`, `target`, `sequenceNumber`) SELECT f.`csFormID`, 'ticket_files', COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.attachments.label')), ''), 'Attachments'), COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.attachments.help')), ''), NULL), 'file', NULL, IF(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.attachments.required')), 'false')='true', 'Y', 'N'), 'attachments', COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.attachments.order')) AS SIGNED), 1000) FROM `gibbonCsForm` f JOIN `gibbonCsTicketType` t ON (t.`csTicketTypeID`=f.`csTicketTypeID`) WHERE 1=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.formConfig, '\$.attachments.show')), 'true') <> 'false';end
+INSERT INTO `gibbonCsFormField` (`csFormID`, `fieldKey`, `label`, `helpText`, `inputType`, `options`, `required`, `target`, `sequenceNumber`) SELECT f.`csFormID`, c.`fieldKey`, c.`label`, c.`description`, c.`fieldType`, c.`options`, c.`required`, CONCAT('custom:', c.`fieldKey`), c.`sequenceNumber` FROM `gibbonCsField` c JOIN `gibbonCsForm` f ON (f.`csTicketTypeID`=c.`csTicketTypeID`) WHERE c.`showOnForm`='Y';end
+ALTER TABLE `gibbonCsField` ADD COLUMN `internal` enum('N','Y') NOT NULL DEFAULT 'N' COMMENT 'Y = only the agents see and fill it in; the requester does not see it on the ticket and forms cannot map to it' AFTER `required`;end
+UPDATE `gibbonCsField` SET `internal`=IF(`showOnForm`='N', 'Y', 'N');end
+ALTER TABLE `gibbonCsField` DROP COLUMN `showOnForm`;end
+ALTER TABLE `gibbonCsTicketType` DROP COLUMN `groupName`, DROP COLUMN `icon`, DROP COLUMN `audience`, DROP COLUMN `formConfig`;end
+INSERT INTO gibbonAction (gibbonModuleID, name, precedence, category, description, URLList, entryURL, entrySidebar, menuShow, defaultPermissionAdmin, defaultPermissionTeacher, defaultPermissionStudent, defaultPermissionParent, defaultPermissionSupport, categoryPermissionStaff, categoryPermissionStudent, categoryPermissionParent, categoryPermissionOther) SELECT gibbonModuleID, 'Manage Forms', 11, 'Configuration', 'Build the request forms: questions, what each question fills in on the ticket, and who can use the form', 'cs_form_manage.php, cs_form_edit.php, cs_form_process.php, cs_formfield_edit.php, cs_formfield_process.php, cs_delete.php, cs_delete_process.php', 'cs_form_manage.php', entrySidebar, menuShow, defaultPermissionAdmin, defaultPermissionTeacher, defaultPermissionStudent, defaultPermissionParent, defaultPermissionSupport, categoryPermissionStaff, categoryPermissionStudent, categoryPermissionParent, categoryPermissionOther FROM gibbonAction WHERE name='Manage Ticket Types' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='administration');end
+INSERT INTO gibbonPermission (gibbonRoleID, gibbonActionID) SELECT p.gibbonRoleID, n.gibbonActionID FROM gibbonPermission AS p JOIN gibbonAction AS o ON o.gibbonActionID=p.gibbonActionID JOIN gibbonAction AS n ON n.name='Manage Forms' AND n.gibbonModuleID=o.gibbonModuleID WHERE o.name='Manage Ticket Types' AND o.gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='administration');end
+UPDATE gibbonAction SET URLList='cs_type_manage.php, cs_type_edit.php, cs_type_process.php, cs_field_edit.php, cs_field_process.php, cs_delete.php, cs_delete_process.php' WHERE name='Manage Ticket Types' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='administration');";

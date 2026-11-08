@@ -10,11 +10,13 @@ use Gibbon\Module\administration\Automation\AutomationEngine;
 use Gibbon\Module\administration\Domain\ActivityGateway;
 use Gibbon\Module\administration\Domain\AttachmentGateway;
 use Gibbon\Module\administration\Domain\FieldGateway;
+use Gibbon\Module\administration\Domain\FormFieldGateway;
+use Gibbon\Module\administration\Domain\FormGateway;
 use Gibbon\Module\administration\Domain\TicketGateway;
 use Gibbon\Module\administration\Domain\TicketTypeGateway;
 use Gibbon\Module\administration\Service\Attachments;
-use Gibbon\Module\administration\Service\CustomFields;
-use Gibbon\Module\administration\Service\FormConfig;
+use Gibbon\Module\administration\Service\FormAccess;
+use Gibbon\Module\administration\Service\FormMapper;
 use Gibbon\Module\administration\Service\Notifier;
 
 $_POST['address'] = '/modules/administration/cs_request_new.php';
@@ -25,92 +27,72 @@ require_once __DIR__ . '/moduleFunctions.php';
 csRequirePost($session);
 
 $_POST = $container->get(Validator::class)->sanitize($_POST);
-$csTicketTypeID = $_POST['csTicketTypeID'] ?? '';
+$csFormID = $_POST['csFormID'] ?? '';
 
 if (!csAccess($guid, $connection2, 'cs_request_new.php')) {
     csRedirect($session, 'cs_portal.php', [], 'error0');
 }
 
-$type = $container->get(TicketTypeGateway::class)->getByID($csTicketTypeID);
+$form = $container->get(FormGateway::class)->getByID($csFormID);
+$type = empty($form) ? [] : $container->get(TicketTypeGateway::class)->getByID($form['csTicketTypeID']);
 $isAdmin = csIsAdmin($guid, $connection2);
 
-// Same rules as the form: the type must exist, be active and be open to the user's role category.
-if (empty($type) || ($type['active'] != 'Y' && !$isAdmin)) {
+// Same rules as opening the form: it must exist, be active and be open to this user. The visibility belongs to the form.
+if (empty($form) || empty($type) || (!$isAdmin && ($form['active'] != 'Y' || $type['active'] != 'Y'))) {
     csRedirect($session, 'cs_portal.php', [], 'error1');
 }
-if (!$isAdmin && !FormConfig::inAudience($type['audience'], csRoleCategory($session))) {
+if (!$isAdmin && !FormAccess::allows($form, csRoleCategory($session), $session->get('gibbonRoleIDCurrent'))) {
     csRedirect($session, 'cs_portal.php', [], 'error0');
 }
 
-$formParams = ['csTicketTypeID' => $csTicketTypeID];
-$allFields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
-$items = FormConfig::items($type['formConfig'], $allFields);
+$formParams = ['csFormID' => $csFormID];
+$questions = $container->get(FormFieldGateway::class)->selectByForm($csFormID);
+$typeFields = $container->get(FieldGateway::class)->selectByType($form['csTicketTypeID']);
 
-// Only the fields the form showed are read - a hidden field can't be posted into a ticket - and required ones are enforced.
-$shown = [];
-$customShown = [];
-foreach ($items as $item) {
-    if ($item['kind'] == 'core') {
-        $shown[$item['key']] = $item;
-    } else {
-        $customShown[] = $item['field'];
+// Only the questions of the form are read, and each answer is checked against the ticket field it fills in.
+$uploaded = [];
+foreach ($questions as $q) {
+    if ($q['inputType'] === 'file' && !empty(Attachments::filesFromRequest(FormMapper::inputName($q['fieldKey'])))) {
+        $uploaded[] = $q['fieldKey'];
     }
 }
-
-$title = mb_substr(trim($_POST['title'] ?? ''), 0, 200);
-$description = isset($shown['description']) ? trim($_POST['description'] ?? '') : '';
-$priority = 'Medium';
-if (isset($shown['priority']) && in_array($_POST['priority'] ?? '', ['Low', 'Medium', 'High', 'Urgent'], true)) {
-    $priority = $_POST['priority'];
-}
-$dateStart = isset($shown['dateStart']) ? csParseDate($_POST['dateStart'] ?? '') : null;
-$dateDue = isset($shown['dateDue']) ? csParseDate($_POST['dateDue'] ?? '') : null;
-
-if ($title === '' || $dateStart === false || $dateDue === false || (!empty($dateStart) && !empty($dateDue) && $dateDue < $dateStart)) {
-    csRedirect($session, 'cs_request_new.php', $formParams, 'error1');
-}
-foreach (['description' => $description, 'dateStart' => $dateStart, 'dateDue' => $dateDue] as $key => $value) {
-    if (isset($shown[$key]) && $shown[$key]['required'] && empty($value)) {
-        csRedirect($session, 'cs_request_new.php', $formParams, 'error1');
-    }
-}
-if (isset($shown['attachments']) && $shown['attachments']['required'] && empty(Attachments::filesFromRequest())) {
-    csRedirect($session, 'cs_request_new.php', $formParams, 'error1');
-}
-
-[$customData, $missing] = CustomFields::collect($customShown, $_POST);
-if (!empty($missing)) {
+$ticket = FormMapper::map($form, $questions, $typeFields, $_POST, $uploaded);
+if (!empty($ticket['errors'])) {
+    csFlash($session, sprintf(__('Please check: %1$s'), implode(', ', $ticket['errors'])));
     csRedirect($session, 'cs_request_new.php', $formParams, 'error1');
 }
 
 $person = csPersonID($session);
 $csTicketID = $container->get(TicketGateway::class)->createTicket([
-    'csTicketTypeID'         => $csTicketTypeID,
-    'title'                  => $title,
-    'description'            => $description,
+    'csTicketTypeID'         => $form['csTicketTypeID'],
+    'csFormID'               => $form['csFormID'],
+    'title'                  => $ticket['title'],
+    'description'            => $ticket['description'],
     'status'                 => 'New',
-    'priority'               => $priority,
-    'dateStart'              => $dateStart ?: null,
-    'dateDue'                => $dateDue ?: null,
+    'priority'               => $ticket['priority'],
+    'dateStart'              => $ticket['dateStart'] ?: null,
+    'dateDue'                => $ticket['dateDue'] ?: null,
     'gibbonPersonIDReporter' => $person,
     'csTeamID'               => $type['csTeamID'] ?: null,
-    'customData'             => $customData,
+    'customData'             => $ticket['customData'],
 ]);
 
 if (empty($csTicketID)) {
     csRedirect($session, 'cs_request_new.php', $formParams, 'error2');
 }
 
-$container->get(ActivityGateway::class)->log($csTicketID, $person, __('Request raised'));
+$container->get(ActivityGateway::class)->log($csTicketID, $person, sprintf(__('Request raised with the form "%1$s"'), $form['name']));
 
 $failedFiles = 0;
-if (isset($shown['attachments'])) {
-    $fileUploader = new Gibbon\FileUploader($pdo, $session);
-    $failedFiles = Attachments::save($container->get(AttachmentGateway::class), $fileUploader, $csTicketID, null, $person);
+$fileUploader = new Gibbon\FileUploader($pdo, $session);
+foreach ($questions as $q) {
+    if ($q['inputType'] === 'file') {
+        $failedFiles += Attachments::save($container->get(AttachmentGateway::class), $fileUploader, $csTicketID, null, $person, FormMapper::inputName($q['fieldKey']));
+    }
 }
 
 (new Notifier($container))->ticketCreated($container->get(TicketGateway::class)->getTicket($csTicketID), $person);
 (new AutomationEngine($container))->fire('ticket_created', $csTicketID);
 
 // warning1: the request was saved, but at least one attachment was rejected (e.g. file type).
-csRedirect($session, 'cs_ticket_view.php', ['csTicketID' => $csTicketID], $failedFiles > 0 ? 'warning1' : 'success0');
+csRedirect($session, 'cs_ticket_view.php', ['csTicketID' => $csTicketID, 'submitted' => 1], $failedFiles > 0 ? 'warning1' : 'success0');

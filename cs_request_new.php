@@ -6,11 +6,11 @@ Copyright © 2010, Gibbon Foundation
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Module\administration\Domain\FieldGateway;
-use Gibbon\Module\administration\Domain\TicketTypeGateway;
-use Gibbon\Module\administration\Service\Attachments;
+use Gibbon\Module\administration\Domain\FormFieldGateway;
+use Gibbon\Module\administration\Domain\FormGateway;
 use Gibbon\Module\administration\Service\CustomFields;
-use Gibbon\Module\administration\Service\FormConfig;
+use Gibbon\Module\administration\Service\FormAccess;
+use Gibbon\Module\administration\Service\FormMapper;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -21,78 +21,89 @@ if (!csAccess($guid, $connection2, 'cs_request_new.php')) {
     return;
 }
 
-$csTicketTypeID = $_GET['csTicketTypeID'] ?? '';
-
-// No request type chosen: this is the portal home.
-if (empty($csTicketTypeID)) {
+// A form is opened by its number or by the readable link name (?form=absence). No form chosen: show the portal.
+$formsGateway = $container->get(FormGateway::class);
+$form = $formsGateway->getByIdOrSlug($_GET['csFormID'] ?? '', $_GET['form'] ?? '');
+if (empty($form) && empty($_GET['csFormID']) && empty($_GET['form'])) {
     require __DIR__ . '/cs_portal.php';
     return;
 }
 
-$type = $container->get(TicketTypeGateway::class)->getByID($csTicketTypeID);
+// The form must exist, be active (with an active ticket type) and be open to the user (administrators can preview any form).
 $isAdmin = csIsAdmin($guid, $connection2);
-
-// The request type must exist, be active and be open to the user's role category (admins can preview any).
-if (empty($type) || ($type['active'] != 'Y' && !$isAdmin)
-    || (!$isAdmin && !FormConfig::inAudience($type['audience'], csRoleCategory($session)))) {
+$type = empty($form) ? [] : $container->get(\Gibbon\Module\administration\Domain\TicketTypeGateway::class)->getByID($form['csTicketTypeID']);
+if (empty($form) || empty($type)
+    || (!$isAdmin && ($form['active'] != 'Y' || $type['active'] != 'Y' || !FormAccess::allows($form, csRoleCategory($session), $session->get('gibbonRoleIDCurrent'))))) {
     $page->addError(__('The specified record cannot be found.'));
     return;
 }
 
 $page->breadcrumbs->add(__('Customer Portal'), 'cs_portal.php');
-$page->breadcrumbs->add($type['name']);
+$page->breadcrumbs->add($form['name']);
+echo csFlashOutput($session);
 
-$form = Form::create('csRequest', $session->get('absoluteURL').'/modules/administration/cs_request_newProcess.php');
-$form->addHiddenValue('address', $session->get('address'));
-$form->addHiddenValue('csTicketTypeID', $csTicketTypeID);
+$f = Form::create('csRequest', $session->get('absoluteURL').'/modules/administration/cs_request_newProcess.php');
+$f->addHiddenValue('address', $session->get('address'));
+$f->addHiddenValue('csFormID', $form['csFormID']);
 
-$form->addRow()->addHeading($type['name'], ($type['icon'] ? $type['icon'].' ' : '').__($type['name']));
-if (!empty($type['description'])) {
-    $form->addRow()->addContent(htmlspecialchars($type['description']));
+$f->addRow()->addHeading($form['name'], ($form['icon'] ? $form['icon'].' ' : '').$form['name']);
+if (!empty($form['description'])) {
+    $f->addRow()->addContent(htmlspecialchars($form['description']));
 }
 
 $fileUploader = new Gibbon\FileUploader($pdo, $session);
-$customFields = $container->get(FieldGateway::class)->selectByType($csTicketTypeID);
 
-// The form is exactly what the request type is configured to show (Manage Ticket Types > Request Form).
-foreach (FormConfig::items($type['formConfig'], $customFields) as $item) {
-    if ($item['kind'] == 'custom') {
-        CustomFields::addToForm($form, [$item['field']]);
+foreach ($container->get(FormFieldGateway::class)->selectByForm($form['csFormID']) as $q) {
+    $name = FormMapper::inputName($q['fieldKey']);
+    $options = CustomFields::optionList($q['options']);
+
+    if ($q['inputType'] === 'info') {
+        $f->addRow()->addContent('<b>'.htmlspecialchars($q['label']).'</b>'.(empty($q['options']) ? '' : '<br/>'.nl2br(htmlspecialchars($q['options']))));
         continue;
     }
 
-    $row = $form->addRow();
-    $label = $row->addLabel($item['key'], $item['label']);
-    if (!empty($item['help'])) {
-        $label->description($item['help']);
+    $row = $f->addRow();
+    $label = $row->addLabel($name, $q['label']);
+    if (!empty($q['helpText'])) {
+        $label->description($q['helpText']);
     }
 
-    switch ($item['key']) {
-        case 'title':
-            $input = $row->addTextField('title')->maxLength(200);
+    switch ($q['inputType']) {
+        case 'text':
+            $input = $row->addTextArea($name)->setRows(4);
             break;
-        case 'description':
-            $input = $row->addTextArea('description')->setRows(6);
+        case 'number':
+            $input = $row->addNumber($name)->decimalPlaces(2);
             break;
-        case 'priority':
-            $input = $row->addSelect('priority')->fromArray(['Low' => __('Low'), 'Medium' => __('Medium'), 'High' => __('High'), 'Urgent' => __('Urgent')])->selected('Medium');
+        case 'date':
+            $input = $row->addDate($name);
             break;
-        case 'dateStart':
-        case 'dateDue':
-            $input = $row->addDate($item['key']);
+        case 'select':
+            $input = $row->addSelect($name)->fromArray($options)->placeholder();
             break;
-        case 'attachments':
-            $input = $row->addFileUpload(Attachments::FIELD)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
-            $label->description(trim($item['help'].' '.sprintf(__('Up to %1$s files.'), Attachments::MAX_FILES)));
+        case 'radio':
+            $input = $row->addRadio($name)->fromArray($options);
             break;
+        case 'checkboxes':
+            $input = $row->addCheckbox($name)->fromArray($options);
+            break;
+        case 'yesno':
+            $input = $row->addYesNo($name)->placeholder();
+            break;
+        case 'file':
+            $input = $row->addFileUpload($name)->accepts($fileUploader->getFileExtensions())->uploadMultiple()->setMaxUpload(false);
+            break;
+        default:
+            $length = (int)$q['options'];
+            $input = $row->addTextField($name)->maxLength($length > 0 ? $length : 255);
     }
-    if ($item['required']) {
+    if ($q['required'] == 'Y') {
         $input->required();
     }
 }
 
-$row = $form->addRow();
+$row = $f->addRow();
     $row->addFooter();
-    $row->addSubmit(__('Submit Request'));
+    $row->addSubmit(__('Submit'));
 
-echo $form->getOutput();
+echo $f->getOutput();

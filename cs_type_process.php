@@ -8,7 +8,6 @@ Copyright © 2010, Gibbon Foundation
 use Gibbon\Data\Validator;
 use Gibbon\Module\administration\Domain\TeamGateway;
 use Gibbon\Module\administration\Domain\TicketTypeGateway;
-use Gibbon\Module\administration\Service\FormConfig;
 use Gibbon\Module\administration\Service\Workflow;
 
 $_POST['address'] = '/modules/administration/cs_type_manage.php';
@@ -33,9 +32,6 @@ $data = [
     'description' => $_POST['description'] ?? '',
     'csTeamID'    => isset($teams[$team]) ? $team : null,
     'active'      => ($_POST['active'] ?? 'Y') == 'N' ? 'N' : 'Y',
-    'groupName'   => mb_substr(trim($_POST['groupName'] ?? ''), 0, 60) ?: null,
-    'icon'        => mb_substr(trim($_POST['icon'] ?? ''), 0, 8) ?: null,
-    'audience'    => implode(',', array_intersect((array)($_POST['audience'] ?? []), array_keys(FormConfig::audienceOptions()))) ?: null,
     'workflow'    => Workflow::fromText($_POST['workflowTransitions'] ?? '', $_POST['workflowCommentRequired'] ?? ''),
 ];
 $editParams = empty($csTicketTypeID) ? [] : ['csTicketTypeID' => $csTicketTypeID];

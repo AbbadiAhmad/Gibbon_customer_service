@@ -29,7 +29,7 @@ if (empty($type)) {
     return;
 }
 
-$values = ['label' => '', 'fieldKey' => '', 'fieldType' => 'varchar', 'options' => '', 'required' => 'N', 'showOnForm' => 'Y', 'description' => '', 'sequenceNumber' => $gateway->nextSequence($csTicketTypeID)];
+$values = ['label' => '', 'fieldKey' => '', 'fieldType' => 'varchar', 'options' => '', 'required' => 'N', 'internal' => 'N', 'description' => '', 'sequenceNumber' => $gateway->nextSequence($csTicketTypeID)];
 if (!empty($csFieldID)) {
     $values = $gateway->getByID($csFieldID);
     if (empty($values) || $values['csTicketTypeID'] != $csTicketTypeID) {
@@ -72,8 +72,8 @@ $row = $form->addRow();
     $row->addTextField('description')->maxLength(255)->setValue($values['description']);
 
 $row = $form->addRow();
-    $row->addLabel('showOnForm', __('Show on the Request Form'))->description(__('"No" keeps the field for the agents: they fill it in on the ticket page, the requester never sees it.'));
-    $row->addYesNo('showOnForm')->required()->selected($values['showOnForm']);
+    $row->addLabel('internal', __('Internal'))->description(__('"Yes": only the agents see and fill in this field on the ticket page; the requester never sees it and forms cannot ask for it.'));
+    $row->addYesNo('internal')->required()->selected($values['internal']);
 
 $row = $form->addRow();
     $row->addLabel('required', __('Required'));

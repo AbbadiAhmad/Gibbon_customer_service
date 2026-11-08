@@ -20,7 +20,8 @@ class TicketTypeGateway extends QueryableGateway
 
     public function selectAllWithCounts(): array
     {
-        $sql = "SELECT gibbonCsTicketType.*, gibbonCsTeam.name AS teamName, COUNT(gibbonCsField.csFieldID) AS fieldCount
+        $sql = "SELECT gibbonCsTicketType.*, gibbonCsTeam.name AS teamName, COUNT(gibbonCsField.csFieldID) AS fieldCount,
+                    (SELECT COUNT(*) FROM gibbonCsForm WHERE gibbonCsForm.csTicketTypeID=gibbonCsTicketType.csTicketTypeID) AS formCount
                 FROM gibbonCsTicketType
                 LEFT JOIN gibbonCsTeam ON (gibbonCsTeam.csTeamID=gibbonCsTicketType.csTeamID)
                 LEFT JOIN gibbonCsField ON (gibbonCsField.csTicketTypeID=gibbonCsTicketType.csTicketTypeID)
@@ -31,14 +32,6 @@ class TicketTypeGateway extends QueryableGateway
     public function selectActive(): array
     {
         return $this->db()->select("SELECT * FROM gibbonCsTicketType WHERE active='Y' ORDER BY name")->fetchAll();
-    }
-
-    /** Active types the person may raise: limited by the audience (Gibbon role category) of each type. */
-    public function selectForAudience(string $roleCategory, bool $all = false): array
-    {
-        return array_values(array_filter($this->selectActive(), function ($type) use ($roleCategory, $all) {
-            return $all || \Gibbon\Module\administration\Service\FormConfig::inAudience($type['audience'], $roleCategory);
-        }));
     }
 
     /** @return array csTicketTypeID => name */

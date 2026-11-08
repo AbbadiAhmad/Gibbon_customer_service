@@ -56,6 +56,15 @@ echo '</div>';
 
 echo '<p class="text-gray-600">'.__('Filter').': '.htmlspecialchars(BoardFilter::describe($board['filter'])).'</p>';
 
+// Quick create without leaving the board (needs the Quick Create action and edit_ticket in a space, like the page).
+echo csQuickCreatedNotice($container, $session);
+if (csAccess($guid, $connection2, 'cs_ticket_quick.php')) {
+    $quickForm = csQuickCreateForm($container, $session, $isAdmin, ['csBoardID' => $csBoardID]);
+    if ($quickForm !== null) {
+        echo '<details class="cs-quick"><summary>+ '.__('Quick create').'</summary>'.$quickForm.'</details>';
+    }
+}
+
 $columns = $container->get(BoardGateway::class)->selectColumns($csBoardID);
 $tickets = $container->get(TicketGateway::class)->selectByFilter($board['filter']);
 $canMove = $isAdmin || $container->get(SpaceGateway::class)->hasPermission(csPersonID($session), $board['csSpaceID'], Permissions::TRANSITION);

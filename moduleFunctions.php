@@ -256,6 +256,17 @@ function csDeleteTarget($container, $session, bool $isAdmin, string $entity, $id
             $gateway = $container->get($ns.'RuleGateway');
             return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_rule_manage.php', []],
                 'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
+        case 'form':
+            $action = 'Manage Forms';
+            $gateway = $container->get($ns.'FormGateway');
+            return ['action' => $action, 'allowed' => $isAdmin && $gateway->exists($id), 'back' => ['cs_form_manage.php', []],
+                'delete' => function () use ($gateway, $id) { return $gateway->deleteForm($id); }];
+        case 'formfield':
+            $action = 'Manage Forms';
+            $gateway = $container->get($ns.'FormFieldGateway');
+            $question = $gateway->getByID($id);
+            return ['action' => $action, 'allowed' => $isAdmin && !empty($question), 'back' => ['cs_form_edit.php', ['csFormID' => $question['csFormID'] ?? '']],
+                'delete' => function () use ($gateway, $id) { return $gateway->delete($id); }];
         case 'space':
             $action = 'Manage Spaces';
             return ['action' => $action, 'allowed' => $isAdmin && $spaces->exists($id), 'back' => ['cs_space_manage.php', []],
@@ -312,4 +323,74 @@ function csDueBadge(array $ticket): string
         return '<span class="text-orange-600 font-bold">'.__('Due today').'</span>';
     }
     return '<span class="text-gray-600">'.sprintf(__('Due %1$s'), \Gibbon\Services\Format::date($ticket['dateDue'])).'</span>';
+}
+
+/**
+ * The quick create form (type, title, summary, assignee) as HTML, for the quick create page and the board.
+ * Null when the user may not quick create. $back is carried to the process script (e.g. ['csBoardID' => 3] to return to a board).
+ */
+function csQuickCreateForm($container, $session, bool $isAdmin, array $back = []): ?string
+{
+    $person = csPersonID($session);
+    if (!\Gibbon\Module\administration\Service\QuickCreate::canUse($container, $person, $isAdmin)) {
+        return null;
+    }
+
+    $form = \Gibbon\Forms\Form::create('csQuickCreate'.(isset($back['csBoardID']) ? 'Board' : ''), $session->get('absoluteURL').'/modules/'.CS_MODULE.'/cs_ticket_quickProcess.php');
+    $form->addHiddenValue('address', $session->get('address'));
+    foreach ($back as $key => $value) {
+        $form->addHiddenValue($key, $value);
+    }
+
+    $row = $form->addRow();
+        $row->addLabel('csTicketTypeID', __('Type'));
+        $row->addSelect('csTicketTypeID')->fromArray(\Gibbon\Module\administration\Service\QuickCreate::typeOptions($container))->required()->placeholder();
+
+    $row = $form->addRow();
+        $row->addLabel('title', __('Title'));
+        $row->addTextField('title')->maxLength(200)->required();
+
+    $row = $form->addRow();
+        $row->addLabel('summary', __('Summary'))->description(__('Optional. A few words on what is needed; it becomes the description of the ticket.'));
+        $row->addTextArea('summary')->setRows(2);
+
+    $assignees = \Gibbon\Module\administration\Service\QuickCreate::assignees($container, $person, $isAdmin);
+    if (!empty($assignees)) {
+        $row = $form->addRow();
+            $row->addLabel('gibbonPersonIDAssignee', __('Assignee'))->description(__('Leave empty to let the team of the type pick it up.'));
+            $row->addSelect('gibbonPersonIDAssignee')->fromArray($assignees)->placeholder(__('Unassigned'));
+    }
+
+    $row = $form->addRow();
+        $row->addFooter();
+        $row->addSubmit(__('Create'));
+
+    return $form->getOutput();
+}
+
+/** "Created CS-12 Title" notice after a quick create (only for the person who created it). */
+function csQuickCreatedNotice($container, $session): string
+{
+    $ticket = empty($_GET['created']) ? [] : $container->get(\Gibbon\Module\administration\Domain\TicketGateway::class)->getTicket((int)$_GET['created']);
+    if (empty($ticket) || (int)$ticket['gibbonPersonIDReporter'] !== csPersonID($session)) {
+        return '';
+    }
+    return '<div class="success">'.__('Created').' '.\Gibbon\Services\Format::link(csURL($session, 'cs_ticket_view.php', ['csTicketID' => $ticket['csTicketID']]), csTicketRef($ticket['csTicketID']).' '.htmlspecialchars($ticket['title'])).'</div>';
+}
+
+/** A one-time message for the next page (e.g. why a form field was refused): Gibbon's return codes are too generic for that. */
+function csFlash($session, string $message): void
+{
+    $session->set('csFlash', $message);
+}
+
+/** The message set by csFlash() as an error box (and forgets it). */
+function csFlashOutput($session): string
+{
+    $message = $session->get('csFlash');
+    if (empty($message)) {
+        return '';
+    }
+    $session->forget('csFlash');
+    return '<div class="error">'.htmlspecialchars($message).'</div>';
 }

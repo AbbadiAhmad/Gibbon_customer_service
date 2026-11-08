@@ -8,6 +8,7 @@ Copyright © 2010, Gibbon Foundation
 namespace Gibbon\Module\administration\Automation;
 
 use Gibbon\Forms\Form;
+use Gibbon\Module\administration\Domain\PersonGateway;
 use Gibbon\Module\administration\Domain\TeamGateway;
 
 /**
@@ -21,10 +22,11 @@ class ActionForm
     /**
      * @param array $existing the saved actions: [['type' => key, 'params' => [...]], ...]
      */
-    public static function addSlots(Form $form, $container, $gibbonSchoolYearID, array $existing = [], int $slots = self::SLOTS): void
+    public static function addSlots(Form $form, $container, array $existing = [], int $slots = self::SLOTS): void
     {
         $actions = ActionRegistry::all();
         $teams = $container->get(TeamGateway::class)->selectOptions();
+        $people = $container->get(PersonGateway::class)->selectOptions();   // once, not once per slot
 
         for ($i = 0; $i < $slots; $i++) {
             $saved = $existing[$i] ?? ['type' => '', 'params' => []];
@@ -59,7 +61,7 @@ class ActionForm
                             $row->addSelect($field)->fromArray($teams)->selected($value)->placeholder();
                             break;
                         case 'person':
-                            $row->addSelectUsers($field, $gibbonSchoolYearID)->selected($value)->placeholder();
+                            $row->addSelectPerson($field)->fromArray($people)->selected($value)->placeholder();
                             break;
                         default:
                             $row->addTextField($field)->maxLength(255)->setValue($value);

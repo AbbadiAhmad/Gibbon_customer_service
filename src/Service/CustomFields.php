@@ -104,39 +104,44 @@ class CustomFields
      * Read the submitted values for the given fields.
      * @return array [array $values keyed by fieldKey, array $missing labels of required fields left empty]
      */
+    /**
+     * Clean one raw answer according to the definition of a ticket field ('fieldType', 'options'):
+     * a choice must be one of the options, a date a valid date, a number numeric; checkboxes give a list, everything else text.
+     * Used for the agent's field form and for form answers that are mapped to a ticket field.
+     *
+     * @return string|int|float|array '' / [] when the answer is empty or invalid
+     */
+    public static function normalize(array $field, $raw)
+    {
+        switch ($field['fieldType']) {
+            case 'checkboxes':
+                return array_values(array_intersect(array_map('strval', (array)$raw), self::optionList($field['options'])));
+            case 'select':
+            case 'radio':
+                return is_scalar($raw) && in_array((string)$raw, self::optionList($field['options']), true) ? (string)$raw : '';
+            case 'yesno':
+                return in_array($raw, ['Y', 'N'], true) ? $raw : '';
+            case 'date':
+                $date = is_scalar($raw) && trim((string)$raw) !== '' ? Format::dateConvert(trim((string)$raw)) : '';
+                return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string)$date, $m) && checkdate((int)$m[2], (int)$m[3], (int)$m[1]) ? $date : '';
+            case 'number':
+                return is_numeric($raw) ? $raw + 0 : '';
+            default:
+                $value = trim(is_array($raw) ? implode(', ', array_map('strval', $raw)) : (string)$raw);
+                if ($field['fieldType'] == 'varchar' && (int)$field['options'] > 0) {
+                    $value = mb_substr($value, 0, (int)$field['options']);
+                }
+                return $value;
+        }
+    }
+
     public static function collect(array $fields, array $post): array
     {
         $values = [];
         $missing = [];
 
         foreach ($fields as $field) {
-            $raw = $post['cf_'.$field['fieldKey']] ?? null;
-
-            switch ($field['fieldType']) {
-                case 'checkboxes':
-                    $allowed = self::optionList($field['options']);
-                    $value = array_values(array_intersect((array)$raw, $allowed));
-                    break;
-                case 'select':
-                case 'radio':
-                    $value = in_array($raw, self::optionList($field['options']), true) ? $raw : '';
-                    break;
-                case 'yesno':
-                    $value = in_array($raw, ['Y', 'N'], true) ? $raw : '';
-                    break;
-                case 'date':
-                    $value = $raw !== null && $raw !== '' ? (Format::dateConvert($raw) ?: '') : '';
-                    break;
-                case 'number':
-                    $value = is_numeric($raw) ? $raw + 0 : '';
-                    break;
-                default:
-                    $value = trim((string)$raw);
-                    if ($field['fieldType'] == 'varchar' && (int)$field['options'] > 0) {
-                        $value = mb_substr($value, 0, (int)$field['options']);
-                    }
-                    break;
-            }
+            $value = self::normalize($field, $post['cf_'.$field['fieldKey']] ?? null);
 
             if ($field['required'] == 'Y' && ($value === '' || $value === [])) {
                 $missing[] = $field['label'];
