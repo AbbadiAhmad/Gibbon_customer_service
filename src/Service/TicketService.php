@@ -13,6 +13,7 @@ namespace Gibbon\Module\ServiceDesk\Service;
 
 use Gibbon\Services\Format;
 use Gibbon\Contracts\Database\Connection;
+use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
 use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketGateway;
 use Gibbon\Module\ServiceDesk\Domain\CommentGateway;
@@ -40,8 +41,9 @@ class TicketService
     protected $subscriberGateway;
     protected $notifier;
     protected $automations;
+    protected $teamGateway;
 
-    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations)
+    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, TeamGateway $teamGateway)
     {
         $this->db = $db;
         $this->ticketGateway = $ticketGateway;
@@ -50,18 +52,26 @@ class TicketService
         $this->subscriberGateway = $subscriberGateway;
         $this->notifier = $notifier;
         $this->automations = $automations;
+        $this->teamGateway = $teamGateway;
     }
 
     /**
      * Creates a ticket in the first stage of its type's workflow. The requester's notification policy is copied to
      * the ticket and the teams of the type are told.
      *
+     * @param mixed $actorID The person sending the request when it is not the requester (a request on behalf of
+     *                       someone): the history then says who created it, and the requester is told.
      * @return int|false The new ticket id.
      */
-    public function create(array $type, $gibbonPersonIDRequester, $gibbonSchoolYearID, string $subject, array $answers)
+    public function create(array $type, $gibbonPersonIDRequester, $gibbonSchoolYearID, string $subject, array $answers, $actorID = null)
     {
+        $actorID = !empty($actorID) ? $actorID : $gibbonPersonIDRequester;
+
         $stage = $this->stageGateway->getFirstStage($type['gibbonServiceDeskTicketTypeID']);
         if (empty($stage)) return false;
+
+        // A team can name a default assignee: the ticket then starts assigned to that person.
+        $assignee = $this->teamGateway->getDefaultAssigneeByTicketType($type['gibbonServiceDeskTicketTypeID']);
 
         $now = date('Y-m-d H:i:s');
         $gibbonServiceDeskTicketID = $this->ticketGateway->insert([
@@ -69,6 +79,7 @@ class TicketService
             'gibbonServiceDeskTicketTypeID' => $type['gibbonServiceDeskTicketTypeID'],
             'gibbonServiceDeskStageID'      => $stage['gibbonServiceDeskStageID'],
             'gibbonPersonIDRequester'       => $gibbonPersonIDRequester,
+            'gibbonPersonIDAssignee'        => $assignee['gibbonPersonID'] ?? null,
             'subject'                       => mb_substr($subject, 0, 120),
             'fields'                        => json_encode($answers, JSON_UNESCAPED_UNICODE),
             'timestampCreated'              => $now,
@@ -78,12 +89,30 @@ class TicketService
         if (empty($gibbonServiceDeskTicketID)) return false;
 
         $this->subscriberGateway->subscribe($gibbonServiceDeskTicketID, $gibbonPersonIDRequester);
+        if (!empty($assignee)) {
+            $this->subscriberGateway->subscribe($gibbonServiceDeskTicketID, $assignee['gibbonPersonID']);
+        }
 
         $ticket = $this->ticketGateway->getTicketByID($gibbonServiceDeskTicketID);
-        $this->notifier->notify($ticket, __m('New {type} request from {name}.', [
-            'type' => $ticket['typeName'],
-            'name' => Format::name('', $ticket['requesterPreferredName'], $ticket['requesterSurname'], 'Student', false),
-        ]), $gibbonPersonIDRequester, false, true);
+        $requesterName = Format::name('', $ticket['requesterPreferredName'], $ticket['requesterSurname'], 'Student', false);
+        $text = __m('New {type} request from {name}.', ['type' => $ticket['typeName'], 'name' => $requesterName]);
+
+        // Sent by someone else: say so on the ticket. The requester is told too (only the actor is left out).
+        if (intval($actorID) !== intval($gibbonPersonIDRequester)) {
+            $actor = $this->db->select("SELECT preferredName, surname FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID", ['gibbonPersonID' => $actorID])->fetch();
+            $onBehalf = __m('Created by {creator} on behalf of {name}.', [
+                'creator' => Format::name('', $actor['preferredName'] ?? '', $actor['surname'] ?? '', 'Student', false),
+                'name'    => $requesterName,
+            ]);
+            $this->writeHistory($ticket, $actorID, $onBehalf, 'Log');
+            $text .= ' '.$onBehalf;
+        }
+
+        if (!empty($assignee)) {
+            $this->writeHistory($ticket, null, __m('Assigned to {name}.', ['name' => Format::name('', $assignee['preferredName'], $assignee['surname'], 'Student', false)]), 'Log');
+        }
+
+        $this->notifier->notify($ticket, $text, $actorID, false, true);
 
         // The first stage may have automation as well.
         if (!empty($stage['automation'])) {

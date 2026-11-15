@@ -34,9 +34,11 @@ class TeamGateway extends QueryableGateway
             ->from($this->getTableName())
             ->cols([
                 'gibbonServiceDeskTeam.*',
+                'assignee.surname AS assigneeSurname', 'assignee.preferredName AS assigneePreferredName',
                 '(SELECT COUNT(*) FROM gibbonServiceDeskTeamMember WHERE gibbonServiceDeskTeamMember.gibbonServiceDeskTeamID=gibbonServiceDeskTeam.gibbonServiceDeskTeamID) AS memberCount',
                 "(SELECT GROUP_CONCAT(gibbonServiceDeskTicketType.name ORDER BY gibbonServiceDeskTicketType.sequenceNumber SEPARATOR ', ') FROM gibbonServiceDeskTicketTypeTeam JOIN gibbonServiceDeskTicketType ON (gibbonServiceDeskTicketType.gibbonServiceDeskTicketTypeID=gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTicketTypeID) WHERE gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTeamID=gibbonServiceDeskTeam.gibbonServiceDeskTeamID) AS ticketTypes",
-            ]);
+            ])
+            ->leftJoin('gibbonPerson AS assignee', 'assignee.gibbonPersonID=gibbonServiceDeskTeam.gibbonPersonIDDefaultAssignee');
 
         return $this->runQuery($query, $criteria);
     }
@@ -74,6 +76,12 @@ class TeamGateway extends QueryableGateway
     public function deleteMember($gibbonServiceDeskTeamID, $gibbonServiceDeskTeamMemberID)
     {
         $data = ['gibbonServiceDeskTeamID' => $gibbonServiceDeskTeamID, 'gibbonServiceDeskTeamMemberID' => $gibbonServiceDeskTeamMemberID];
+
+        // Someone who leaves the team can no longer be its default assignee.
+        $this->db()->update("UPDATE gibbonServiceDeskTeam SET gibbonPersonIDDefaultAssignee=NULL
+            WHERE gibbonServiceDeskTeamID=:gibbonServiceDeskTeamID
+            AND gibbonPersonIDDefaultAssignee=(SELECT gibbonPersonID FROM gibbonServiceDeskTeamMember WHERE gibbonServiceDeskTeamMemberID=:gibbonServiceDeskTeamMemberID)", $data);
+
         $sql = "DELETE FROM gibbonServiceDeskTeamMember WHERE gibbonServiceDeskTeamID=:gibbonServiceDeskTeamID AND gibbonServiceDeskTeamMemberID=:gibbonServiceDeskTeamMemberID";
 
         return $this->db()->delete($sql, $data);
@@ -168,5 +176,25 @@ class TeamGateway extends QueryableGateway
                 WHERE gibbonModule.name='ServiceDesk' AND gibbonAction.name='Manage Ticket Types' AND gibbonPerson.status='Full'";
 
         return $this->db()->select($sql);
+    }
+
+    /**
+     * The person new tickets of a type are assigned to: the default assignee of the first (by name) active team of
+     * the type that has one and whose assignee is still an active member. Empty when no team has a default.
+     */
+    public function getDefaultAssigneeByTicketType($gibbonServiceDeskTicketTypeID)
+    {
+        $data = ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID];
+        $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonPerson.surname, gibbonPerson.preferredName
+                FROM gibbonServiceDeskTicketTypeTeam
+                JOIN gibbonServiceDeskTeam ON (gibbonServiceDeskTeam.gibbonServiceDeskTeamID=gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTeamID)
+                JOIN gibbonServiceDeskTeamMember ON (gibbonServiceDeskTeamMember.gibbonServiceDeskTeamID=gibbonServiceDeskTeam.gibbonServiceDeskTeamID AND gibbonServiceDeskTeamMember.gibbonPersonID=gibbonServiceDeskTeam.gibbonPersonIDDefaultAssignee)
+                JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=gibbonServiceDeskTeam.gibbonPersonIDDefaultAssignee)
+                WHERE gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTicketTypeID=:gibbonServiceDeskTicketTypeID
+                AND gibbonServiceDeskTeam.active='Y' AND gibbonPerson.status='Full'
+                ORDER BY gibbonServiceDeskTeam.name
+                LIMIT 1";
+
+        return $this->db()->select($sql, $data)->fetch() ?: [];
     }
 }

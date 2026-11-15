@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.0.00';
+$version     = '1.1.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -37,6 +37,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTeam` (
     `name` varchar(60) NOT NULL,
     `description` varchar(255) NOT NULL DEFAULT '',
     `active` enum('Y','N') NOT NULL DEFAULT 'Y',
+    `gibbonPersonIDDefaultAssignee` int(10) unsigned zerofill NULL,
     PRIMARY KEY (`gibbonServiceDeskTeamID`),
     UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -232,6 +233,21 @@ $actionRows[] = [
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',
 ] + $serviceDeskEveryone;
+
+// A second action on the same pages (Gibbon's "grouped action" convention: name_suffix + higher precedence).
+// Holders see every active service and can send a request on behalf of another person.
+$actionRows[] = [
+    'name'        => 'New Request_onBehalf',
+    'precedence'  => '1',
+    'category'    => 'Requests',
+    'description' => 'Create tickets on behalf of others: see every service and send a request for another person, who becomes the requester.',
+    'URLList'     => 'request_new.php,request_newProcess.php',
+    'entryURL'    => 'request_new.php',
+    'entrySidebar' => 'Y',
+    'menuShow'    => 'Y',
+    'defaultPermissionAdmin' => 'Y', 'defaultPermissionTeacher' => 'N', 'defaultPermissionStudent' => 'N', 'defaultPermissionParent' => 'N', 'defaultPermissionSupport' => 'Y',
+    'categoryPermissionStaff' => 'Y', 'categoryPermissionStudent' => 'N', 'categoryPermissionParent' => 'N', 'categoryPermissionOther' => 'N',
+];
 
 $actionRows[] = [
     'name'        => 'Tickets',

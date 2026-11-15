@@ -15,6 +15,8 @@
 | Admin creates teams with access to specific types | *Manage Teams* + teams chosen on the ticket type | `teams_*.php`, `TicketAccess` |
 | Default workflow copied to every new type; editable per type | *Manage Workflows*; stages with no type = default; copied on type creation | `workflow_*.php`, `StageGateway::copyDefaultWorkflow` |
 | Automation on the workflow: script with a clear interface, transactional, verifies, comments, moves to done | Stage has *automation on entry* + *then move to* | `src/Automation/*`, `TicketService::changeStage` |
+| Staff with the permission create a ticket on behalf of someone (added in 1.1.00) | Action *New Request_onBehalf*: person picker on the service list, all active services, form built for that person, history line "Created by X on behalf of Y" | `request_new.php` (+Process), `TicketAccess::canCreateOnBehalf`, `TicketService::create` |
+| Tickets are assigned directly on creation (added in 1.1.00) | Optional *Default Assignee* on the team (one of its members) | `teams_manage_edit.php`, `TeamGateway::getDefaultAssigneeByTicketType`, `TicketService::create` |
 | User saves filters (type, status, assignee) | Filter form on the ticket list + *Save as Filter* | `tickets.php`, `tickets_filterProcess.php`, `TicketFilters` |
 | Admin creates default filters, e.g. absence tickets for a team | Administrators save a filter for *Everyone* or for one team | same |
 
@@ -48,7 +50,8 @@ Gibbon actions decide which pages a role may open (`manifest.php`). On top of th
 |---|---|---|
 | Administrator | role holds action *Manage Ticket Types* | configure; see and manage all tickets; shared filters |
 | Team member | in an active team linked to the ticket's type | see and manage those tickets; internal notes |
-| Requester | raised the ticket | see it, comment, set own notifications |
+| Requester | raised the ticket (or it was raised on their behalf) | see it, comment, set own notifications |
+| Holder of *New Request_onBehalf* | role holds that action | see every active service; send a request for any active user. Gives no access to tickets by itself |
 
 Enforced in three places: the list query (`TicketGateway::queryTickets` adds the scope to the SQL), the ticket page
 and the process script (`canView` / `canManage`; "not found" and "not allowed" answer the same). Internal notes are
@@ -110,7 +113,6 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
 | # | Use case | Note |
 |---|---|---|
 | M1 | **Attachments** on requests and comments (doctor's note, signed de-registration form) | Needs upload + an access-checked download script. The most likely first request. |
-| M2 | **Staff raise a ticket on behalf of a parent** (phone call, front desk) | Help Desk has "create for other". Needs a requester picker and children of *that* parent. |
 | M3 | **Requester withdraws a request / reopens a closed one** | Today: by commenting; the team moves the ticket. |
 | M4 | **Both parents of a family see the ticket** | See decision D6. |
 | M5 | **Tell teachers** (form tutor, class teachers) about an approved absence or unenrolment | Could be a second automation script. |
@@ -138,5 +140,11 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
 * Notification centre (`tests/live/notifications.js`): entries listed on Gibbon's notification page, bell count,
   "Action & Archive" opens the ticket, empty-team ticket reaches the administrators. Email: sent through SMTP to a
   local sink (`tests/live/mail-on.sh`), sender, recipients, subject and ticket link checked.
-* **Not tested**: delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31; upgrade
-  path (there is only one version); students as requesters; uninstall; other languages; very large data.
+* On behalf (`tests/live/onbehalf.js`): upgrade 1.0.00 -> 1.1.00 through Manage Modules (new action, permissions,
+  new column); administrator sees all services, picks a parent, gets that parent's children, ticket has the parent as
+  requester and the "created by ... on behalf of" line, parent is notified and sees the ticket; a teacher without the
+  permission sees only their services and is refused the on-behalf address.
+* Default assignee (`tests/live/assignee.js`): set on the team -> new ticket starts assigned and appears in the
+  assignee's "Assigned to Me"; cleared -> unassigned; member removed from the team -> default cleared.
+* **Not tested**: delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
+  students as requesters; uninstall; other languages; very large data.

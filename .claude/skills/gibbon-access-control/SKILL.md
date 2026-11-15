@@ -25,6 +25,10 @@ Every file a browser can request authorises itself. In order:
    * Team member = in an active team linked to the ticket's type (`canManage($ticket)`): stage, assignee, priority,
      internal notes.
    * Requester (`isRequester`): view, comment, own notification settings.
+   * Create on behalf (`canCreateOnBehalf()` = strongest action on `request_new.php` is `New Request_onBehalf`):
+     all active types and any active user as requester. The process script ignores a posted
+     `gibbonPersonIDOnBehalf` unless the permission is held (answers `error0`), and validates the answers against what
+     the *requester* may choose (their children), not the creator. The permission gives no access to tickets.
    * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
      give the same answer.
    * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query
@@ -41,6 +45,7 @@ Every file a browser can request authorises itself. In order:
    * ticket: the new stage must belong to the ticket's type; a new assignee must be in a team of the type; only team
      members may post an internal note (the posted `type` is ignored for requesters).
    * filters: personal by default; only administrators may share; delete only own filters (shared: administrators).
+   * team default assignee: must be a member of that team (else stored as empty); cleared when the member is removed.
    * admin forms: an id from the request is re-read and checked against its parent (field belongs to the type, stage
      belongs to the workflow, member row belongs to the team) before it is changed or deleted.
 

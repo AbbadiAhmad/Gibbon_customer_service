@@ -85,4 +85,13 @@ class TicketAccess
     {
         return $this->isRequester($ticket) || $this->canManage($ticket);
     }
+
+    /**
+     * Does the user hold "New Request_onBehalf" (create tickets on behalf of others)? They then see every active
+     * service and may send a request for another person.
+     */
+    public function canCreateOnBehalf(): bool
+    {
+        return getHighestGroupedAction($this->session->get('guid'), '/modules/ServiceDesk/request_new.php', $this->db->getConnection()) == 'New Request_onBehalf';
+    }
 }

@@ -63,6 +63,16 @@ errors or facts observed in the running site, not read from source.
   page; `category` groups the module menu. `defaultPermission{Admin,Teacher,Student,Parent,Support}` and
   `categoryPermission{Staff,Student,Parent,Other}` - both must allow a role.
 * A page missing from every `URLList` cannot be opened by anyone (`tests/static.php` checks this).
+* **Permission variants of one page = grouped actions** (**LIVE**): a second action with the same `URLList`, the name
+  `<Base name>_<suffix>` and a higher `precedence` (here `New Request_onBehalf`). `isActionAccessible()` passes for
+  either; `getHighestGroupedAction($guid, '/modules/ServiceDesk/page.php', $connection2)` returns the name of the
+  strongest one the current role holds - compare it to decide what to offer. The menu shows one entry.
+* **LIVE** upgrade recipe for a new action (CHANGEDB): `INSERT INTO gibbonAction (gibbonModuleID, name, precedence,
+  category, description, URLList, entryURL, entrySidebar, menuShow, defaultPermission*, categoryPermission*) VALUES
+  ((SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'), ...);end` then `INSERT INTO gibbonPermission
+  (gibbonRoleID, gibbonActionID) SELECT gibbonRole.gibbonRoleID, gibbonAction.gibbonActionID FROM gibbonRole JOIN
+  gibbonAction ON (gibbonAction.name='...') JOIN gibbonModule ON (... AND gibbonModule.name='ServiceDesk') WHERE
+  gibbonRole.name IN ('Administrator', ...)`. Permissions and the menu are read at login: log in again to see them.
 
 ## Pages
 ```php
@@ -86,7 +96,8 @@ $page->breadcrumbs->add(__m('Parent'), 'parent.php', ['id' => $id])->add(__m('Th
 * People pickers that query the database (`addSelectStudent`, `addSelectUsers`, `addSelectStaff`) need
   `$form->setFactory(DatabaseFormFactory::create($pdo))`. Without it the call returns an error placeholder and the
   next chained call dies with "Undefined Method ... on Layout\Element". **LIVE**: `addSelectStudent($name,
-  $gibbonSchoolYearID)->selectMultiple()` works with the factory set. For a custom list use
+  $gibbonSchoolYearID)->selectMultiple()` works with the factory set. For a long custom list of people use
+  `addSelectPerson($name)->fromArray($people)->placeholder()` (searchable; **LIVE** with 1000+ people). For a custom list use
   `addSelect($name)->fromArray($people)`.
 * Show/hide rows: `$form->toggleVisibilityByClass('cls')->onSelect('field')->when('Value')` + `$row->addClass('cls')`.
 * Edit forms: `$form->loadAllValuesFrom($values)` after adding the rows.

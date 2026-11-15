@@ -17,6 +17,7 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | A request-form field type | `RequestFields`: `TYPES`, `addToForm()`, `collect()` (validate!), `describe()`; the `type` enum of `gibbonServiceDeskField` (manifest + CHANGEDB); the type list in `types_field_edit.php` |
 | An automation script | new class in `src/Automation/Scripts/` implementing `AutomationScript` - nothing else (copy `RecordAbsence.php`) |
 | A filter criterion | `TicketFilters::clean()` + `apply()`, a rule in `TicketGateway::queryTickets()`, a row in the form of `tickets.php` |
+| A permission variant of an existing page | a grouped action `<Name>_<suffix>` in `manifest.php` + CHANGEDB, a `can...()` method in `TicketAccess` using `getHighestGroupedAction` (see `canCreateOnBehalf`) |
 | A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
 | A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |
 | A view with more than a few lines of HTML | `templates/<name>.twig.html` + classes in `css/module.css` |

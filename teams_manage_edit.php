@@ -54,6 +54,17 @@ $row = $form->addRow();
     $row->addLabel('active', __('Active'))->description(__m('Members of an inactive team no longer see its tickets.'));
     $row->addYesNo('active')->required();
 
+// DEFAULT ASSIGNEE: optional, one of the team's members (so it can only be chosen once the team has members)
+if (!empty($gibbonServiceDeskTeamID)) {
+    $memberOptions = [];
+    foreach ($teamGateway->selectMembersByTeam($gibbonServiceDeskTeamID)->fetchAll() as $person) {
+        $memberOptions[$person['gibbonPersonID']] = Format::name('', $person['preferredName'], $person['surname'], 'Staff', true, true);
+    }
+    $row = $form->addRow();
+        $row->addLabel('gibbonPersonIDDefaultAssignee', __m('Default Assignee'))->description(__m('New tickets of this team\'s ticket types are assigned to this member straight away. Leave empty and tickets start unassigned.'));
+        $row->addSelect('gibbonPersonIDDefaultAssignee')->fromArray($memberOptions)->placeholder(__m('Nobody (tickets start unassigned)'));
+}
+
 $row = $form->addRow();
     $row->addFooter();
     $row->addSubmit();

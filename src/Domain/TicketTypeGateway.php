@@ -105,4 +105,14 @@ class TicketTypeGateway extends QueryableGateway
 
         return $this->delete($gibbonServiceDeskTicketTypeID);
     }
+
+    /**
+     * Every active ticket type, for people who may create tickets on behalf of others.
+     */
+    public function selectActiveTypes()
+    {
+        $sql = "SELECT * FROM gibbonServiceDeskTicketType WHERE active='Y' ORDER BY sequenceNumber, name";
+
+        return $this->db()->select($sql);
+    }
 }

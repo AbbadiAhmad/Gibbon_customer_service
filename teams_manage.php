@@ -45,6 +45,11 @@ $table->addColumn('name', __('Name'))
         return '<b>'.htmlspecialchars($team['name']).'</b><br/>'.Format::small(htmlspecialchars($team['description']));
     });
 $table->addColumn('memberCount', __m('Members'))->notSortable();
+$table->addColumn('defaultAssignee', __m('Default Assignee'))
+    ->notSortable()
+    ->format(function ($team) {
+        return !empty($team['gibbonPersonIDDefaultAssignee']) ? Format::name('', $team['assigneePreferredName'], $team['assigneeSurname'], 'Staff', true, true) : '';
+    });
 $table->addColumn('ticketTypes', __m('Ticket Types'))
     ->notSortable()
     ->format(function ($team) {

@@ -50,6 +50,13 @@ if (empty($gibbonServiceDeskTeamID)) {
     }
     $URL .= $gibbonServiceDeskTeamID;
 } else {
+    // The default assignee must be a member of this team; anything else means "nobody".
+    $gibbonPersonIDDefaultAssignee = $_POST['gibbonPersonIDDefaultAssignee'] ?? '';
+    $members = array_map('intval', array_column($teamGateway->selectMembersByTeam($gibbonServiceDeskTeamID)->fetchAll(), 'gibbonPersonID'));
+    $data['gibbonPersonIDDefaultAssignee'] = !empty($gibbonPersonIDDefaultAssignee) && in_array(intval($gibbonPersonIDDefaultAssignee), $members, true)
+        ? $gibbonPersonIDDefaultAssignee
+        : null;
+
     $teamGateway->update($gibbonServiceDeskTeamID, $data);
 }
 

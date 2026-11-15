@@ -151,4 +151,43 @@ class People
 
         return $staff;
     }
+
+    /**
+     * An active user with the category of their primary role (Staff / Student / Parent / Other), or [].
+     */
+    public function getPerson($gibbonPersonID): array
+    {
+        $data = ['gibbonPersonID' => $gibbonPersonID];
+        $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonPerson.surname, gibbonPerson.preferredName, gibbonRole.category AS roleCategory
+                FROM gibbonPerson
+                LEFT JOIN gibbonRole ON (gibbonRole.gibbonRoleID=gibbonPerson.gibbonRoleIDPrimary)
+                WHERE gibbonPerson.gibbonPersonID=:gibbonPersonID AND gibbonPerson.status='Full'";
+
+        $person = $this->db->select($sql, $data)->fetch();
+        if (empty($person)) return [];
+
+        $person['name'] = Format::name('', $person['preferredName'], $person['surname'], 'Student', false);
+        $person['roleCategory'] = $person['roleCategory'] ?: 'Other';
+
+        return $person;
+    }
+
+    /**
+     * Every active user, as gibbonPersonID => "Surname, Name (Parent)", to choose who a request is for.
+     */
+    public function getPeopleOptions(): array
+    {
+        $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonPerson.surname, gibbonPerson.preferredName, gibbonRole.category AS roleCategory
+                FROM gibbonPerson
+                LEFT JOIN gibbonRole ON (gibbonRole.gibbonRoleID=gibbonPerson.gibbonRoleIDPrimary)
+                WHERE gibbonPerson.status='Full'
+                ORDER BY gibbonPerson.surname, gibbonPerson.preferredName";
+
+        $people = [];
+        foreach ($this->db->select($sql)->fetchAll() as $row) {
+            $people[intval($row['gibbonPersonID'])] = Format::name('', $row['preferredName'], $row['surname'], 'Student', true).' ('.__($row['roleCategory'] ?: 'Other').')';
+        }
+
+        return $people;
+    }
 }

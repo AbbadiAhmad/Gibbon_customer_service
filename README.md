@@ -38,6 +38,10 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
   and can be changed per ticket (bottom of the ticket page).
 * Filter the ticket list (type, status, stage, assignee, priority, text) and save filters under a name.
 
+**Staff with *New Request_onBehalf*** (default: Administrator, Support Staff)
+* On *New Request* they see every active service and an *On Behalf Of* picker. The person chosen becomes the
+  requester (the form shows that person's children and classes); the ticket history records who created it.
+
 **Team members** (staff added to a team)
 * See the tickets of the ticket types given to their teams; comment, write internal notes (never shown to the
   requester), assign, set priority, move between stages.
@@ -48,7 +52,8 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
   Text, Long Text, Date, Select, Yes/No, Students, Classes).
 * *Manage Workflows*: the default workflow (copied to every new ticket type) and the workflow of each type: stages,
   their status (Open / In Progress / Closed), an automation on entry and the stage to move to afterwards.
-* *Manage Teams*: teams and members.
+* *Manage Teams*: teams, members, and an optional *Default Assignee* per team: new tickets of the team's ticket
+  types are then assigned to that member straight away (empty = tickets start unassigned).
 * Save a filter as shared: for everyone or for one team.
 * See and manage every ticket.
 

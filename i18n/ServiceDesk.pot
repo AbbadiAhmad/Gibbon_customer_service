@@ -106,12 +106,20 @@ msgstr ""
 msgid "Created"
 msgstr ""
 
+#: src/Service/TicketService.php
+msgid "Created by {creator} on behalf of {name}."
+msgstr ""
+
 #: templates/filters.twig.html
 msgid "Custom"
 msgstr ""
 
 #: types_field_edit.php
 msgid "Date"
+msgstr ""
+
+#: teams_manage.php teams_manage_edit.php
+msgid "Default Assignee"
 msgstr ""
 
 #: workflow_manage.php
@@ -184,6 +192,10 @@ msgstr ""
 
 #: types_field_edit.php types_manage_edit.php
 msgid "Label"
+msgstr ""
+
+#: request_new.php
+msgid "Leave empty to send a request for yourself. The person chosen becomes the requester of the ticket."
 msgstr ""
 
 #: types_field_edit.php
@@ -262,6 +274,10 @@ msgstr ""
 msgid "New internal note"
 msgstr ""
 
+#: teams_manage_edit.php
+msgid "New tickets of this team's ticket types are assigned to this member straight away. Leave empty and tickets start unassigned."
+msgstr ""
+
 #: workflow_stage_edit.php
 msgid "New tickets start in the stage with the lowest number."
 msgstr ""
@@ -272,6 +288,10 @@ msgstr ""
 
 #: types_manage.php
 msgid "No team"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "Nobody (tickets start unassigned)"
 msgstr ""
 
 #: tickets.php
@@ -292,6 +312,10 @@ msgstr ""
 
 #: notifications.php
 msgid "Notification Settings"
+msgstr ""
+
+#: request_new.php
+msgid "On Behalf Of"
 msgstr ""
 
 #: tickets.php
@@ -568,6 +592,10 @@ msgstr ""
 
 #: types_field_edit.php
 msgid "Yes/No"
+msgstr ""
+
+#: request_new.php
+msgid "You are creating a request on behalf of {name}."
 msgstr ""
 
 #: tickets_view.php
