@@ -1,0 +1,53 @@
+<?php
+/*
+Gibbon: the flexible, open school platform
+Copyright © 2010, Gibbon Foundation
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+*/
+
+namespace Gibbon\Module\ServiceDesk\Automation;
+
+/**
+ * What an automation script reports back: whether it worked, and a message for the ticket.
+ */
+class AutomationResult
+{
+    protected $success;
+    protected $message;
+
+    protected function __construct(bool $success, string $message)
+    {
+        $this->success = $success;
+        $this->message = $message;
+    }
+
+    /**
+     * @param string $message Written on the ticket as a comment the requester can read.
+     */
+    public static function success(string $message = ''): self
+    {
+        return new self(true, $message);
+    }
+
+    /**
+     * @param string $message Written on the ticket as an internal note for the team.
+     */
+    public static function failure(string $message): self
+    {
+        return new self(false, $message);
+    }
+
+    public function isSuccess(): bool
+    {
+        return $this->success;
+    }
+
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
+}

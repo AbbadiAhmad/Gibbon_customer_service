@@ -1,43 +1,60 @@
 ---
 name: gibbon-access-control
-description: Security and permission rules for every entry point of the administration Gibbon module - isActionAccessible, named actions, POST-only processes, CSRF, sanitising, ticket visibility, audience, internal data, downloads. Use whenever adding or reviewing a page, process script, download, hook or CLI script.
+description: Security and permission rules for every entry point of the ServiceDesk Gibbon module - isActionAccessible, POST-only process scripts, CSRF, sanitising, ticket visibility, internal notes, re-validating what forms limited, automation scripts. Use whenever adding or reviewing a page, process script, query that lists tickets, template or automation script.
 ---
 
-# Access control rules (use Gibbon's own functions)
+# Access control rules (ServiceDesk)
 
-Every file a browser can request must authorise itself. Checklist, in order:
+Every file a browser can request authorises itself. In order:
 
-1. **Gibbon role permission**: first executable check is `isActionAccessible($guid, $connection2, '/modules/administration/<page>.php')`
-   (in this module: `csAccess($guid, $connection2, '<page>.php', '<Action name>')`).
-   * Pages: on failure `$page->addError(__('You do not have access to this action.')); return;`
-   * Process scripts: redirect with `return=error0`.
-   * The check passes if *any* action lists the page (LIKE on `URLList`). For a page listed in several actions (the shared delete page)
-     pass the **named action** (`$sub`) that owns the record - `csDeleteTarget()['action']`.
-   * Every page and process script must be listed in an action's `URLList` in `manifest.php` (and in CHANGEDB for upgrades), otherwise
-     nobody - or the wrong people - can reach it.
-2. **Process scripts**: `csRequirePost($session)` right after requiring `moduleFunctions.php`; name them `...Process.php`/`..._process.php` so
-   gibbon.php applies the CSRF token + nonce check; sanitise with `$container->get(Validator::class)->sanitize($_POST)`. Pages call
-   `csSanitizeRequest($container)` for `$_GET`.
-3. **Record-level rules on top of the role permission** (the action only says the page may be used):
-   * Ticket: `csCanViewTicket()` (requester, admin, or member with `view_board` of a space whose active board filter matches the ticket).
-     Deny with the same answer for "not found" and "not allowed" when linking (`link_add`).
-   * Ticket changes: `csHasTicketPermission($container, $session, $ticket, Permissions::X, $isAdmin)` - the permission must be held in a space that shows the ticket.
-   * Internal notes, internal events, their attachments, agent-only fields, subtasks, checklists, links, tags, watchers: only when
-     `csCanSeeInternal()`; the requester never receives them (filter in the query, not only in the template).
-   * Space management: global admin (`csIsAdmin()` = holds *Manage Ticket Types*) or the space permission `manage_members` / `manage_boards`;
-     the space of a board/member is read from the stored record, never trusted from the request.
-   * Quick create (`QuickCreate`): admin or `edit_ticket` in some space; the assignee must be in the people of the spaces where the user has `assign_ticket` (or the type's team) - validated in the service, not only in the form.
-   * Forms: active (with an active ticket type) **and** allowed for the user (`FormAccess::allows`: role category OR specific role; nothing set = every registered user) - checked on the portal, when opening the form *and* in the submit script. Visibility belongs to the form, never to the ticket type.
-   * IDs that arrive in the request (checklist, link, saved filter, attachment) are always re-read together with the owning ticket/user
-     (`getForTicket`, `getOwned`, `removeLink($id, $ticketId)`).
-4. **Submit scripts re-derive what the form allowed**: only the questions of the stored form are read and `FormMapper::map` re-checks every answer against the ticket field it is mapped to
-   (options, dates, numbers); status, reporter, team and form come from the server, never from the request.
-5. **Output**: escape with `htmlspecialchars` (names, titles, labels). Values going into SQL always use bindings - identifiers (field keys) are validated
-   by `BoardFilter::isValidKey` before being used in a JSON path.
-6. **Files**: uploads only through `FileUploader`; downloads only via `cs_attachment.php` (ticket access + internal visibility check, `isSafePath`,
-   `Content-Disposition: attachment`, `nosniff`). Remove files when the ticket is deleted.
-7. **Non-page files**: `hook_dashboard.php` exits unless Gibbon included it and the user holds the action; `cli_*.php` exit unless `PHP_SAPI === 'cli'` before
-   loading anything; `src/` has an `.htaccess` deny.
-8. **Defaults**: staff tools (Boards, configuration) are not granted to Student/Parent roles; configuration actions are Administrator-only.
+1. **Gibbon action permission** - first executable statement:
+   `isActionAccessible($guid, $connection2, '/modules/ServiceDesk/<page>.php')`.
+   * Pages: `$page->addError(__('You do not have access to this action.')); return;`
+   * Process scripts: redirect with `return=error0`, then `exit`.
+   * Every page and process script must be in an action's `URLList` (`manifest.php`; for upgrades also `CHANGEDB.php`).
+     `php tests/static.php` fails when one is missing.
+   * Defaults: *New Request*, *Tickets*, *Notification Settings* for every role; *Manage Ticket Types*, *Manage
+     Workflows*, *Manage Teams* for Administrator only.
 
-When adding an entry point, copy the guard block of a similar file, then add a row to the access table in `docs/ARCHITECTURE.md` if it introduces a new rule.
+2. **Process scripts**: named `...Process.php` (Gibbon then checks CSRF token + nonce), built only from
+   `Gibbon\Forms\Form` posts, `$_POST = $container->get(Validator::class)->sanitize($_POST)` before use. Changes
+   happen only in process scripts, never on a GET page.
+
+3. **Record-level rules** (`Service/TicketAccess`) - the action only says the page may be used:
+   * Administrator = holds *Manage Ticket Types* (`isAdmin()`): all tickets.
+   * Team member = in an active team linked to the ticket's type (`canManage($ticket)`): stage, assignee, priority,
+     internal notes.
+   * Requester (`isRequester`): view, comment, own notification settings.
+   * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
+     give the same answer.
+   * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query
+     that returns tickets must take the same two arguments. Saved filters only narrow.
+   * Internal notes / internal log lines: excluded **in the query** (`CommentGateway::selectCommentsByTicket($id,
+     $includeInternal)`), never only hidden in the template. Notifications about internal events go to team members
+     only (`Notifier::notify(..., $internal = true)`). Priority is not shown to the requester.
+
+4. **Process scripts re-derive what the form limited** - the form is a convenience, not a control:
+   * request: the type must be active and offered to the user's role category; only the stored fields of that type
+     are read; students must be the user's own children (`People::filterSelectableStudents`), classes must be classes
+     of those children, select values must be among the options, dates must be real dates; required fields are
+     checked server-side; stage, requester and school year come from the server.
+   * ticket: the new stage must belong to the ticket's type; a new assignee must be in a team of the type; only team
+     members may post an internal note (the posted `type` is ignored for requesters).
+   * filters: personal by default; only administrators may share; delete only own filters (shared: administrators).
+   * admin forms: an id from the request is re-read and checked against its parent (field belongs to the type, stage
+     belongs to the workflow, member row belongs to the team) before it is changed or deleted.
+
+5. **Output**: Twig autoescapes. In PHP-built HTML (`DataTable` format callbacks, echo) wrap data in
+   `htmlspecialchars()`. SQL values always through bindings.
+
+6. **Automation scripts** are PHP files deployed with the module (`src/Automation/Scripts/`). Never add a way to
+   type or upload code through the browser. A stage stores only the class name, validated against
+   `AutomationRegistry` when saved. Scripts run with the database rights of Gibbon: they must check their inputs
+   (the ticket's stored answers) and verify their result.
+
+7. **Non-page files**: `src/` has `.htaccess` deny; templates and CSS hold no logic. A future CLI/cron script must
+   exit unless `PHP_SAPI === 'cli'` before loading anything; a dashboard hook must check the action itself.
+
+When adding an entry point, copy the guard block of a similar file and add the rule to `docs/ARCHITECTURE.md`
+section 3 if it is new. Verify with a second user in the live test (`tests/live/flow.js` logs in as another parent
+and expects to be refused).

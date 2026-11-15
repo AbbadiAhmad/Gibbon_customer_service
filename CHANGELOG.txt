@@ -1,0 +1,9 @@
+CHANGELOG
+=========
+
+v1.0.00
+-------
+First release. Service catalog and request forms per ticket type (with child and class pickers for parents),
+teams, tickets with comments / internal notes / history, workflow per ticket type copied from a default workflow,
+automation scripts on stage entry (Record absence in Attendance, Unenrol from classes), notification policy per
+person and per ticket (notification centre and email), personal and shared saved filters.

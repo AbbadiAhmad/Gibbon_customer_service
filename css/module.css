@@ -1,0 +1,36 @@
+/* Service Desk - own classes only, so the module does not depend on which utility classes the theme ships. */
+
+/* Service catalog */
+.serviceDesk-catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; margin: 1rem 0 2rem; }
+.serviceDesk-card { display: block; padding: 1.1rem 1.2rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: #fff; text-decoration: none; transition: border-color .15s, box-shadow .15s; }
+.serviceDesk-card:hover { border-color: #6366f1; box-shadow: 0 2px 8px rgba(0, 0, 0, .08); }
+.serviceDesk-cardTitle { display: block; font-weight: 600; font-size: 1.05rem; color: #1f2937; margin-bottom: .35rem; }
+.serviceDesk-cardText { display: block; font-size: .85rem; color: #6b7280; line-height: 1.35; }
+
+/* Saved filters */
+.serviceDesk-filters { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 1rem; }
+.serviceDesk-filter { padding: .3rem .8rem; border: 1px solid #d1d5db; border-radius: 999px; font-size: .85rem; color: #374151; background: #fff; text-decoration: none; }
+.serviceDesk-filter:hover { border-color: #6366f1; }
+.serviceDesk-filter.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+.serviceDesk-details { margin-bottom: 1rem; }
+.serviceDesk-details > summary { cursor: pointer; font-size: .9rem; color: #4b5563; padding: .3rem 0; }
+
+/* Ticket */
+.serviceDesk-subject { margin-top: .5rem; }
+.serviceDesk-number { color: #9ca3af; font-weight: 400; }
+.serviceDesk-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .8rem 1.2rem; padding: 1rem 1.2rem; margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: .5rem; background: #f9fafb; font-size: .9rem; }
+.serviceDesk-summary > div > span:first-child { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: .15rem; }
+.serviceDesk-stage { display: inline-block; padding: .1rem .6rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+.serviceDesk-stage-Open { background: #fef3c7; color: #92400e; }
+.serviceDesk-stage-InProgress { background: #dbeafe; color: #1e40af; }
+.serviceDesk-stage-Closed { background: #d1fae5; color: #065f46; }
+.serviceDesk-fields { width: 100%; margin-bottom: 1.5rem; border-collapse: collapse; font-size: .9rem; }
+.serviceDesk-fields th { width: 30%; text-align: left; vertical-align: top; padding: .5rem .8rem; color: #4b5563; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
+.serviceDesk-fields td { padding: .5rem .8rem; border-bottom: 1px solid #e5e7eb; }
+
+/* History */
+.serviceDesk-entry { padding: .7rem 1rem; margin-bottom: .6rem; border: 1px solid #e5e7eb; border-left: 3px solid #6366f1; border-radius: .35rem; background: #fff; font-size: .9rem; }
+.serviceDesk-entryMeta { font-size: .78rem; color: #6b7280; margin-bottom: .25rem; }
+.serviceDesk-log { border-left-color: #d1d5db; background: #f9fafb; color: #4b5563; padding: .45rem 1rem; }
+.serviceDesk-internal { border-left-color: #f59e0b; background: #fffbeb; }
+.serviceDesk-badge { display: inline-block; margin-left: .4rem; padding: 0 .45rem; border-radius: 999px; background: #f59e0b; color: #fff; font-size: .7rem; font-weight: 600; }

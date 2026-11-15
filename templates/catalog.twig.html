@@ -1,0 +1,21 @@
+{#<!--
+Gibbon: the flexible, open school platform
+Copyright © 2010, Gibbon Foundation
+
+Service catalog: the services (ticket types) the current user can request.
+-->#}
+
+<h2>{{ __m('What do you need?') }}</h2>
+
+{% if types is empty %}
+    <div class="message">{{ __m('There are no services available to you at the moment.') }}</div>
+{% else %}
+    <div class="serviceDesk-catalog">
+        {% for type in types %}
+            <a class="serviceDesk-card" href="{{ url }}{{ type.gibbonServiceDeskTicketTypeID }}">
+                <span class="serviceDesk-cardTitle">{{ __m(type.name) }}</span>
+                <span class="serviceDesk-cardText">{{ __m(type.description) }}</span>
+            </a>
+        {% endfor %}
+    </div>
+{% endif %}

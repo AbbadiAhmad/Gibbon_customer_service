@@ -1,0 +1,20 @@
+{#<!--
+Gibbon: the flexible, open school platform
+Copyright © 2010, Gibbon Foundation
+
+Saved ticket filters as a row of links: shared filters first, then the user's own.
+-->#}
+
+<div class="serviceDesk-filters">
+    <a class="serviceDesk-filter {{ activeID is empty and not isCustom ? 'active' }}" href="{{ url }}">{{ __m('All') }}</a>
+    {% for filter in filters %}
+        <a class="serviceDesk-filter {{ filter.gibbonServiceDeskFilterID == activeID ? 'active' }}"
+           href="{{ url }}&gibbonServiceDeskFilterID={{ filter.gibbonServiceDeskFilterID }}"
+           title="{{ filter.gibbonPersonID is empty ? (filter.teamName ? __m('Shared with team {team}', {team: filter.teamName}) : __m('Shared filter')) : __m('My filter') }}">
+            {{- filter.gibbonPersonID is empty ? __m(filter.name) : filter.name -}}
+        </a>
+    {% endfor %}
+    {% if isCustom %}
+        <span class="serviceDesk-filter active">{{ __m('Custom') }}</span>
+    {% endif %}
+</div>
