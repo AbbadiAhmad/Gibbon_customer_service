@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v1.4.00
+-------
+Shared filters have an audience: "Staff working on tickets" (administrators and team members, optionally one team)
+or "Requesters" (everybody else: parents, students, staff who are in no team). Requesters no longer see Assigned to
+Me, Unassigned, My Requests or Open Tickets; they get All, Open and Closed.
+
 v1.3.00
 -------
 Board view on the Tickets page for team members and administrators: a filter on one ticket type shows that type's

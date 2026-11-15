@@ -20,7 +20,7 @@
 | Permission holders edit / delete comments and change their visibility, for own or any comment (added in 1.2.00) | Actions *Edit Comments_my/_all*, *Change Comment Visibility_my/_all*; Edit / Delete links on each comment | `tickets_comment_*.php`, `TicketAccess::canEditComment / canChangeCommentVisibility`, `TicketService::updateComment / setCommentVisibility / deleteComment` |
 | Board with the workflow as columns and drag and drop; colours; last view remembered per user (added in 1.3.00) | List / Board switch on the Tickets page; one type in the filter -> stage columns with drag and drop, otherwise status columns; colour per ticket type | `tickets.php` (board section), `templates/board.twig.html`, `js/board.js`, `tickets_boardProcess.php`, `ViewPreferenceGateway` |
 | User saves filters (type, status, assignee) | Filter form on the ticket list + *Save as Filter* | `tickets.php`, `tickets_filterProcess.php`, `TicketFilters` |
-| Admin creates default filters, e.g. absence tickets for a team | Administrators save a filter for *Everyone* or for one team | same |
+| Admin creates default filters, e.g. absence tickets for a team | Administrators save a filter for an audience - staff working on tickets, one team, or requesters (1.4.00) | same, `FilterGateway::selectFiltersByPerson` |
 
 ## 2. Data model (tables `gibbonServiceDesk*`)
 
@@ -36,7 +36,8 @@ Team ──< TeamMember >── gibbonPerson (staff)
                                      └──< TicketSubscriber        (copy of the person's notification policy)
 
 ViewPreference (per person: List | Board)
-NotificationPreference (per person)         Filter (person NULL = shared; team = shared with that team only)
+NotificationPreference (per person)         Filter (person NULL = shared, with audience Agents | Requesters;
+                                                    team = agents of that team only)
 ```
 
 * `Ticket.fields`: JSON list of `[name, label, type, value, display]` - a snapshot of the form and answers.
@@ -162,6 +163,10 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   the next visit and after a new login; status columns for mixed types with nothing movable; stage columns for one
   type; a real drag and drop to another stage; a drop on a stage with automation asks for confirmation, records the
   attendance and the card ends in Done; a parent gets no board; type colour saved; page does not overflow.
+* Filter audience (`tests/live/audience.js`, after upgrading 1.3.00 -> 1.4.00 through Manage Modules): parent and a
+  staff member in no team see All / Open / Closed; a team member sees the agent filters and the team's filter; the
+  administrator sees all with the requesters' ones marked; a filter shared with requesters reaches the parent and not
+  the team member.
 * **Not tested**: drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
   and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

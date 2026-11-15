@@ -67,3 +67,4 @@
 .serviceDesk-priority { padding: 0 .4rem; border-radius: 999px; font-weight: 600; color: #fff; }
 .serviceDesk-priority-High { background: #f97316; }
 .serviceDesk-priority-Urgent { background: #dc2626; }
+.serviceDesk-filterOther { border-style: dashed; color: #6b7280; }

@@ -41,7 +41,7 @@ $ticketGateway = $container->get(TicketGateway::class);
 $teamGateway = $container->get(TeamGateway::class);
 
 // CRITERIA: from a saved filter, or from the filter form
-$filters = $container->get(FilterGateway::class)->selectFiltersByPerson($gibbonPersonID, $isAdmin)->fetchAll();
+$filters = $container->get(FilterGateway::class)->selectFiltersByPerson($gibbonPersonID, $isAdmin, $isAgent)->fetchAll();
 $filters = array_combine(array_map('intval', array_column($filters, 'gibbonServiceDeskFilterID')), $filters);
 
 $gibbonServiceDeskFilterID = intval($_GET['gibbonServiceDeskFilterID'] ?? 0);
@@ -73,6 +73,7 @@ echo $page->fetchFromTemplate('filters.twig.html', [
     'isCustom' => empty($activeFilter) && !empty($values),
     'url'      => $moduleURL.'/tickets.php',
     'view'     => $view,
+    'isAgent'  => $isAgent,
     'viewURL'  => $isAgent ? $moduleURL.'/tickets.php'.($criteriaQuery !== '' ? '&'.$criteriaQuery : '').'&view=' : '',
 ]);
 
@@ -141,12 +142,16 @@ if (!empty($values) && empty($activeFilter)) {
         $row->addTextField('name')->maxLength(60)->required();
 
     if ($isAdmin) {
-        $shareWith = ['' => __m('Only me'), 'all' => __m('Everyone (shared filter)')];
+        $shareWith = [
+            ''           => __m('Only me'),
+            'agents'     => __m('Staff working on tickets (administrators and team members)'),
+            'requesters' => __m('Requesters (parents, students and staff who are in no team)'),
+        ];
         foreach ($teamGateway->selectTeamOptions()->fetchKeyPair() as $gibbonServiceDeskTeamID => $teamName) {
             $shareWith[intval($gibbonServiceDeskTeamID)] = __m('Team: {team}', ['team' => $teamName]);
         }
         $row = $form->addRow();
-            $row->addLabel('share', __m('Available To'));
+            $row->addLabel('share', __m('Available To'))->description(__m('The audience of a shared filter. A filter never shows a person more tickets than they may see.'));
             $row->addSelect('share')->fromArray($shareWith);
     }
 

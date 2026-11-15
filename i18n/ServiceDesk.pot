@@ -190,10 +190,6 @@ msgstr ""
 msgid "Every new ticket type gets a copy of these stages. Changing them here does not change existing ticket types."
 msgstr ""
 
-#: tickets.php
-msgid "Everyone (shared filter)"
-msgstr ""
-
 #: types_field_edit.php types_manage_edit.php
 msgid "Field Name"
 msgstr ""
@@ -434,6 +430,10 @@ msgstr ""
 msgid "Requester"
 msgstr ""
 
+#: tickets.php
+msgid "Requesters (parents, students and staff who are in no team)"
+msgstr ""
+
 #: types_field_edit.php types_manage_edit.php
 msgid "Required"
 msgstr ""
@@ -463,11 +463,19 @@ msgid "Shared filter"
 msgstr ""
 
 #: templates/filters.twig.html
+msgid "Shared with requesters"
+msgstr ""
+
+#: templates/filters.twig.html
 msgid "Shared with team {team}"
 msgstr ""
 
 #: types_manage_edit.php
 msgid "Shown to people choosing a service."
+msgstr ""
+
+#: tickets.php
+msgid "Staff working on tickets (administrators and team members)"
 msgstr ""
 
 #: tickets.php tickets_view.php templates/ticket.twig.html
@@ -524,6 +532,10 @@ msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
 msgid "The attendance code \"Absent\" does not exist or is not active."
+msgstr ""
+
+#: tickets.php
+msgid "The audience of a shared filter. A filter never shows a person more tickets than they may see."
 msgstr ""
 
 #: notifications.php
@@ -680,6 +692,10 @@ msgstr ""
 
 #: templates/ticket.twig.html
 msgid "edited"
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "requesters"
 msgstr ""
 
 #: workflow_manage.php

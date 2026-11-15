@@ -54,6 +54,9 @@ Every file a browser can request authorises itself. In order:
      rules again (`canManage`, stage belongs to the ticket's type) and rebuilds the return address from cleaned
      criteria. The `movable` flag and the board itself (agents only) are conveniences. Saving the last view on a GET
      is accepted: it only changes the user's own display preference.
+   * filter audience: `isAgent()` (administrator, or member of a team with ticket types) decides which shared
+     filters are offered - `Agents` or `Requesters`; everybody who is not an agent is a requester, whatever their
+     Gibbon role. This is display only: the ticket query scope is what protects tickets.
    * filters: personal by default; only administrators may share; delete only own filters (shared: administrators).
    * team default assignee: must be a member of that team (else stored as empty); cleared when the member is removed.
    * admin forms: an id from the request is re-read and checked against its parent (field belongs to the type, stage

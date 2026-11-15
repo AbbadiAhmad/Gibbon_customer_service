@@ -40,10 +40,11 @@ if ($action == 'save') {
         exit;
     }
 
-    // Only administrators can share a filter, with everyone or with one team.
+    // Only administrators can share a filter: with the agents (administrators and team members), with one team
+    // (agents of that team), or with the requesters (everybody else).
     $share = $isAdmin ? ($_POST['share'] ?? '') : '';
     $gibbonServiceDeskTeamID = null;
-    if ($share !== '' && $share !== 'all') {
+    if (!in_array($share, ['', 'agents', 'requesters'], true)) {
         $team = $container->get(TeamGateway::class)->getByID($share);
         if (empty($team)) {
             header("Location: {$URL}&return=error1");
@@ -55,6 +56,7 @@ if ($action == 'save') {
     $gibbonServiceDeskFilterID = $filterGateway->insert([
         'gibbonPersonID'          => $share === '' ? $gibbonPersonID : null,
         'gibbonServiceDeskTeamID' => $gibbonServiceDeskTeamID,
+        'audience'                => $share === 'requesters' ? 'Requesters' : 'Agents',
         'name'                    => mb_substr($name, 0, 60),
         'criteria'                => json_encode($criteria),
         'sequenceNumber'          => 100,

@@ -68,7 +68,7 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
   their status (Open / In Progress / Closed), an automation on entry and the stage to move to afterwards.
 * *Manage Teams*: teams, members, and an optional *Default Assignee* per team: new tickets of the team's ticket
   types are then assigned to that member straight away (empty = tickets start unassigned).
-* Save a filter as shared: for everyone or for one team.
+* Save a filter as shared and choose its audience: staff working on tickets, one team, or requesters.
 * See and manage every ticket.
 
 ## Installed defaults
@@ -81,7 +81,9 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 | Complaint | Everyone | Management | New, In Progress, Done, Rejected |
 | General Request | Everyone | Administration | New, In Progress, Done, Rejected |
 
-Shared filters: My Requests, Open Tickets, Assigned to Me, Unassigned, Absence Intake (team Administration).
+Shared filters for staff working on tickets (administrators and team members): My Requests, Open Tickets, Assigned
+to Me, Unassigned, Absence Intake (team Administration). For requesters (parents, students, staff in no team): Open,
+Closed.
 
 ## Writing an automation script
 

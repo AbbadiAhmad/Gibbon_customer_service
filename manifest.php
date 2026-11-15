@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.3.00';
+$version     = '1.4.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -147,11 +147,13 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketSubscriber` (
     PRIMARY KEY (`gibbonServiceDeskTicketID`,`gibbonPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-// gibbonPersonID NULL = shared filter made by an administrator; gibbonServiceDeskTeamID limits a shared filter to one team.
+// gibbonPersonID NULL = shared filter made by an administrator. A shared filter has an audience: Agents (administrators
+// and team members; gibbonServiceDeskTeamID then limits it to one team) or Requesters (everybody else).
 $moduleTables[] = "CREATE TABLE `gibbonServiceDeskFilter` (
     `gibbonServiceDeskFilterID` int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `gibbonPersonID` int(10) unsigned zerofill NULL,
     `gibbonServiceDeskTeamID` int(8) unsigned zerofill NULL,
+    `audience` enum('Agents','Requesters') NOT NULL DEFAULT 'Agents',
     `name` varchar(60) NOT NULL,
     `criteria` text NOT NULL,
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
@@ -213,12 +215,14 @@ foreach ([null, 1, 2, 3, 4, 5] as $serviceDeskTypeID) {
     $moduleTables[] = "INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `automation`, `nextStage`) VALUES ".implode(', ', $rows);
 }
 
-$moduleTables[] = "INSERT INTO `gibbonServiceDeskFilter` (`gibbonPersonID`, `gibbonServiceDeskTeamID`, `name`, `criteria`, `sequenceNumber`) VALUES
-    (NULL, NULL, 'My Requests', '{\"requester\":\"me\"}', 1),
-    (NULL, NULL, 'Open Tickets', '{\"status\":[\"Open\",\"In Progress\"]}', 2),
-    (NULL, NULL, 'Assigned to Me', '{\"assignee\":\"me\",\"status\":[\"Open\",\"In Progress\"]}', 3),
-    (NULL, NULL, 'Unassigned', '{\"assignee\":\"none\",\"status\":[\"Open\",\"In Progress\"]}', 4),
-    (NULL, 1, 'Absence Intake', '{\"type\":[\"1\"],\"status\":[\"Open\"]}', 5)";
+$moduleTables[] = "INSERT INTO `gibbonServiceDeskFilter` (`gibbonPersonID`, `gibbonServiceDeskTeamID`, `audience`, `name`, `criteria`, `sequenceNumber`) VALUES
+    (NULL, NULL, 'Agents', 'My Requests', '{\"requester\":\"me\"}', 1),
+    (NULL, NULL, 'Agents', 'Open Tickets', '{\"status\":[\"Open\",\"In Progress\"]}', 2),
+    (NULL, NULL, 'Agents', 'Assigned to Me', '{\"assignee\":\"me\",\"status\":[\"Open\",\"In Progress\"]}', 3),
+    (NULL, NULL, 'Agents', 'Unassigned', '{\"assignee\":\"none\",\"status\":[\"Open\",\"In Progress\"]}', 4),
+    (NULL, 1, 'Agents', 'Absence Intake', '{\"type\":[\"1\"],\"status\":[\"Open\"]}', 5),
+    (NULL, NULL, 'Requesters', 'Open', '{\"status\":[\"Open\",\"In Progress\"]}', 1),
+    (NULL, NULL, 'Requesters', 'Closed', '{\"status\":[\"Closed\"]}', 2)";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Actions
