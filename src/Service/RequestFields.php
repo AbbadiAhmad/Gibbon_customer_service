@@ -238,4 +238,73 @@ class RequestFields
     {
         return is_string($date) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
     }
+
+    /**
+     * Plain text of the answers that people search for: details, children, classes, dates - one per line. Reasons
+     * from lists and yes/no answers are included as typed, labels and field names are not (searching for "name" must
+     * not find every ticket).
+     */
+    public static function searchText(array $answers): string
+    {
+        $lines = [];
+        foreach ($answers as $answer) {
+            $value = $answer['value'] ?? '';
+            switch ($answer['type'] ?? '') {
+                case 'Date':
+                    if (self::isDate($value)) $lines[] = $value.' '.Format::date($value);
+                    break;
+                case 'Students':
+                case 'Classes':
+                    if (!empty($answer['display'])) $lines[] = $answer['display'];
+                    elseif (is_string($value) && $value !== '') $lines[] = $value;
+                    break;
+                case 'Yes/No':
+                    break;
+                default:
+                    if (is_string($value) && $value !== '') $lines[] = $value;
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * One short line about what a request is for - the children, their classes and the dates - for notices to people
+     * who must not read the whole ticket (teachers). Free text and reasons are left out on purpose.
+     */
+    public static function summary(array $answers): string
+    {
+        $names = [];
+        $classes = [];
+        $dates = [];
+
+        foreach ($answers as $answer) {
+            if (($answer['type'] ?? '') == 'Students' && !empty($answer['display'])) {
+                foreach (explode(', ', $answer['display']) as $name) {
+                    $names[$name] = true;
+                }
+            } elseif (($answer['type'] ?? '') == 'Classes' && !empty($answer['display'])) {
+                foreach (explode("\n", $answer['display']) as $line) {
+                    $parts = explode(': ', $line, 2);
+                    if (count($parts) == 2) {
+                        $names[$parts[0]] = true;
+                        $classes[$parts[1]] = true;
+                    }
+                }
+            } elseif (($answer['type'] ?? '') == 'Date' && self::isDate($answer['value'] ?? '')) {
+                $dates[$answer['value']] = true;
+            }
+        }
+
+        $parts = [];
+        if (!empty($names)) $parts[] = implode(', ', array_keys($names));
+        if (!empty($classes)) $parts[] = __m('classes').': '.implode(', ', array_keys($classes));
+        if (!empty($dates)) {
+            $dates = array_keys($dates);
+            sort($dates);
+            $parts[] = count($dates) > 1 ? Format::date($dates[0]).' - '.Format::date(end($dates)) : Format::date($dates[0]);
+        }
+
+        return implode('; ', $parts);
+    }
 }

@@ -35,6 +35,23 @@ Every file a browser can request authorises itself. In order:
      always read together with its ticket (`CommentGateway::getCommentByTicket`). The edit process applies text and
      visibility separately, each only if its own permission covers the comment; changes by others, visibility changes
      and deletions write an `Internal Log` line.
+   * Family (`isFamilyMember`): only for ticket types with `shareWithFamily = 'Y'`; the viewer shares a family with the
+     requester **and has `childDataAccess = 'Y'`**. The same rule appears twice and must stay in step: in SQL for the
+     list scope (`TicketGateway::queryTickets`) and in `GuardianGateway::isCoAdult` for single tickets and
+     `selectCoAdultIDs` for notifications. `isRequesterSide` (requester or family) may comment, withdraw, reopen.
+   * Withdraw / reopen (`canWithdraw`, `canReopen`): requester side only; withdraw while Open / In Progress and only if
+     the workflow has a `withdrawn` stage; reopen for `REOPEN_DAYS` after `timestampClosed`. The confirmation page
+     and its process script check the same functions; failing says "not found".
+   * Delete (`canDelete`): the action *Delete Tickets* **and** `canView`. The retention script has no user: it only
+     selects what `selectExpiredTickets` returns (closed, type with retention, old enough).
+   * Move to another type (`move` action of `tickets_viewProcess.php`): `canManage` of the current ticket; the target
+     must exist and be active; afterwards `canView` is re-checked for the redirect.
+   * Teacher notices go to people who may not see the ticket: the text must contain no reason, no free text, no
+     internal data (`RequestFields::summary` builds it from children, classes and dates only) and is sent through the
+     notification centre only (`Notifier::notifyCentre`).
+   * Search: a filter rule inside `queryTickets`, so it only narrows what the person may see. It searches public
+     comments (`type IN ('Comment','Log')`) and never internal notes or internal log lines, otherwise a requester
+     could probe them.
    * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
      give the same answer.
    * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query
@@ -70,7 +87,7 @@ Every file a browser can request authorises itself. In order:
    `AutomationRegistry` when saved. Scripts run with the database rights of Gibbon: they must check their inputs
    (the ticket's stored answers) and verify their result.
 
-7. **Non-page files**: `src/` has `.htaccess` deny; templates and CSS hold no logic. A future CLI/cron script must
+7. **Non-page files** (`cli_*.php`: first statement is the `PHP_SAPI` check; `hook_*.php`: named by a hook in `manifest.php`; both checked by `tests/static.php`): `src/` has `.htaccess` deny; templates and CSS hold no logic. A future CLI/cron script must
    exit unless `PHP_SAPI === 'cli'` before loading anything; a dashboard hook must check the action itself.
 
 When adding an entry point, copy the guard block of a similar file and add the rule to `docs/ARCHITECTURE.md`

@@ -36,7 +36,7 @@ $page->breadcrumbs
     ->add(__m('Manage Workflows'), 'workflow_manage.php', ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID])
     ->add(empty($gibbonServiceDeskStageID) ? __m('Add Stage') : __m('Edit Stage'));
 
-$values = ['category' => 'In Progress', 'sequenceNumber' => 0];
+$values = ['category' => 'In Progress', 'sequenceNumber' => 0, 'notifyTeachers' => 'N', 'withdrawn' => 'N'];
 if (!empty($gibbonServiceDeskStageID)) {
     $values = $stageGateway->getByID($gibbonServiceDeskStageID);
     if (empty($values) || intval($values['gibbonServiceDeskTicketTypeID']) !== intval($gibbonServiceDeskTicketTypeID)) {
@@ -61,6 +61,14 @@ $row = $form->addRow();
 $row = $form->addRow();
     $row->addLabel('sequenceNumber', __m('Order'))->description(__m('New tickets start in the stage with the lowest number.'));
     $row->addNumber('sequenceNumber')->maxLength(4)->required();
+
+$row = $form->addRow();
+    $row->addLabel('notifyTeachers', __m('Tell the Teachers'))->description(__m('When a ticket enters this stage, the form tutors and class teachers of the children on the ticket get a notification (notification centre only, never email). It says what was approved for whom and when, not why.'));
+    $row->addYesNo('notifyTeachers')->required();
+
+$row = $form->addRow();
+    $row->addLabel('withdrawn', __m('Withdrawn Stage'))->description(__m('Where tickets go when the requester withdraws the request. One per workflow; it should have the status Closed.'));
+    $row->addYesNo('withdrawn')->required();
 
 $form->addRow()->addHeading(__m('Automation'))->append(__m('A script that runs when a ticket enters this stage. If it fails, the ticket stays in the stage it came from and the reason is written on the ticket as an internal note.'));
 

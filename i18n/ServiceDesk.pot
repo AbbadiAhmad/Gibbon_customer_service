@@ -58,6 +58,10 @@ msgstr ""
 msgid "All"
 msgstr ""
 
+#: hook_dashboard_requests.php hook_dashboard_staff.php
+msgid "All my requests"
+msgstr ""
+
 #: notifications.php
 msgid "Also change the tickets you already follow."
 msgstr ""
@@ -68,6 +72,10 @@ msgstr ""
 
 #: notifications.php
 msgid "Apply to My Current Tickets"
+msgstr ""
+
+#: hook_dashboard_staff.php
+msgid "Assigned to me"
 msgstr ""
 
 #: src/Service/TicketService.php
@@ -108,6 +116,10 @@ msgstr ""
 
 #: templates/board.twig.html
 msgid "Closed tickets are shown for {days} days."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Closed tickets of this type are deleted this many days after they were closed, by the scheduled script cli_deleteExpiredTickets.php (see the README). Empty keeps them for ever."
 msgstr ""
 
 #: types_manage_edit.php
@@ -162,8 +174,16 @@ msgstr ""
 msgid "Delete Filter"
 msgstr ""
 
+#: tickets_delete.php
+msgid "Delete Ticket"
+msgstr ""
+
 #: tickets.php
 msgid "Delete filter \"{name}\""
+msgstr ""
+
+#: tickets_view.php
+msgid "Delete this ticket"
 msgstr ""
 
 #: src/Service/TicketService.php
@@ -208,6 +228,10 @@ msgstr ""
 
 #: tickets.php
 msgid "Filter tickets"
+msgstr ""
+
+#: tickets_view.php
+msgid "For a request filed under the wrong service. The teams of the new type take over; the stage of the same name is kept, otherwise the ticket starts in the first stage. The assignee stays only if they are in a team of the new type."
 msgstr ""
 
 #: templates/ticket.twig.html
@@ -310,6 +334,18 @@ msgstr ""
 msgid "Missing script: {script}"
 msgstr ""
 
+#: tickets_view.php
+msgid "Move Ticket"
+msgstr ""
+
+#: tickets_view.php
+msgid "Move to Another Ticket Type"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Moved from {from} to {to}."
+msgstr ""
+
 #: src/Service/TicketService.php
 msgid "Moved to {stage}."
 msgstr ""
@@ -322,7 +358,11 @@ msgstr ""
 msgid "My filter"
 msgstr ""
 
-#: request_new.php tickets.php templates/board.twig.html
+#: hook_dashboard_requests.php hook_dashboard_staff.php
+msgid "My open requests"
+msgstr ""
+
+#: hook_dashboard_requests.php hook_dashboard_staff.php request_new.php tickets.php templates/board.twig.html
 msgid "New Request"
 msgstr ""
 
@@ -354,6 +394,10 @@ msgstr ""
 msgid "No email was sent: your user account has no email address."
 msgstr ""
 
+#: hook_dashboard_staff.php
+msgid "No open ticket is assigned to you."
+msgstr ""
+
 #: types_manage.php
 msgid "No team"
 msgstr ""
@@ -374,8 +418,16 @@ msgstr ""
 msgid "Not all tickets fit on the board: narrow the filter."
 msgstr ""
 
+#: tickets_requester.php
+msgid "Note"
+msgstr ""
+
 #: templates/ticket.twig.html
 msgid "Nothing has happened on this ticket yet."
+msgstr ""
+
+#: hook_dashboard_staff.php
+msgid "Nothing is waiting for someone to pick it up."
 msgstr ""
 
 #: notifications.php tickets_view.php
@@ -398,12 +450,20 @@ msgstr ""
 msgid "Only {found} of {expected} absences could be recorded."
 msgstr ""
 
+#: hook_dashboard_staff.php
+msgid "Open the board"
+msgstr ""
+
 #: types_field_edit.php
 msgid "Optional help text under the label."
 msgstr ""
 
 #: request_new.php
 msgid "Optional: a short title for your request."
+msgstr ""
+
+#: tickets_requester.php
+msgid "Optional: tell the team why. It is added as a comment."
 msgstr ""
 
 #: types_field_edit.php
@@ -438,6 +498,14 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
+#: tickets_requester.php
+msgid "Reopen Request"
+msgstr ""
+
+#: tickets_view.php
+msgid "Reopen this request"
+msgstr ""
+
 #: types_manage_edit.php
 msgid "Request Form"
 msgstr ""
@@ -456,6 +524,14 @@ msgstr ""
 
 #: types_field_edit.php types_manage_edit.php
 msgid "Required"
+msgstr ""
+
+#: types_manage.php
+msgid "Retention"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Retention (days)"
 msgstr ""
 
 #: tickets.php
@@ -490,6 +566,10 @@ msgstr ""
 msgid "Service Desk test notification ({time})."
 msgstr ""
 
+#: types_manage_edit.php
+msgid "Share With Family"
+msgstr ""
+
 #: templates/filters.twig.html
 msgid "Shared filter"
 msgstr ""
@@ -504,6 +584,10 @@ msgstr ""
 
 #: types_manage_edit.php
 msgid "Shown to people choosing a service."
+msgstr ""
+
+#: workflow_manage.php
+msgid "Special"
 msgstr ""
 
 #: tickets.php
@@ -535,15 +619,15 @@ msgid "Subject"
 msgstr ""
 
 #: tickets.php
-msgid "Subject or requester name."
-msgstr ""
-
-#: tickets.php
 msgid "Team: {team}"
 msgstr ""
 
 #: types_manage.php types_manage_edit.php
 msgid "Teams"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Tell the Teachers"
 msgstr ""
 
 #: notifications.php
@@ -564,6 +648,10 @@ msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
 msgid "The absence was recorded in Attendance: {students} student(s), {days} school day(s), {period}."
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "The assignee is not in a team of the new ticket type: the ticket is unassigned."
 msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
@@ -590,12 +678,24 @@ msgstr ""
 msgid "The notification could not be stored. Is the module installed under the name ServiceDesk?"
 msgstr ""
 
+#: types_manage_edit.php
+msgid "The other adults of the requester's family (with data access) also see these tickets, comment on them, withdraw and reopen them. Leave off for private matters such as complaints."
+msgstr ""
+
 #: types_field_edit.php
 msgid "The question as people see it."
 msgstr ""
 
 #: types_manage_edit.php
 msgid "The questions people answer when they send this request. A subject line is always offered. The field name is what automation scripts use to read the answer."
+msgstr ""
+
+#: tickets_requester.php
+msgid "The request goes back to the start of its workflow and the team is told."
+msgstr ""
+
+#: tickets_requester.php
+msgid "The request is closed as withdrawn and the team is told. You can reopen it for {days} days."
 msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
@@ -626,6 +726,10 @@ msgstr ""
 msgid "The ticket is no longer assigned."
 msgstr ""
 
+#: tickets_delete.php
+msgid "The ticket, its comments, its notification settings and the notifications written about it are deleted for good. This cannot be undone. Changes the workflow made elsewhere in Gibbon (attendance, enrolment) stay as they are. A line in the system log records that the ticket was deleted, and by whom - not what it said."
+msgstr ""
+
 #: workflow_stage_edit.php
 msgid "Then Move To"
 msgstr ""
@@ -654,7 +758,7 @@ msgstr ""
 msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
 msgstr ""
 
-#: tickets.php templates/ticket.twig.html
+#: tickets.php tickets_view.php templates/ticket.twig.html
 msgid "Ticket Type"
 msgstr ""
 
@@ -662,12 +766,20 @@ msgstr ""
 msgid "Ticket Types"
 msgstr ""
 
-#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_filter_delete.php tickets_view.php
+#: tickets.php
+msgid "Ticket number, subject, details, children, classes, dates, requester, assignee and comments. Several words must all be found."
+msgstr ""
+
+#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_delete.php tickets_filter_delete.php tickets_requester.php tickets_view.php
 msgid "Tickets"
 msgstr ""
 
-#: tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html
+#: hook_dashboard_staff.php tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html
 msgid "Unassigned"
+msgstr ""
+
+#: hook_dashboard_staff.php
+msgid "Unassigned tickets"
 msgstr ""
 
 #: src/Automation/Scripts/UnenrolFromClasses.php
@@ -699,11 +811,31 @@ msgid "What the stage means for filters and lists: waiting, being worked on, or 
 msgstr ""
 
 #: workflow_stage_edit.php
+msgid "When a ticket enters this stage, the form tutors and class teachers of the children on the ticket get a notification (notification centre only, never email). It says what was approved for whom and when, not why."
+msgstr ""
+
+#: workflow_stage_edit.php
 msgid "Where the ticket goes when the automation succeeded. Empty: it stays in this stage."
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Where tickets go when the requester withdraws the request. One per workflow; it should have the status Closed."
 msgstr ""
 
 #: types_manage_edit.php
 msgid "Who can send this kind of request."
+msgstr ""
+
+#: tickets_requester.php
+msgid "Withdraw Request"
+msgstr ""
+
+#: tickets_view.php
+msgid "Withdraw this request"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Withdrawn Stage"
 msgstr ""
 
 #: types_manage.php types_manage_edit.php workflow_manage.php
@@ -726,6 +858,10 @@ msgstr ""
 msgid "You are not following this ticket. Choose a channel to be told about its updates."
 msgstr ""
 
+#: hook_dashboard_requests.php hook_dashboard_staff.php
+msgid "You have no open requests."
+msgstr ""
+
 #: workflow_manage.php
 msgid "Your request failed because a workflow needs at least one stage."
 msgstr ""
@@ -738,8 +874,16 @@ msgstr ""
 msgid "Your request failed because tickets are in this stage. Move them to another stage first."
 msgstr ""
 
+#: src/Service/RequestFields.php
+msgid "classes"
+msgstr ""
+
 #: templates/ticket.twig.html
 msgid "edited"
+msgstr ""
+
+#: workflow_manage.php
+msgid "receives withdrawn requests"
 msgstr ""
 
 #: templates/filters.twig.html
@@ -747,6 +891,30 @@ msgid "requesters"
 msgstr ""
 
 #: workflow_manage.php
+msgid "tells the teachers"
+msgstr ""
+
+#: workflow_manage.php
 msgid "then move to {stage}"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "{count} teacher(s) were told (notification centre only)."
+msgstr ""
+
+#: types_manage.php
+msgid "{days} days"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "{name} reopened the request."
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "{name} withdrew the request."
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "{type} approved: {details}."
 msgstr ""
 

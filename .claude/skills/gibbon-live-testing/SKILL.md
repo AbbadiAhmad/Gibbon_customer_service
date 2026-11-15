@@ -24,6 +24,15 @@ node tests/live/install.js                       # installs the module through S
   comes from Gibbon's own demo database, not from the module.
 * Playwright and Chromium are pre-installed (`require('playwright')` works anywhere; do not install them).
 
+**Never run two live scripts at the same time** (or a script while `setup.sh` / another run is going): they share one
+database and one site, and the failures that result are confusing. If a long run is in the background, wait for it
+(`until ! pgrep -f regress.sh >/dev/null; do sleep 5; done`). A full regression is: `setup.sh`, `install.js`, then the
+scripts in the order listed in `setup.sh`'s last lines - one after the other.
+
+Tips found while testing (**LIVE**): the header search box of Gibbon is also `input[name=search]` - select form fields by
+`#id`; headings may be upper-cased by CSS (`innerText` shows `MY OPEN REQUESTS`): compare case-insensitively;
+`locator.dragTo` works for HTML5 drag and drop; read the database for what the browser cannot show (`sql()` in `lib.js`).
+
 ## After changing code
 ```sh
 tests/live/sync.sh /tmp/servicedesk-live         # copy the module again (a symlink does not work) + empty the Twig cache
@@ -47,6 +56,11 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `board.js` | (after `flow.js`) view switch and its per-person memory, status vs stage columns, real drag and drop (`locator.dragTo`), automation confirmation dialog, parent has no board, type colour |
 | `audience.js` | (after `flow.js`) which shared filters a parent, a staff member in no team (`120`), a team member and the administrator see |
 | `reporter.js` | (after `flow.js`) what the requester is told: public comment, assignment, stage change yes; internal note and own actions no; the notification self-test |
+| `family.js` | co-parent sees / comments / withdraws / reopens a shared type, not a private one; other family sees nothing; reopen window; no withdrawn stage -> no link |
+| `teachers.js` | teacher notices on approval: recipients computed independently in SQL, text without reason, not emailed (uses the SMTP sink) |
+| `lifecycle.js` | move to another type, delete (permissions, tables emptied, log line), retention script (dry run, real run, refuses the web) |
+| `search.js` | 19 searches incl. old tickets, internal notes not found, wildcards and quotes, saved filter, board |
+| `widgets.js` | dashboard tabs of a parent, co-parent, parent without requests, team member, teacher in no team, administrator |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |

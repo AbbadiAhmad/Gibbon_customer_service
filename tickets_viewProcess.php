@@ -13,6 +13,7 @@ use Gibbon\Data\Validator;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
 use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketGateway;
+use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
 use Gibbon\Module\ServiceDesk\Service\TicketAccess;
 use Gibbon\Module\ServiceDesk\Service\TicketService;
@@ -85,6 +86,27 @@ switch ($_POST['action'] ?? '') {
         if (!$ticketService->changeStage($ticket, $stage, $gibbonPersonID)) {
             // The stage's automation failed: the ticket stayed where it was, the reason is in the history.
             header("Location: {$URL}&return=warning1");
+            exit;
+        }
+        break;
+
+    // Another ticket type: team members and administrators; the target must be an active type.
+    case 'move':
+        if (!$canManage) {
+            header("Location: {$URL}&return=error0");
+            exit;
+        }
+
+        $type = $container->get(TicketTypeGateway::class)->getByID($_POST['gibbonServiceDeskTicketTypeID'] ?? '');
+        if (empty($type) || !$ticketService->changeType($ticket, $type, $gibbonPersonID)) {
+            header("Location: {$URL}&return=error1");
+            exit;
+        }
+
+        // The person may not be in a team of the new type: then the ticket is no longer theirs to open.
+        $moved = $container->get(TicketGateway::class)->getTicketByID($gibbonServiceDeskTicketID);
+        if (!$access->canView($moved)) {
+            header('Location: '.$session->get('absoluteURL').'/index.php?q=/modules/ServiceDesk/tickets.php&return=success0');
             exit;
         }
         break;

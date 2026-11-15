@@ -69,3 +69,12 @@
 .serviceDesk-priority-Urgent { background: #dc2626; }
 .serviceDesk-filterOther { border-style: dashed; color: #6b7280; }
 .serviceDesk-filterDelete { text-align: right; font-size: .85rem; margin: 0 0 .5rem; }
+.serviceDesk-tools { text-align: right; font-size: .85rem; margin: 0 0 .8rem; }
+
+/* Dashboard widget */
+.serviceDesk-widget { margin-bottom: 1.2rem; }
+.serviceDesk-widget h4 { margin: 0 0 .5rem; }
+.serviceDesk-widget ul { list-style: none; margin: 0; padding: 0; }
+.serviceDesk-widget li { border-left: 4px solid #9ca3af; padding: .3rem .7rem; margin-bottom: .4rem; background: #f9fafb; border-radius: 0 .3rem .3rem 0; font-size: .9rem; }
+.serviceDesk-widgetEmpty { color: #6b7280; font-size: .9rem; }
+.serviceDesk-widgetLinks { font-size: .85rem; margin: .5rem 0 0; }

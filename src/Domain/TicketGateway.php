@@ -25,7 +25,8 @@ class TicketGateway extends QueryableGateway
 
     private static $tableName = 'gibbonServiceDeskTicket';
     private static $primaryKey = 'gibbonServiceDeskTicketID';
-    private static $searchableColumns = ['gibbonServiceDeskTicket.subject', 'requester.surname', 'requester.preferredName'];
+    // The search is a filter of its own (see 'search' below): it also looks in the answers, names and comments.
+    private static $searchableColumns = [];
 
     /**
      * Filters understood here (see TicketFilters): type (ids), status (stage categories), stage (name),
@@ -40,6 +41,7 @@ class TicketGateway extends QueryableGateway
                 'gibbonServiceDeskTicket.*',
                 'gibbonServiceDeskTicketType.name AS typeName',
                 'gibbonServiceDeskTicketType.color AS typeColor',
+                'gibbonServiceDeskTicketType.shareWithFamily',
                 'gibbonServiceDeskStage.name AS stageName',
                 'gibbonServiceDeskStage.category AS stageCategory',
                 'requester.title AS requesterTitle', 'requester.surname AS requesterSurname', 'requester.preferredName AS requesterPreferredName',
@@ -51,7 +53,14 @@ class TicketGateway extends QueryableGateway
             ->leftJoin('gibbonPerson AS assignee', 'assignee.gibbonPersonID=gibbonServiceDeskTicket.gibbonPersonIDAssignee');
 
         if (!$isAdmin) {
+            // Own requests; requests of the other adults of the family for ticket types shared with the family; and the
+            // tickets of the ticket types the person's teams handle.
             $query->where("(gibbonServiceDeskTicket.gibbonPersonIDRequester=:scopeRequester
+                    OR (gibbonServiceDeskTicketType.shareWithFamily='Y' AND gibbonServiceDeskTicket.gibbonPersonIDRequester IN (
+                        SELECT requesterAdult.gibbonPersonID
+                        FROM gibbonFamilyAdult AS viewerAdult
+                        JOIN gibbonFamilyAdult AS requesterAdult ON (requesterAdult.gibbonFamilyID=viewerAdult.gibbonFamilyID)
+                        WHERE viewerAdult.gibbonPersonID=:scopeFamily AND viewerAdult.childDataAccess='Y'))
                     OR gibbonServiceDeskTicket.gibbonServiceDeskTicketTypeID IN (
                         SELECT gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTicketTypeID
                         FROM gibbonServiceDeskTeamMember
@@ -59,10 +68,35 @@ class TicketGateway extends QueryableGateway
                         JOIN gibbonServiceDeskTicketTypeTeam ON (gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTeamID=gibbonServiceDeskTeam.gibbonServiceDeskTeamID)
                         WHERE gibbonServiceDeskTeamMember.gibbonPersonID=:scopeMember))")
                 ->bindValue('scopeRequester', $gibbonPersonID)
+                ->bindValue('scopeFamily', $gibbonPersonID)
                 ->bindValue('scopeMember', $gibbonPersonID);
         }
 
         $criteria->addFilterRules([
+            // Every word must be found in at least one of: ticket number, subject, the answers of the request form
+            // (details, children, classes, dates), requester, assignee, or a public comment. Internal notes are never
+            // searched: a requester must not be able to find out what they say.
+            'search' => function ($query, $text) {
+                $words = array_slice(preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY), 0, 6);
+                foreach ($words as $index => $word) {
+                    $like = '%'.addcslashes($word, '%_\\').'%';
+                    $number = ctype_digit(ltrim($word, '#')) && ltrim($word, '#') !== '' ? intval(ltrim($word, '#')) : 0;
+                    $query->where("(gibbonServiceDeskTicket.subject LIKE :searchA{$index}
+                            OR COALESCE(gibbonServiceDeskTicket.searchText, gibbonServiceDeskTicket.fields) LIKE :searchB{$index}
+                            OR CONCAT(requester.preferredName, ' ', requester.surname) LIKE :searchC{$index}
+                            OR CONCAT(requester.surname, ' ', requester.preferredName) LIKE :searchD{$index}
+                            OR CONCAT(assignee.preferredName, ' ', assignee.surname) LIKE :searchE{$index}
+                            OR CONCAT(assignee.surname, ' ', assignee.preferredName) LIKE :searchF{$index}
+                            OR gibbonServiceDeskTicket.gibbonServiceDeskTicketID+0=:searchNumber{$index}
+                            OR EXISTS (SELECT 1 FROM gibbonServiceDeskTicketComment AS searchComment WHERE searchComment.gibbonServiceDeskTicketID=gibbonServiceDeskTicket.gibbonServiceDeskTicketID AND searchComment.type IN ('Comment','Log') AND searchComment.comment LIKE :searchG{$index}))");
+                    foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G'] as $letter) {
+                        $query->bindValue("search{$letter}{$index}", $like);
+                    }
+                    $query->bindValue("searchNumber{$index}", $number);
+                }
+
+                return $query;
+            },
             'type' => function ($query, $ids) {
                 return $query
                     // +0 turns the zero-filled id into a plain number. (CAST ... AS UNSIGNED breaks in the query builder: it reads AS as an alias.)
@@ -120,7 +154,7 @@ class TicketGateway extends QueryableGateway
     {
         $data = ['gibbonServiceDeskTicketID' => $gibbonServiceDeskTicketID];
         $sql = "SELECT gibbonServiceDeskTicket.*,
-                    gibbonServiceDeskTicketType.name AS typeName,
+                    gibbonServiceDeskTicketType.name AS typeName, gibbonServiceDeskTicketType.shareWithFamily,
                     gibbonServiceDeskStage.name AS stageName, gibbonServiceDeskStage.category AS stageCategory,
                     requester.title AS requesterTitle, requester.surname AS requesterSurname, requester.preferredName AS requesterPreferredName,
                     assignee.title AS assigneeTitle, assignee.surname AS assigneeSurname, assignee.preferredName AS assigneePreferredName
@@ -132,5 +166,24 @@ class TicketGateway extends QueryableGateway
                 WHERE gibbonServiceDeskTicket.gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID";
 
         return $this->db()->selectOne($sql, $data) ?: [];
+    }
+
+    /**
+     * Closed tickets that are older than the retention time of their ticket type (a type without retention keeps
+     * its tickets). Used by the retention script.
+     */
+    public function selectExpiredTickets()
+    {
+        $sql = "SELECT gibbonServiceDeskTicket.gibbonServiceDeskTicketID
+                FROM gibbonServiceDeskTicket
+                JOIN gibbonServiceDeskTicketType ON (gibbonServiceDeskTicketType.gibbonServiceDeskTicketTypeID=gibbonServiceDeskTicket.gibbonServiceDeskTicketTypeID)
+                JOIN gibbonServiceDeskStage ON (gibbonServiceDeskStage.gibbonServiceDeskStageID=gibbonServiceDeskTicket.gibbonServiceDeskStageID)
+                WHERE gibbonServiceDeskTicketType.retentionDays>0
+                AND gibbonServiceDeskStage.category='Closed'
+                AND gibbonServiceDeskTicket.timestampClosed IS NOT NULL
+                AND gibbonServiceDeskTicket.timestampClosed < DATE_SUB(NOW(), INTERVAL gibbonServiceDeskTicketType.retentionDays DAY)
+                ORDER BY gibbonServiceDeskTicket.gibbonServiceDeskTicketID";
+
+        return $this->db()->select($sql)->fetchAll(\PDO::FETCH_COLUMN);
     }
 }

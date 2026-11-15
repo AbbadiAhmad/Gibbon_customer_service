@@ -19,6 +19,13 @@
 | Tickets are assigned directly on creation (added in 1.1.00) | Optional *Default Assignee* on the team (one of its members) | `teams_manage_edit.php`, `TeamGateway::getDefaultAssigneeByTicketType`, `TicketService::create` |
 | Permission holders edit / delete comments and change their visibility, for own or any comment (added in 1.2.00) | Actions *Edit Comments_my/_all*, *Change Comment Visibility_my/_all*; Edit / Delete links on each comment | `tickets_comment_*.php`, `TicketAccess::canEditComment / canChangeCommentVisibility`, `TicketService::updateComment / setCommentVisibility / deleteComment` |
 | Board with the workflow as columns and drag and drop; colours; last view remembered per user (added in 1.3.00) | List / Board switch on the Tickets page; one type in the filter -> stage columns with drag and drop, otherwise status columns; colour per ticket type | `tickets.php` (board section), `templates/board.twig.html`, `js/board.js`, `tickets_boardProcess.php`, `ViewPreferenceGateway` |
+| Requester withdraws or reopens a request (1.5.00) | Link on the ticket -> confirmation page with an optional note; the withdrawn stage / first stage | `tickets_requester.php` (+Process), `TicketService::withdraw / reopen`, `TicketAccess::canWithdraw / canReopen` |
+| Both parents of a family see the ticket (1.5.00) | Type setting *Share With Family*; the other adults of the family (data access) are requester side | `GuardianGateway`, `TicketAccess::isFamilyMember`, scope in `TicketGateway::queryTickets`, `Notifier` |
+| Dashboard widgets (1.5.00) | Hooks on the Parental and Staff dashboards | `hook_dashboard_requests.php`, `hook_dashboard_staff.php`, `DashboardWidget` |
+| Teachers are told when an absence / unenrolment is approved, notification centre only (1.5.00) | Stage flag *Tell the Teachers* | `TicketService::notifyTeachers`, `TeacherFinder`, `Notifier::notifyCentre` |
+| Move a ticket to another type (1.5.00) | "Move to Another Ticket Type" form on the ticket | `TicketService::changeType` |
+| Delete tickets; retention per type (1.5.00) | Action *Delete Tickets* + confirmation page; *Retention (days)* on the type + cron script | `tickets_delete.php` (+Process), `cli_deleteExpiredTickets.php`, `TicketService::deleteTicket` |
+| Search in title, description, assignee, reporter, children (1.5.00) | The search field of the filter form | `TicketGateway` filter rule *search*, `Ticket.searchText`, `RequestFields::searchText` |
 | User saves filters (type, status, assignee) | Filter form on the ticket list + *Save as Filter* | `tickets.php`, `tickets_filterProcess.php`, `TicketFilters` |
 | Admin creates default filters, e.g. absence tickets for a team | Administrators save a filter for an audience - staff working on tickets, one team, or requesters (1.4.00) | same, `FilterGateway::selectFiltersByPerson` |
 
@@ -36,6 +43,7 @@ Team ──< TeamMember >── gibbonPerson (staff)
                                      └──< TicketSubscriber        (copy of the person's notification policy)
 
 ViewPreference (per person: List | Board)
+TicketType.shareWithFamily, TicketType.retentionDays, Stage.notifyTeachers, Stage.withdrawn, Ticket.searchText (1.5.00)
 NotificationPreference (per person)         Filter (person NULL = shared, with audience Agents | Requesters;
                                                     team = agents of that team only)
 ```
@@ -55,6 +63,8 @@ Gibbon actions decide which pages a role may open (`manifest.php`). On top of th
 | Administrator | role holds action *Manage Ticket Types* | configure; see and manage all tickets; shared filters |
 | Team member | in an active team linked to the ticket's type | see and manage those tickets; internal notes |
 | Requester | raised the ticket (or it was raised on their behalf) | see it, comment, set own notifications |
+| Family member | another adult of the requester's family with data access, for a type with *Share With Family* | the requester's rights: see, comment, withdraw, reopen |
+| Holder of *Delete Tickets* | role holds that action **and** can see the ticket | permanently delete it |
 | Holder of *Edit Comments_my / _all* | role holds that action | change the text of, or delete, own / any comment on tickets they can see (internal notes only when they work on the ticket; never log lines) |
 | Holder of *Change Comment Visibility_my / _all* | role holds that action **and** works on the ticket | switch own / any comment between public and internal |
 | Holder of *New Request_onBehalf* | role holds that action | see every active service; send a request for any active user. Gives no access to tickets by itself |
@@ -97,6 +107,10 @@ tickets.php, tickets_filterProcess.php      list and board, filters
 tickets_boardProcess.php, js/board.js       a card dropped on a stage column (fills and sends a Gibbon form)
 tickets_view.php (+Process)                 ticket: comment | manage | notify
 tickets_comment_edit.php (+Process)         comment text and/or visibility (comment permissions)
+tickets_requester.php (+Process)            withdraw / reopen by the requester side
+tickets_delete.php (+Process)               delete a ticket (action Delete Tickets)
+cli_deleteExpiredTickets.php                retention: run from cron (CLI only)
+hook_dashboard_requests.php, hook_dashboard_staff.php   dashboard tabs for parents / staff
 tickets_comment_delete.php (+Process)       delete a comment
 notifications.php (+Process)                personal notification policy
 types_manage*.php, types_field_*.php        ticket types and their form fields      (admin)
@@ -107,6 +121,9 @@ src/Service/TicketService.php               create, comment, assign, priority, c
 src/Service/TicketAccess.php                who may see / manage
 src/Service/RequestFields.php               form fields: build, validate, describe
 src/Service/People.php                      children of a parent, classes, staff (Gibbon tables)
+src/Service/TeacherFinder.php               form tutors and class teachers of the children on a ticket
+src/Service/DashboardWidget.php             the ticket lists on the dashboards
+src/Domain/GuardianGateway.php              the other adults of a family
 src/Service/Notifier.php, TicketFilters.php notifications; filter criteria
 src/Automation/                             interface, context, result, registry, Scripts/
 templates/*.twig.html                       catalog, saved-filter bar, ticket view
@@ -170,6 +187,15 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
 * Reporter notifications (`tests/live/reporter.js`): the requester gets a notification for a public comment, an
   assignment and a stage change made by a team member; none for an internal note or for their own comment; the team
   member is told about the requester's comment; the self-test reports both channels.
-* **Not tested**: drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
+* 1.5.00 (`family.js`, `teachers.js`, `lifecycle.js`, `search.js`, `widgets.js`; upgrade 1.4.01 -> 1.5.00 through Manage
+  Modules and a fresh install): the co-parent sees, comments on, withdraws and reopens a shared absence, is told about
+  the team's comment, and sees nothing of the complaint; a parent of another family sees neither; reopening is refused
+  after 30 days; teachers (form tutors + class teachers, computed independently in SQL) get a notice without the
+  reason and no email; a unenrolment tells only the tutor and the teacher of the chosen class; moving a ticket,
+  administrator told when the new type's team is empty; delete refused for team member and requester, allowed for the
+  administrator, nothing left in four tables, log line without content; the retention script (dry run, real run,
+  second run, other types untouched, refuses a web request); 19 searches incl. internal notes not found and old
+  tickets found; widgets on both dashboards for five different users.
+* **Not tested**: the retention script from a real cron; drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
   and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

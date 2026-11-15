@@ -83,7 +83,7 @@ $form->setClass('noIntBorder w-full');
 $form->addHiddenValue('q', '/modules/ServiceDesk/tickets.php');
 
 $row = $form->addRow();
-    $row->addLabel('search', __('Search For'))->description(__m('Subject or requester name.'));
+    $row->addLabel('search', __('Search For'))->description(__m('Ticket number, subject, details, children, classes, dates, requester, assignee and comments. Several words must all be found.'));
     $row->addTextField('search')->setValue($values['search'] ?? '')->maxLength(60);
 
 $types = [];

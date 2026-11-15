@@ -76,6 +76,12 @@ $table->addColumn('name', __('Name'))->format(function ($stage) {
     return htmlspecialchars(__m($stage['name']));
 });
 $table->addColumn('category', __('Status'))->translatable();
+$table->addColumn('flags', __m('Special'))->notSortable()->format(function ($stage) {
+    return implode('<br/>', array_filter([
+        $stage['notifyTeachers'] == 'Y' ? Format::small(__m('tells the teachers')) : '',
+        $stage['withdrawn'] == 'Y' ? Format::small(__m('receives withdrawn requests')) : '',
+    ]));
+});
 $table->addColumn('automation', __m('Automation on Entry'))->format(function ($stage) use ($automations) {
     if (empty($stage['automation'])) return '';
 

@@ -65,8 +65,8 @@ class StageGateway extends QueryableGateway
     public function copyDefaultWorkflow($gibbonServiceDeskTicketTypeID)
     {
         $data = ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID];
-        $sql = "INSERT INTO gibbonServiceDeskStage (gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, nextStage)
-                SELECT :gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, nextStage
+        $sql = "INSERT INTO gibbonServiceDeskStage (gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, nextStage, notifyTeachers, withdrawn)
+                SELECT :gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, nextStage, notifyTeachers, withdrawn
                 FROM gibbonServiceDeskStage WHERE gibbonServiceDeskTicketTypeID IS NULL ORDER BY sequenceNumber, gibbonServiceDeskStageID";
 
         return $this->db()->statement($sql, $data);
@@ -104,5 +104,33 @@ class StageGateway extends QueryableGateway
         $sql = "SELECT name FROM gibbonServiceDeskStage GROUP BY name ORDER BY MIN(sequenceNumber), name";
 
         return $this->db()->select($sql)->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    /**
+     * The stage a requester's "Withdraw" sends a ticket to (flag withdrawn), or [] when the workflow has none.
+     */
+    public function getWithdrawnStage($gibbonServiceDeskTicketTypeID): array
+    {
+        foreach ($this->selectStagesByType($gibbonServiceDeskTicketTypeID)->fetchAll() as $stage) {
+            if ($stage['withdrawn'] == 'Y') return $stage;
+        }
+
+        return [];
+    }
+
+    /**
+     * Makes the given stage the only withdrawn stage of its workflow.
+     */
+    public function clearOtherWithdrawnStages($gibbonServiceDeskTicketTypeID, $gibbonServiceDeskStageID)
+    {
+        $data = ['gibbonServiceDeskStageID' => $gibbonServiceDeskStageID];
+        if (empty($gibbonServiceDeskTicketTypeID)) {
+            $sql = "UPDATE gibbonServiceDeskStage SET withdrawn='N' WHERE gibbonServiceDeskTicketTypeID IS NULL AND gibbonServiceDeskStageID<>:gibbonServiceDeskStageID";
+        } else {
+            $data['gibbonServiceDeskTicketTypeID'] = $gibbonServiceDeskTicketTypeID;
+            $sql = "UPDATE gibbonServiceDeskStage SET withdrawn='N' WHERE gibbonServiceDeskTicketTypeID=:gibbonServiceDeskTicketTypeID AND gibbonServiceDeskStageID<>:gibbonServiceDeskStageID";
+        }
+
+        return $this->db()->update($sql, $data);
     }
 }

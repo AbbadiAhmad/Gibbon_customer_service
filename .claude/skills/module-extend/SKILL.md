@@ -21,6 +21,11 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | Something on the board | board section of `tickets.php` (columns, card data, limits), `templates/board.twig.html`, `js/board.js`, `tickets_boardProcess.php`; stage changes still go through `TicketService::changeStage()` |
 | A per-person display preference | `ViewPreferenceGateway` (one row per person) |
 | A default shared filter | `manifest.php` INSERT with `audience` (`Agents` / `Requesters`) and, for an upgrade, an INSERT in CHANGEDB |
+| A rule shared between SQL and PHP (e.g. "who sees a ticket") | write it once as a gateway method and once in the list scope, name both in the skill `gibbon-access-control`, and test both (list and single ticket) in `tests/live/` |
+| A dashboard tab | `hook_dashboard_*.php` + the `$hooks[]` entry in `manifest.php` and the same INSERT in CHANGEDB; logic in `src/Service/DashboardWidget.php` |
+| A scheduled job | `cli_<name>.php` (CLI check first) + the service method it calls; document the cron line in `README.md` |
+| Something that must disappear with a ticket | `TicketService::deleteTicket` (comments, subscribers, notifications whose text starts with `#<id> `) - a new table that refers to a ticket must be added there |
+| A stage behaviour (flag) | a column on `gibbonServiceDeskStage` (manifest + CHANGEDB + copy in `StageGateway::copyDefaultWorkflow`), fields in `workflow_stage_edit.php` + its process, behaviour in `TicketService::changeStage` |
 | A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
 | A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |
 | A view with more than a few lines of HTML | `templates/<name>.twig.html` + classes in `css/module.css` |

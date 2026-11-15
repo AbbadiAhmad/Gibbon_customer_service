@@ -30,7 +30,7 @@ $page->breadcrumbs
     ->add(__m('Manage Ticket Types'), 'types_manage.php')
     ->add(empty($gibbonServiceDeskTicketTypeID) ? __m('Add Ticket Type') : __m('Edit Ticket Type'));
 
-$values = ['roleCategories' => 'Staff,Student,Parent,Other', 'active' => 'Y', 'sequenceNumber' => 0];
+$values = ['roleCategories' => 'Staff,Student,Parent,Other', 'shareWithFamily' => 'N', 'retentionDays' => '', 'active' => 'Y', 'sequenceNumber' => 0];
 $teamIDs = [];
 if (!empty($gibbonServiceDeskTicketTypeID)) {
     $values = $ticketTypeGateway->getByID($gibbonServiceDeskTicketTypeID);
@@ -64,8 +64,16 @@ $row = $form->addRow();
     $row->addCheckbox('teams')->fromArray($teams)->checked($teamIDs);
 
 $row = $form->addRow();
+    $row->addLabel('shareWithFamily', __m('Share With Family'))->description(__m('The other adults of the requester\'s family (with data access) also see these tickets, comment on them, withdraw and reopen them. Leave off for private matters such as complaints.'));
+    $row->addYesNo('shareWithFamily')->required();
+
+$row = $form->addRow();
     $row->addLabel('color', __m('Colour'))->description(__m('Marks the tickets of this type in the list and on the board.'));
     $row->addColor('color');
+
+$row = $form->addRow();
+    $row->addLabel('retentionDays', __m('Retention (days)'))->description(__m('Closed tickets of this type are deleted this many days after they were closed, by the scheduled script cli_deleteExpiredTickets.php (see the README). Empty keeps them for ever.'));
+    $row->addNumber('retentionDays')->minimum(1)->maxLength(5);
 
 $row = $form->addRow();
     $row->addLabel('sequenceNumber', __m('Order'))->description(__m('Position in the list of services.'));

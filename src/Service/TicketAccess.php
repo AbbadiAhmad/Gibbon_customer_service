@@ -14,28 +14,41 @@ namespace Gibbon\Module\ServiceDesk\Service;
 use Gibbon\Contracts\Database\Connection;
 use Gibbon\Contracts\Services\Session;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
+use Gibbon\Module\ServiceDesk\Domain\StageGateway;
+use Gibbon\Module\ServiceDesk\Domain\GuardianGateway;
 
 /**
  * Record-level rules on top of Gibbon's action permissions (which only say that a page may be used).
  *
  *  - Administrator: holds the action "Manage Ticket Types". Sees and manages every ticket.
  *  - Team member: belongs to an active team that handles the ticket's type. Sees and manages those tickets.
- *  - Requester: sees their own tickets and can comment on them.
+ *  - Requester: sees their own tickets and can comment on them, withdraw them and reopen them.
+ *  - Family: the other adults of the requester's family (with data access) are treated like the requester for
+ *    ticket types that are shared with the family.
  */
 class TicketAccess
 {
     protected $session;
     protected $db;
     protected $teamGateway;
+    protected $stageGateway;
+    protected $guardianGateway;
     protected $isAdmin;
     protected $typeIDs;
     protected $levels = [];
 
-    public function __construct(Session $session, Connection $db, TeamGateway $teamGateway)
+    /**
+     * A closed ticket can be reopened by its requester for this many days after it was closed.
+     */
+    public const REOPEN_DAYS = 30;
+
+    public function __construct(Session $session, Connection $db, TeamGateway $teamGateway, StageGateway $stageGateway, GuardianGateway $guardianGateway)
     {
         $this->session = $session;
         $this->db = $db;
         $this->teamGateway = $teamGateway;
+        $this->stageGateway = $stageGateway;
+        $this->guardianGateway = $guardianGateway;
     }
 
     public function isAdmin(): bool
@@ -82,9 +95,57 @@ class TicketAccess
         return $this->isAdmin() || in_array(intval($ticket['gibbonServiceDeskTicketTypeID']), $this->getTeamTypeIDs(), true);
     }
 
+    /**
+     * Another adult of the requester's family, for a ticket type shared with the family.
+     */
+    public function isFamilyMember(array $ticket): bool
+    {
+        if (empty($ticket) || ($ticket['shareWithFamily'] ?? 'N') != 'Y' || $this->isRequester($ticket)) return false;
+
+        return $this->guardianGateway->isCoAdult($this->session->get('gibbonPersonID'), $ticket['gibbonPersonIDRequester']);
+    }
+
+    /**
+     * The requester, or another adult of their family: the people who may comment, withdraw and reopen.
+     */
+    public function isRequesterSide(array $ticket): bool
+    {
+        return $this->isRequester($ticket) || $this->isFamilyMember($ticket);
+    }
+
     public function canView(array $ticket): bool
     {
-        return $this->isRequester($ticket) || $this->canManage($ticket);
+        return $this->isRequesterSide($ticket) || $this->canManage($ticket);
+    }
+
+    /**
+     * May the user withdraw the request? Requester side only, while the ticket is not finished, and only when the
+     * workflow has a "Withdrawn" stage to send it to.
+     */
+    public function canWithdraw(array $ticket): bool
+    {
+        return $this->isRequesterSide($ticket)
+            && in_array($ticket['stageCategory'], ['Open', 'In Progress'], true)
+            && !empty($this->stageGateway->getWithdrawnStage($ticket['gibbonServiceDeskTicketTypeID']));
+    }
+
+    /**
+     * May the user reopen the request? Requester side only, for REOPEN_DAYS after it was closed.
+     */
+    public function canReopen(array $ticket): bool
+    {
+        return $this->isRequesterSide($ticket)
+            && $ticket['stageCategory'] == 'Closed'
+            && !empty($ticket['timestampClosed'])
+            && strtotime($ticket['timestampClosed']) >= strtotime('-'.self::REOPEN_DAYS.' days');
+    }
+
+    /**
+     * May the user permanently delete the ticket? Needs the action "Delete Tickets" and sight of the ticket.
+     */
+    public function canDelete(array $ticket): bool
+    {
+        return isActionAccessible($this->session->get('guid'), $this->db->getConnection(), '/modules/ServiceDesk/tickets_delete.php') && $this->canView($ticket);
     }
 
     /**

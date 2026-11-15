@@ -21,4 +21,10 @@ async function check(page, label) {
   console.log((problems.length ? 'FAIL ' : 'ok   ') + label + (problems.length ? ' -> ' + problems.join(' | ') : ''));
   return problems.length === 0;
 }
-module.exports = { chromium, BASE, login, check };
+// Runs SQL against the test database and returns the rows as arrays of strings (tab separated -> split).
+const { execFileSync } = require('child_process');
+function sql(query) {
+  const out = execFileSync('mariadb', ['-h127.0.0.1', '-P' + (process.env.GIBBON_DB_PORT || '3399'), '-uroot', 'gibbon', '-N', '-e', query]).toString().trim();
+  return out === '' ? [] : out.split('\n').map(l => l.split('\t'));
+}
+module.exports = { chromium, BASE, login, check, sql };

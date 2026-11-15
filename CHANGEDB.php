@@ -60,3 +60,26 @@ $sql[$count][0] = '1.4.01';
 $sql[$count][1] = "
 UPDATE `gibbonAction` SET URLList='tickets.php,tickets_filterProcess.php,tickets_filter_delete.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php' WHERE name='Tickets' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');
 ";
+
+// v1.5.00 - family sharing, withdrawn stage, teacher notices, retention, search text, dashboard hooks, action "Delete Tickets"
+++$count;
+$sql[$count][0] = '1.5.00';
+$serviceDeskHooks = [];
+foreach (['Parental Dashboard' => 'hook_dashboard_requests.php', 'Staff Dashboard' => 'hook_dashboard_staff.php'] as $serviceDeskHookType => $serviceDeskHookFile) {
+    $serviceDeskHooks[] = "INSERT INTO `gibbonHook` (`name`, `type`, `options`, `gibbonModuleID`) VALUES ('Service Desk', '".$serviceDeskHookType."', '".serialize(['sourceModuleName' => 'ServiceDesk', 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => $serviceDeskHookFile])."', (SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'))";
+}
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskTicketType` ADD `shareWithFamily` enum('Y','N') NOT NULL DEFAULT 'N' AFTER `roleCategories`, ADD `retentionDays` int(5) unsigned NULL AFTER `color`;end
+ALTER TABLE `gibbonServiceDeskStage` ADD `notifyTeachers` enum('Y','N') NOT NULL DEFAULT 'N' AFTER `nextStage`, ADD `withdrawn` enum('Y','N') NOT NULL DEFAULT 'N' AFTER `notifyTeachers`;end
+ALTER TABLE `gibbonServiceDeskTicket` ADD `searchText` text NULL AFTER `fields`;end
+UPDATE `gibbonServiceDeskTicketType` SET shareWithFamily='Y' WHERE name IN ('Absence Report', 'Course Unenrolment', 'School De-registration');end
+UPDATE `gibbonServiceDeskStage` SET withdrawn='Y' WHERE name='Withdrawn';end
+INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `withdrawn`) SELECT t.gibbonServiceDeskTicketTypeID, 'Withdrawn', 'Closed', 50, 'Y' FROM `gibbonServiceDeskTicketType` t WHERE NOT EXISTS (SELECT 1 FROM `gibbonServiceDeskStage` s WHERE s.gibbonServiceDeskTicketTypeID=t.gibbonServiceDeskTicketTypeID AND s.withdrawn='Y');end
+INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `withdrawn`) SELECT NULL, 'Withdrawn', 'Closed', 50, 'Y' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `gibbonServiceDeskStage` s WHERE s.gibbonServiceDeskTicketTypeID IS NULL AND s.withdrawn='Y');end
+INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `notifyTeachers`) SELECT t.gibbonServiceDeskTicketTypeID, 'Approved', 'In Progress', 25, 'Y' FROM `gibbonServiceDeskTicketType` t WHERE t.name='Course Unenrolment' AND NOT EXISTS (SELECT 1 FROM `gibbonServiceDeskStage` s WHERE s.gibbonServiceDeskTicketTypeID=t.gibbonServiceDeskTicketTypeID AND s.name='Approved');end
+UPDATE `gibbonServiceDeskStage` SET notifyTeachers='Y' WHERE name='Approved' AND gibbonServiceDeskTicketTypeID IN (SELECT gibbonServiceDeskTicketTypeID FROM `gibbonServiceDeskTicketType` WHERE name IN ('Absence Report', 'Course Unenrolment'));end
+UPDATE `gibbonAction` SET URLList='tickets.php,tickets_filterProcess.php,tickets_filter_delete.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php,tickets_requester.php,tickets_requesterProcess.php' WHERE name='Tickets' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');end
+INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, `description`, `URLList`, `entryURL`, `entrySidebar`, `menuShow`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES ((SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'), 'Delete Tickets', 0, 'Requests', 'Permanently delete a ticket, for example for a data-protection request. Tickets can also be deleted automatically after the retention time of their ticket type.', 'tickets_delete.php,tickets_deleteProcess.php', 'tickets_delete.php', 'Y', 'N', 'Y', 'N', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
+INSERT INTO `gibbonPermission` (`gibbonRoleID`, `gibbonActionID`) SELECT gibbonRole.gibbonRoleID, gibbonAction.gibbonActionID FROM gibbonRole JOIN gibbonAction ON (gibbonAction.name='Delete Tickets') JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID AND gibbonModule.name='ServiceDesk') WHERE gibbonRole.name='Administrator';end
+".implode(";end\n", $serviceDeskHooks).";
+";

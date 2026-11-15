@@ -14,6 +14,8 @@ namespace Gibbon\Module\ServiceDesk\Service;
 use Gibbon\Services\Format;
 use Gibbon\Contracts\Database\Connection;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
+use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
+use Gibbon\Domain\System\LogGateway;
 use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketGateway;
 use Gibbon\Module\ServiceDesk\Domain\CommentGateway;
@@ -42,8 +44,10 @@ class TicketService
     protected $notifier;
     protected $automations;
     protected $teamGateway;
+    protected $ticketTypeGateway;
+    protected $teacherFinder;
 
-    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, TeamGateway $teamGateway)
+    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, TeamGateway $teamGateway, TicketTypeGateway $ticketTypeGateway, TeacherFinder $teacherFinder)
     {
         $this->db = $db;
         $this->ticketGateway = $ticketGateway;
@@ -53,6 +57,8 @@ class TicketService
         $this->notifier = $notifier;
         $this->automations = $automations;
         $this->teamGateway = $teamGateway;
+        $this->ticketTypeGateway = $ticketTypeGateway;
+        $this->teacherFinder = $teacherFinder;
     }
 
     /**
@@ -82,6 +88,7 @@ class TicketService
             'gibbonPersonIDAssignee'        => $assignee['gibbonPersonID'] ?? null,
             'subject'                       => mb_substr($subject, 0, 120),
             'fields'                        => json_encode($answers, JSON_UNESCAPED_UNICODE),
+            'searchText'                    => RequestFields::searchText($answers),
             'timestampCreated'              => $now,
             'timestampModified'             => $now,
             'timestampClosed'               => $stage['category'] == 'Closed' ? $now : null,
@@ -178,7 +185,7 @@ class TicketService
      * @param array $stage  A stage of the ticket's own type.
      * @param bool  $rerun  Run the automation even though the ticket is already in the stage (used on creation).
      */
-    public function changeStage(array $ticket, array $stage, $actorID, bool $rerun = false, int $depth = 0): bool
+    public function changeStage(array $ticket, array $stage, $actorID, bool $rerun = false, int $depth = 0, ?string $text = null, bool $withTeam = false): bool
     {
         $gibbonServiceDeskTicketID = $ticket['gibbonServiceDeskTicketID'];
         $alreadyThere = intval($ticket['gibbonServiceDeskStageID']) === intval($stage['gibbonServiceDeskStageID']);
@@ -216,12 +223,17 @@ class TicketService
         }
 
         if (!$alreadyThere) {
-            $text = __m('Moved to {stage}.', ['stage' => __m($stage['name'])]);
+            $text = $text ?? __m('Moved to {stage}.', ['stage' => __m($stage['name'])]);
             $this->writeHistory($ticket, $actorID, $text, 'Log');
-            $this->notifier->notify($ticket, $text, $actorID);
+            $this->notifier->notify($ticket, $text, $actorID, false, $withTeam);
         }
 
         $ticket = $this->ticketGateway->getTicketByID($gibbonServiceDeskTicketID);
+
+        // A stage can tell the teachers of the children (form tutors, class teachers) that the request is approved.
+        if (($stage['notifyTeachers'] ?? 'N') == 'Y' && (!$alreadyThere || $rerun)) {
+            $this->notifyTeachers($ticket, $actorID);
+        }
 
         if ($result !== null && $result->getMessage() !== '') {
             $this->writeHistory($ticket, null, $result->getMessage(), 'Log');
@@ -295,5 +307,141 @@ class TicketService
         $this->writeHistory($ticket, $actorID, __m('Deleted a comment of {date}.', ['date' => Format::dateTimeReadable($comment['timestamp'])]), 'Internal Log');
 
         return true;
+    }
+
+    /**
+     * Tells the teachers of the children on the ticket - form tutors and class teachers - through the notification
+     * centre (never by email). The notice says what was approved for whom and when, never why: reasons such as
+     * "Medical" stay on the ticket.
+     */
+    public function notifyTeachers(array $ticket, $actorID)
+    {
+        $answers = RequestFields::decode($ticket['fields']);
+        $teachers = array_diff($this->teacherFinder->findForAnswers($answers, $ticket['gibbonSchoolYearID']), [intval($actorID)]);
+        if (empty($teachers)) return;
+
+        $details = RequestFields::summary($answers);
+        $this->notifier->notifyCentre($teachers, '#'.intval($ticket['gibbonServiceDeskTicketID']).' '.__m('{type} approved: {details}.', [
+            'type'    => __m($ticket['typeName']),
+            'details' => $details,
+        ]));
+
+        $this->writeHistory($ticket, null, __m('{count} teacher(s) were told (notification centre only).', ['count' => count($teachers)]), 'Internal Log');
+    }
+
+    /**
+     * The requester (or another adult of the family) withdraws the request: the ticket moves to the workflow's
+     * "Withdrawn" stage and the team is told. An optional note is added as a comment.
+     */
+    public function withdraw(array $ticket, string $note, $actorID): bool
+    {
+        $stage = $this->stageGateway->getWithdrawnStage($ticket['gibbonServiceDeskTicketTypeID']);
+        if (empty($stage)) return false;
+
+        if ($note !== '') {
+            $this->writeHistory($ticket, $actorID, $note, 'Comment');
+        }
+
+        return $this->changeStage($ticket, $stage, $actorID, false, 0, __m('{name} withdrew the request.', ['name' => $this->personName($actorID)]), true);
+    }
+
+    /**
+     * The requester reopens a closed request: the ticket goes back to the first stage of its workflow.
+     */
+    public function reopen(array $ticket, string $note, $actorID): bool
+    {
+        $stage = $this->stageGateway->getFirstStage($ticket['gibbonServiceDeskTicketTypeID']);
+        if (empty($stage)) return false;
+
+        if ($note !== '') {
+            $this->writeHistory($ticket, $actorID, $note, 'Comment');
+        }
+
+        return $this->changeStage($ticket, $stage, $actorID, false, 0, __m('{name} reopened the request.', ['name' => $this->personName($actorID)]), true);
+    }
+
+    /**
+     * Moves a ticket to another ticket type (it was filed under the wrong service). The ticket keeps the stage of the
+     * same name when the new workflow has one, otherwise it starts in the first stage; the stage's automation is not
+     * run. The assignee stays only if they belong to a team of the new type. The requester sees the move; the teams
+     * of the new type are told.
+     */
+    public function changeType(array $ticket, array $type, $actorID): bool
+    {
+        if (empty($type) || $type['active'] != 'Y' || intval($type['gibbonServiceDeskTicketTypeID']) === intval($ticket['gibbonServiceDeskTicketTypeID'])) {
+            return false;
+        }
+
+        $stage = $this->stageGateway->getStageByName($type['gibbonServiceDeskTicketTypeID'], $ticket['stageName']) ?: $this->stageGateway->getFirstStage($type['gibbonServiceDeskTicketTypeID']);
+        if (empty($stage)) return false;
+
+        $members = array_map('intval', array_column($this->teamGateway->selectMembersByTicketType($type['gibbonServiceDeskTicketTypeID'])->fetchAll(), 'gibbonPersonID'));
+        $keepAssignee = !empty($ticket['gibbonPersonIDAssignee']) && in_array(intval($ticket['gibbonPersonIDAssignee']), $members, true);
+
+        $now = date('Y-m-d H:i:s');
+        $this->ticketGateway->update($ticket['gibbonServiceDeskTicketID'], [
+            'gibbonServiceDeskTicketTypeID' => $type['gibbonServiceDeskTicketTypeID'],
+            'gibbonServiceDeskStageID'      => $stage['gibbonServiceDeskStageID'],
+            'gibbonPersonIDAssignee'        => $keepAssignee ? $ticket['gibbonPersonIDAssignee'] : null,
+            'timestampModified'             => $now,
+            'timestampClosed'               => $stage['category'] == 'Closed' ? ($ticket['timestampClosed'] ?: $now) : null,
+        ]);
+
+        $moved = $this->ticketGateway->getTicketByID($ticket['gibbonServiceDeskTicketID']);
+        $text = __m('Moved from {from} to {to}.', ['from' => __m($ticket['typeName']), 'to' => __m($type['name'])]);
+        $this->writeHistory($moved, $actorID, $text, 'Log');
+
+        if (!empty($ticket['gibbonPersonIDAssignee']) && !$keepAssignee) {
+            $this->writeHistory($moved, $actorID, __m('The assignee is not in a team of the new ticket type: the ticket is unassigned.'), 'Internal Log');
+        }
+
+        $this->notifier->notify($moved, $text, $actorID, false, true);
+
+        return true;
+    }
+
+    /**
+     * Permanently deletes a ticket with its comments, notification settings and the notifications written about it.
+     * What the workflow changed elsewhere in Gibbon (attendance, enrolment) is not undone. A line in Gibbon's log
+     * records that, when and by whom - not what the ticket said.
+     *
+     * @param mixed $actorID The person who deleted it; empty for the automatic retention script.
+     */
+    public function deleteTicket(array $ticket, $actorID = null): bool
+    {
+        $data = ['gibbonServiceDeskTicketID' => $ticket['gibbonServiceDeskTicketID']];
+
+        $this->db->beginTransaction();
+        $this->db->delete("DELETE FROM gibbonServiceDeskTicketComment WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
+        $this->db->delete("DELETE FROM gibbonServiceDeskTicketSubscriber WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
+        $this->db->delete("DELETE gibbonNotification FROM gibbonNotification JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonNotification.gibbonModuleID) WHERE gibbonModule.name='ServiceDesk' AND gibbonNotification.text LIKE :prefix", ['prefix' => '#'.intval($ticket['gibbonServiceDeskTicketID']).' %']);
+        $deleted = $this->ticketGateway->delete($ticket['gibbonServiceDeskTicketID']);
+
+        if (!$deleted) {
+            $this->db->rollBack();
+            return false;
+        }
+        $this->db->commit();
+
+        try {
+            global $container;
+            $gibbonSchoolYearID = $ticket['gibbonSchoolYearID'] ?: $this->db->selectOne("SELECT gibbonSchoolYearID FROM gibbonSchoolYear WHERE status='Current'");
+            $container->get(LogGateway::class)->addLog($gibbonSchoolYearID, 'ServiceDesk', $actorID ?: null, 'Service Desk', [
+                'event'  => empty($actorID) ? 'Ticket deleted after its retention time' : 'Ticket deleted',
+                'ticket' => intval($ticket['gibbonServiceDeskTicketID']),
+                'type'   => $ticket['typeName'] ?? '',
+            ], empty($actorID) ? '127.0.0.1' : null);
+        } catch (\Throwable $e) {
+            error_log('ServiceDesk: could not log a deleted ticket: '.$e->getMessage());
+        }
+
+        return true;
+    }
+
+    protected function personName($gibbonPersonID): string
+    {
+        $person = $this->db->select("SELECT preferredName, surname FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID", ['gibbonPersonID' => $gibbonPersonID])->fetch();
+
+        return Format::name('', $person['preferredName'] ?? '', $person['surname'] ?? '', 'Student', false);
     }
 }

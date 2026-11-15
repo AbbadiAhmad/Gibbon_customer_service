@@ -1,6 +1,21 @@
 CHANGELOG
 =========
 
+v1.5.00
+-------
+- Requesters can withdraw a request (stage flagged "Withdrawn Stage") and reopen it for 30 days after it was closed.
+- The other adults of a family (with data access) see, comment on, withdraw and reopen the tickets of ticket types
+  set to "Share With Family" (default: absence, unenrolment, de-registration) and are told about public updates.
+- Dashboard tab "Service Desk": open requests for parents; unassigned and assigned tickets for team members and
+  administrators; own requests for other staff.
+- A stage can tell the teachers (form tutors, class teachers) - notification centre only, no email, no reason. Default:
+  the "Approved" stages of Absence Report and Course Unenrolment (new stage).
+- Move a ticket to another ticket type.
+- Delete tickets (new action "Delete Tickets"; confirmation page; log line) and "Retention (days)" per ticket type with
+  the script cli_deleteExpiredTickets.php for cron.
+- Search finds tickets by number, subject, details, children, classes, dates, requester, assignee and public comments.
+- Every default workflow gets a "Withdrawn" stage (added by the upgrade to existing ticket types too).
+
 v1.4.01
 -------
 Deleting a saved filter asks for confirmation. Notification Settings has "Send me a test notification", which tries

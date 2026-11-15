@@ -18,6 +18,7 @@ use Gibbon\Contracts\Services\Session;
 use Gibbon\Domain\System\NotificationGateway;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
+use Gibbon\Module\ServiceDesk\Domain\GuardianGateway;
 
 /**
  * Tells people about ticket updates, each through the channels of their notification policy for that ticket:
@@ -33,14 +34,16 @@ class Notifier
     protected $notificationGateway;
     protected $subscriberGateway;
     protected $teamGateway;
+    protected $guardianGateway;
 
-    public function __construct(Session $session, Connection $db, NotificationGateway $notificationGateway, SubscriberGateway $subscriberGateway, TeamGateway $teamGateway)
+    public function __construct(Session $session, Connection $db, NotificationGateway $notificationGateway, SubscriberGateway $subscriberGateway, TeamGateway $teamGateway, GuardianGateway $guardianGateway)
     {
         $this->session = $session;
         $this->db = $db;
         $this->notificationGateway = $notificationGateway;
         $this->subscriberGateway = $subscriberGateway;
         $this->teamGateway = $teamGateway;
+        $this->guardianGateway = $guardianGateway;
     }
 
     /**
@@ -83,6 +86,16 @@ class Notifier
                 }
             }
 
+            // The other adults of the requester's family follow public updates of tickets shared with the family, with
+            // their own notification settings, unless they chose something else for this ticket (a row in $recipients).
+            if (!$internal && ($ticket['shareWithFamily'] ?? 'N') == 'Y') {
+                foreach ($this->guardianGateway->selectCoAdultIDs($ticket['gibbonPersonIDRequester']) as $gibbonPersonID) {
+                    if (!isset($people[intval($gibbonPersonID)])) {
+                        $people[intval($gibbonPersonID)] = $this->subscriberGateway->getPreference($gibbonPersonID);
+                    }
+                }
+            }
+
             if ($internal) {
                 $people = array_intersect_key($people, $team + [intval($ticket['gibbonPersonIDAssignee'] ?? 0) => true]);
             }
@@ -117,6 +130,24 @@ class Notifier
             $this->notificationGateway->updateNotificationCount($row['gibbonNotificationID'], $row['count'] + 1);
         } else {
             $this->notificationGateway->insertNotification($notification);
+        }
+    }
+
+    /**
+     * Tells people through the notification centre only - no email, whatever their settings. Used for notices the
+     * recipient did not ask for (teachers who are told about an approved absence). The text must start with
+     * "#<ticket number> " so that the notice is removed together with the ticket.
+     */
+    public function notifyCentre(array $gibbonPersonIDs, string $text, string $link = '/index.php?q=notifications.php')
+    {
+        try {
+            foreach (array_unique(array_map('intval', $gibbonPersonIDs)) as $gibbonPersonID) {
+                if ($gibbonPersonID > 0) {
+                    $this->sendInApp($gibbonPersonID, $text, $link);
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->logFailure('Notification failed', $e);
         }
     }
 

@@ -32,6 +32,8 @@ $data = [
     'name'           => trim($_POST['name'] ?? ''),
     'description'    => trim($_POST['description'] ?? ''),
     'roleCategories' => implode(',', array_intersect(['Staff', 'Student', 'Parent', 'Other'], (array) ($_POST['roleCategories'] ?? []))),
+    'shareWithFamily' => ($_POST['shareWithFamily'] ?? 'N') == 'Y' ? 'Y' : 'N',
+    'retentionDays'  => intval($_POST['retentionDays'] ?? 0) > 0 ? intval($_POST['retentionDays']) : null,
     'color'          => preg_match('/^#[0-9a-fA-F]{6}$/', $_POST['color'] ?? '') ? $_POST['color'] : '',
     'sequenceNumber' => intval($_POST['sequenceNumber'] ?? 0),
     'active'         => ($_POST['active'] ?? 'Y') == 'N' ? 'N' : 'Y',

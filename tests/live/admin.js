@@ -53,7 +53,7 @@ const ret = page => (page.url().match(/return=(\w+)/) || [])[1];
   await submit(admin, 'form#request'); console.log('staff ticket:', ret(admin)); await check(admin, 'staff ticket');
 
   // Filters: custom criteria, save shared with team 1, then delete
-  await admin.goto(M + 'tickets.php&status[]=Closed&type[]=1&search=Absence'); await check(admin, 'custom filter');
+  await admin.goto(M + 'tickets.php&view=list&status[]=Closed&type[]=1&search=Absence'); await check(admin, 'custom filter');
   console.log('rows for closed absence:', await admin.$$eval('table tbody tr', r => r.length)); await shot(admin, 'tickets_custom');
   await admin.fill('form#filterSave input[name=name]', 'Closed absences ' + stamp);
   await admin.selectOption('form#filterSave select[name=share]', '1');

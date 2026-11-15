@@ -44,6 +44,13 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
   and can be changed per ticket (bottom of the ticket page).
 * Filter the ticket list (type, status, stage, assignee, priority, text) and save filters under a name.
 
+**Requesters** (and, for shared services, the other adult of the family)
+* *Withdraw this request* while it is open, *Reopen this request* for 30 days after it was closed - on the ticket page.
+* For absences, unenrolments and de-registrations the other parent of the family sees the ticket too, comments on it and
+  is told about updates (setting *Share With Family* per ticket type; with data access only).
+* A tab *Service Desk* on the parents' dashboard lists the open requests.
+* The search field finds tickets by number, subject, details, children, classes, dates, requester, assignee and comments.
+
 **Staff with *New Request_onBehalf*** (default: Administrator, Support Staff)
 * On *New Request* they see every active service and an *On Behalf Of* picker. The person chosen becomes the
   requester (the form shows that person's children and classes); the ticket history records who created it.
@@ -55,6 +62,8 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 * Default: Administrator "_all"; Teacher and Support Staff "_my". Changes by others are noted in the team's history.
 
 **Team members** (staff added to a team)
+* Move a ticket to another ticket type when it was filed under the wrong service. Team members and administrators see
+  *Unassigned tickets* / *Assigned to me* on the staff dashboard.
 * See the tickets of the ticket types given to their teams; comment, write internal notes (never shown to the
   requester), assign, set priority, move between stages.
 * Use the shared filters made for everyone or for their team (e.g. *Absence Intake*).
@@ -66,7 +75,11 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 **Administrators** (role with *Manage Ticket Types*)
 * *Manage Ticket Types*: services, their colour, who may request them, which teams handle them, and the request form (fields of type
   Text, Long Text, Date, Select, Yes/No, Students, Classes).
-* *Manage Workflows*: the default workflow (copied to every new ticket type) and the workflow of each type: stages,
+* *Delete Tickets* (permission, default Administrator): delete a ticket for good from its page (data protection). Set a
+  **retention** in days on a ticket type and schedule the script that deletes expired closed tickets, e.g. every night:
+  `php <gibbon>/modules/ServiceDesk/cli_deleteExpiredTickets.php` (`--dry-run` shows what it would delete).
+* *Manage Workflows*: the default workflow (copied to every new ticket type) and the workflow of each type: stages
+  (flags: *Tell the Teachers* = form tutors and class teachers are notified, notification centre only; *Withdrawn Stage*),
   their status (Open / In Progress / Closed), an automation on entry and the stage to move to afterwards.
 * *Manage Teams*: teams, members, and an optional *Default Assignee* per team: new tickets of the team's ticket
   types are then assigned to that member straight away (empty = tickets start unassigned).

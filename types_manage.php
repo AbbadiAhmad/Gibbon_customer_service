@@ -56,6 +56,11 @@ $table->addColumn('roleCategories', __m('Requested By'))
     ->format(function ($type) {
         return implode(', ', array_map('__', array_filter(explode(',', $type['roleCategories']))));
     });
+$table->addColumn('retentionDays', __m('Retention'))
+    ->notSortable()
+    ->format(function ($type) {
+        return !empty($type['retentionDays']) ? __m('{days} days', ['days' => intval($type['retentionDays'])]) : '';
+    });
 $table->addColumn('active', __('Active'))->format(Format::using('yesNo', 'active'));
 
 $table->addActionColumn()

@@ -77,6 +77,8 @@ $data = [
     'category'       => $category,
     'sequenceNumber' => intval($_POST['sequenceNumber'] ?? 0),
     'automation'     => !empty($automation) ? $automation : null,
+    'notifyTeachers' => ($_POST['notifyTeachers'] ?? 'N') == 'Y' ? 'Y' : 'N',
+    'withdrawn'      => ($_POST['withdrawn'] ?? 'N') == 'Y' && $category == 'Closed' ? 'Y' : 'N',
     'nextStage'      => !empty($automation) && !empty($nextStage) ? $nextStage : null,
 ];
 
@@ -87,6 +89,12 @@ if (empty($gibbonServiceDeskStageID)) {
     if ($saved && $existing['name'] !== $data['name']) {
         $stageGateway->renameNextStage($gibbonServiceDeskTicketTypeID, $existing['name'], $data['name']);
     }
+}
+
+// Only one stage per workflow receives withdrawn tickets.
+if ($saved && $data['withdrawn'] == 'Y') {
+    $savedID = !empty($gibbonServiceDeskStageID) ? $gibbonServiceDeskStageID : $saved;
+    $stageGateway->clearOtherWithdrawnStages($gibbonServiceDeskTicketTypeID, $savedID);
 }
 
 header("Location: ".($saved ? "{$URLWorkflow}&return=success0" : "{$URL}&return=error2"));

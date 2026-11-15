@@ -163,6 +163,30 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * Domain = module name; files `i18n/<locale>/LC_MESSAGES/ServiceDesk.mo`. Template: `php tests/make-pot.php`.
 * Names stored in the database and shown to users (type names, labels, stage names) are also passed through `__m()`.
 
+## Dashboard hooks, CLI scripts, plain gateways
+* **Dashboard hook** (**LIVE**): `$hooks[]` in `manifest.php` / an INSERT in CHANGEDB:
+  `INSERT INTO gibbonHook (name, type, options, gibbonModuleID) VALUES ('Service Desk', 'Parental Dashboard' | 'Staff Dashboard',
+  serialize(['sourceModuleName' => 'ServiceDesk', 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => 'hook_x.php']), (SELECT
+  gibbonModuleID ...))`. In CHANGEDB build the serialized string in PHP (`serialize()` inside the file; the double quotes in it
+  are fine inside a single-quoted SQL string). Gibbon `include`s the file from inside the dashboard class and uses
+  its **return value** as the tab content; the tab label is the hook name. Roles holding the named action get the tab.
+  The file runs in a method scope: `global $container, $session, $page;`. **The dashboard is not a page of the module, so
+  the module's classes are not autoloadable yet** (error "Alias ... is not being managed by the container"): call
+  `$container->get(\Gibbon\Services\ModuleLoader::class)->registerModuleNamespace('ServiceDesk');` first. Add the module
+  stylesheet with `$page->stylesheets->add(...)`. A tab for which Gibbon has no icon still renders.
+* **CLI script** (`cli_*.php`, **LIVE**): first statement `if (PHP_SAPI !== 'cli') { exit(...); }`, then `require_once
+  __DIR__.'/../../gibbon.php';` (works from the shell with the module copied under `modules/`), then
+  `$container->get(...)`. `$argv` for options. It needs no action in `manifest.php`; `tests/static.php` checks the
+  first statement. Files named `cli_*` / `hook_*` are exempt from the "every root file is in an action" rule.
+* A gateway without a table: `class XGateway extends Gibbon\Domain\Gateway` and use `$this->db()` (see `GuardianGateway`).
+* Data kept as JSON on a row (ticket answers) cannot be searched reliably through the JSON: keep a plain-text copy
+  (`searchText`) and, for rows from before the column existed, fall back with `COALESCE(searchText, fields)`.
+* Several `where()` calls on one query are ANDed; bind every value with a unique placeholder name (`:searchA0`, `:searchA1`,
+  ...) when the same condition is repeated per word.
+* `addcslashes($word, '%_\\')` makes LIKE wildcards plain characters (MySQL's default escape is the backslash).
+* `DataSet::getResultCount()` and `toArray()` give a short list together with the total (`pageSize(5)` on the criteria).
+* `DELETE t FROM t JOIN other ... WHERE ...` (multi-table delete) works through `$this->db()->delete()`.
+
 ## Notifications
 * Gibbon's `NotificationSender::addNotification()->sendNotifications()` writes the notification centre entry and
   emails it only if the person's global `receiveNotificationEmails` is on. For per-channel control (this module) use
