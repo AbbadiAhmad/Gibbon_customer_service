@@ -56,9 +56,13 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 * See the tickets of the ticket types given to their teams; comment, write internal notes (never shown to the
   requester), assign, set priority, move between stages.
 * Use the shared filters made for everyone or for their team (e.g. *Absence Intake*).
+* Switch the Tickets page between **List** and **Board**; the page remembers the last choice per person. With a
+  filter on one ticket type the board shows that type's workflow stages and tickets are moved by dragging them to
+  another column; otherwise it shows Open / In Progress / Closed as an overview. Cards carry the colour of their
+  ticket type; closed tickets stay on the board for 30 days.
 
 **Administrators** (role with *Manage Ticket Types*)
-* *Manage Ticket Types*: services, who may request them, which teams handle them, and the request form (fields of type
+* *Manage Ticket Types*: services, their colour, who may request them, which teams handle them, and the request form (fields of type
   Text, Long Text, Date, Select, Yes/No, Students, Classes).
 * *Manage Workflows*: the default workflow (copied to every new ticket type) and the workflow of each type: stages,
   their status (Open / In Progress / Closed), an automation on entry and the stage to move to afterwards.

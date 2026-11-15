@@ -17,6 +17,7 @@ use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\FilterGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
+use Gibbon\Module\ServiceDesk\Domain\ViewPreferenceGateway;
 use Gibbon\Module\ServiceDesk\Service\TicketAccess;
 use Gibbon\Module\ServiceDesk\Service\TicketFilters;
 use Gibbon\Module\ServiceDesk\Service\TicketService;
@@ -47,12 +48,32 @@ $gibbonServiceDeskFilterID = intval($_GET['gibbonServiceDeskFilterID'] ?? 0);
 $activeFilter = $filters[$gibbonServiceDeskFilterID] ?? [];
 $values = !empty($activeFilter) ? TicketFilters::decode($activeFilter['criteria']) : TicketFilters::clean($_GET);
 
+// VIEW: list or board. The board is for people who work on tickets. The last choice is remembered per person.
+$viewPreferenceGateway = $container->get(ViewPreferenceGateway::class);
+$view = 'List';
+if ($isAgent) {
+    $requested = ucfirst(strtolower($_GET['view'] ?? ''));
+    if (in_array($requested, ['List', 'Board'], true)) {
+        $viewPreferenceGateway->setTicketView($gibbonPersonID, $requested);
+        $view = $requested;
+    } else {
+        $view = $viewPreferenceGateway->getTicketView($gibbonPersonID);
+    }
+}
+
+// The criteria as URL parameters: to switch view and to come back to the same tickets after moving a card.
+$criteriaQuery = !empty($activeFilter)
+    ? 'gibbonServiceDeskFilterID='.intval($activeFilter['gibbonServiceDeskFilterID'])
+    : TicketFilters::toQuery($values);
+
 // SAVED FILTERS
 echo $page->fetchFromTemplate('filters.twig.html', [
     'filters'  => $filters,
     'activeID' => $activeFilter['gibbonServiceDeskFilterID'] ?? '',
     'isCustom' => empty($activeFilter) && !empty($values),
     'url'      => $moduleURL.'/tickets.php',
+    'view'     => $view,
+    'viewURL'  => $isAgent ? $moduleURL.'/tickets.php'.($criteriaQuery !== '' ? '&'.$criteriaQuery : '').'&view=' : '',
 ]);
 
 // FILTER FORM
@@ -104,7 +125,7 @@ if ($isAgent) {
 $row = $form->addRow();
     $row->addSearchSubmit($session, __('Clear Filters'));
 
-echo '<details class="serviceDesk-details" '.(empty($activeFilter) && !empty($values) ? 'open' : '').'>';
+echo '<details class="serviceDesk-details" '.(empty($activeFilter) && !empty($values) && $view == 'List' ? 'open' : '').'>';
 echo '<summary>'.__m('Filter tickets').'</summary>';
 echo $form->getOutput();
 
@@ -147,6 +168,86 @@ if (!empty($activeFilter) && ($isAdmin || !empty($activeFilter['gibbonPersonID']
     echo $form->getOutput();
 }
 
+// BOARD
+if ($view == 'Board') {
+    // How long closed tickets stay on the board, and how many cards are loaded at most.
+    $boardClosedDays = 30;
+    $boardMaxCards = 300;
+
+    // TICKETS: same criteria and same access rules as the list, without paging; closed tickets only while recent.
+    $criteria = $ticketGateway->newQueryCriteria(false)->sortBy('timestampModified', 'DESC')->pageSize($boardMaxCards);
+    $criteria = TicketFilters::apply($criteria, $values)
+        ->filterBy('closedSince', date('Y-m-d', strtotime("-{$boardClosedDays} days")));
+
+    $tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin)->toArray();
+
+    // COLUMNS: one ticket type in the filter -> that type's workflow stages (cards can be moved);
+    // otherwise the three statuses, which exist in every workflow (overview only: a status is a different stage per type).
+    $singleType = count($values['type'] ?? []) == 1 ? intval($values['type'][0]) : 0;
+    $columns = [];
+
+    if (!empty($singleType)) {
+        foreach ($container->get(StageGateway::class)->selectStagesByType($singleType)->fetchAll() as $stage) {
+            $columns[intval($stage['gibbonServiceDeskStageID'])] = [
+                'id'         => intval($stage['gibbonServiceDeskStageID']),
+                'name'       => __m($stage['name']),
+                'category'   => str_replace(' ', '', $stage['category']),
+                'automation' => !empty($stage['automation']),
+                'cards'      => [],
+            ];
+        }
+    } else {
+        foreach (TicketFilters::STATUSES as $status) {
+            $columns[$status] = ['id' => '', 'name' => __m($status), 'category' => str_replace(' ', '', $status), 'automation' => false, 'cards' => []];
+        }
+    }
+
+    foreach ($tickets as $ticket) {
+        $key = !empty($singleType) ? intval($ticket['gibbonServiceDeskStageID']) : $ticket['stageCategory'];
+        if (!isset($columns[$key])) continue;
+
+        $columns[$key]['cards'][] = [
+            'id'        => intval($ticket['gibbonServiceDeskTicketID']),
+            'subject'   => $ticket['subject'],
+            'type'      => __m($ticket['typeName']),
+            'color'     => preg_match('/^#[0-9a-fA-F]{6}$/', $ticket['typeColor']) ? $ticket['typeColor'] : '#9ca3af',
+            'stage'     => __m($ticket['stageName']),
+            'requester' => Format::name('', $ticket['requesterPreferredName'], $ticket['requesterSurname'], 'Student', false),
+            'assignee'  => !empty($ticket['gibbonPersonIDAssignee']) ? Format::name('', $ticket['assigneePreferredName'], $ticket['assigneeSurname'], 'Student', false) : '',
+            'priority'  => $ticket['priority'],
+            'updated'   => $ticket['timestampModified'],
+            // Only tickets the person works on can be moved (their own requests of other teams cannot).
+            'movable'   => !empty($singleType) && $access->canManage($ticket),
+        ];
+    }
+
+    echo $page->fetchFromTemplate('board.twig.html', [
+        'title'      => !empty($activeFilter) ? __m($activeFilter['name']) : __m('Tickets'),
+        'columns'    => $columns,
+        'byStage'    => !empty($singleType),
+        'ticketURL'  => $moduleURL.'/tickets_view.php&gibbonServiceDeskTicketID=',
+        'newURL'     => $moduleURL.'/request_new.php',
+        'closedDays' => $boardClosedDays,
+        'truncated'  => count($tickets) >= $boardMaxCards,
+        'confirm'    => __m('This stage runs an automation when a ticket enters it. Move the ticket?'),
+    ]);
+
+    // MOVE: dropping a card fills in and sends this form, so the change goes through the normal, CSRF-protected path.
+    if (!empty($singleType)) {
+        $form = Form::createBlank('boardMove', $session->get('absoluteURL').'/modules/ServiceDesk/tickets_boardProcess.php');
+        $form->addHiddenValue('address', $session->get('address'));
+        $form->addHiddenValue('gibbonServiceDeskTicketID', '');
+        $form->addHiddenValue('gibbonServiceDeskStageID', '');
+        $form->addHiddenValue('criteria', $criteriaQuery);
+
+        echo $form->getOutput();
+
+        $page->scripts->add('serviceDeskBoard', 'modules/ServiceDesk/js/board.js');
+    }
+
+    return;
+}
+
 // QUERY
 $criteria = $ticketGateway->newQueryCriteria(true)->sortBy('timestampModified', 'DESC');
 $criteria = TicketFilters::apply($criteria, $values)->fromPOST();
@@ -174,7 +275,8 @@ $table->addColumn('gibbonServiceDeskTicketID', '#')
 $table->addColumn('subject', __m('Subject'))
     ->format(function ($ticket) use ($moduleURL) {
         $url = $moduleURL.'/tickets_view.php&gibbonServiceDeskTicketID='.$ticket['gibbonServiceDeskTicketID'];
-        return Format::link($url, htmlspecialchars($ticket['subject'])).'<br/>'.Format::small(htmlspecialchars(__m($ticket['typeName'])));
+        $dot = preg_match('/^#[0-9a-fA-F]{6}$/', $ticket['typeColor']) ? '<span class="serviceDesk-dot" style="background:'.$ticket['typeColor'].'"></span>' : '';
+        return Format::link($url, htmlspecialchars($ticket['subject'])).'<br/>'.$dot.Format::small(htmlspecialchars(__m($ticket['typeName'])));
     });
 
 if ($isAgent) {

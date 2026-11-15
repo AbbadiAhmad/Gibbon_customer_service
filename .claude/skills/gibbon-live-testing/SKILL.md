@@ -44,6 +44,7 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `assignee.js` | (after `flow.js`) team default assignee: set, cleared, cleared by removing the member |
 | `update.js` | updates the module through Manage Modules when the code is newer (runs CHANGEDB) |
 | `comments.js` | (after `flow.js`) comment permissions: teacher "_my", administrator "_all", parent none; edit, visibility, delete, refusals, traces |
+| `board.js` | (after `flow.js`) view switch and its per-person memory, status vs stage columns, real drag and drop (`locator.dragTo`), automation confirmation dialog, parent has no board, type colour |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |

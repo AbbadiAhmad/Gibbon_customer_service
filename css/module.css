@@ -36,3 +36,34 @@
 .serviceDesk-badge { display: inline-block; margin-left: .4rem; padding: 0 .45rem; border-radius: 999px; background: #f59e0b; color: #fff; font-size: .7rem; font-weight: 600; }
 .serviceDesk-entryTools { float: right; }
 .serviceDesk-entryTools a { margin-left: .7rem; }
+
+/* List / board switch and type colour */
+.serviceDesk-viewSwitch { margin-left: auto; display: inline-flex; border: 1px solid #d1d5db; border-radius: .4rem; overflow: hidden; }
+.serviceDesk-viewSwitch a { padding: .3rem .8rem; font-size: .85rem; color: #374151; background: #fff; text-decoration: none; }
+.serviceDesk-viewSwitch a.active { background: #1f2937; color: #fff; }
+.serviceDesk-dot { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .35rem; }
+
+/* Board */
+.serviceDesk-boardHead { display: flex; align-items: center; justify-content: space-between; }
+.serviceDesk-boardNote { font-size: .8rem; color: #6b7280; margin: 0 0 .8rem; }
+/* The wrapper has no minimum width of its own, so a wide board scrolls inside it instead of widening the page. */
+.serviceDesk-boardWrap { display: grid; grid-template-columns: minmax(0, 1fr); }
+.serviceDesk-board { display: flex; gap: .7rem; overflow-x: auto; align-items: flex-start; padding-bottom: 1rem; }
+.serviceDesk-column { flex: 1 0 140px; min-width: 140px; background: #f3f4f6; border-radius: .5rem; border-top: 3px solid #d1d5db; }
+.serviceDesk-column-Open { border-top-color: #f59e0b; }
+.serviceDesk-column-InProgress { border-top-color: #3b82f6; }
+.serviceDesk-column-Closed { border-top-color: #10b981; }
+.serviceDesk-column.over { background: #e0e7ff; outline: 2px dashed #6366f1; }
+.serviceDesk-columnHead { display: flex; justify-content: space-between; align-items: center; padding: .55rem .7rem; font-weight: 600; font-size: .85rem; color: #374151; }
+.serviceDesk-count { background: #fff; border-radius: 999px; padding: 0 .5rem; font-size: .75rem; color: #6b7280; }
+.serviceDesk-cards { min-height: 3rem; padding: 0 .5rem .5rem; display: flex; flex-direction: column; gap: .5rem; }
+.serviceDesk-ticketCard { display: block; background: #fff; border: 1px solid #e5e7eb; border-left: 4px solid #9ca3af; border-radius: .35rem; padding: .5rem .6rem; text-decoration: none; color: #1f2937; box-shadow: 0 1px 2px rgba(0, 0, 0, .05); }
+.serviceDesk-ticketCard:hover { border-color: #6366f1; }
+.serviceDesk-ticketCard.movable { cursor: grab; }
+.serviceDesk-ticketCard.dragging { opacity: .45; }
+.serviceDesk-cardTop { display: flex; justify-content: space-between; font-size: .75rem; }
+.serviceDesk-cardSubject { display: block; font-size: .88rem; font-weight: 600; margin: .15rem 0 .25rem; line-height: 1.25; }
+.serviceDesk-cardMeta { display: block; font-size: .73rem; color: #6b7280; }
+.serviceDesk-priority { padding: 0 .4rem; border-radius: 999px; font-weight: 600; color: #fff; }
+.serviceDesk-priority-High { background: #f97316; }
+.serviceDesk-priority-Urgent { background: #dc2626; }

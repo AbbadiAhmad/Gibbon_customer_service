@@ -17,4 +17,11 @@ Saved ticket filters as a row of links: shared filters first, then the user's ow
     {% if isCustom %}
         <span class="serviceDesk-filter active">{{ __m('Custom') }}</span>
     {% endif %}
+
+    {% if viewURL %}
+        <span class="serviceDesk-viewSwitch">
+            <a class="{{ view == 'List' ? 'active' }}" href="{{ viewURL }}list">{{ __m('List') }}</a>
+            <a class="{{ view == 'Board' ? 'active' }}" href="{{ viewURL }}board">{{ __m('Board') }}</a>
+        </span>
+    {% endif %}
 </div>

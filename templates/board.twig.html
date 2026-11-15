@@ -1,0 +1,57 @@
+{#<!--
+Gibbon: the flexible, open school platform
+Copyright © 2010, Gibbon Foundation
+
+Board view of the tickets: one column per workflow stage (one ticket type) or per status (several types).
+-->#}
+
+<div class="serviceDesk-boardHead">
+    <h2>{{ title }}</h2>
+    <a class="serviceDesk-filter" href="{{ newURL }}">+ {{ __m('New Request') }}</a>
+</div>
+
+<p class="serviceDesk-boardNote">
+    {% if byStage %}
+        {{ __m('Drag a ticket to another column to move it to that stage.') }}
+    {% else %}
+        {{ __m('Overview by status. Choose a filter with a single ticket type to see its workflow stages and move tickets.') }}
+    {% endif %}
+    {{ __m('Closed tickets are shown for {days} days.', {days: closedDays}) }}
+    {% if truncated %}<strong>{{ __m('Not all tickets fit on the board: narrow the filter.') }}</strong>{% endif %}
+</p>
+
+<div class="serviceDesk-boardWrap">
+<div class="serviceDesk-board" data-confirm="{{ confirm }}">
+    {% for column in columns %}
+        <div class="serviceDesk-column serviceDesk-column-{{ column.category }}"
+             {% if byStage %}data-stage="{{ column.id }}" data-automation="{{ column.automation ? 1 : 0 }}"{% endif %}>
+            <div class="serviceDesk-columnHead">
+                <span>{{ column.name }}{% if column.automation %} *{% endif %}</span>
+                <span class="serviceDesk-count">{{ column.cards|length }}</span>
+            </div>
+            <div class="serviceDesk-cards">
+                {% for card in column.cards %}
+                    <a class="serviceDesk-ticketCard {{ card.movable ? 'movable' }}" href="{{ ticketURL }}{{ card.id }}"
+                       style="border-left-color: {{ card.color }}"
+                       {% if card.movable %}draggable="true" data-ticket="{{ card.id }}" data-stage="{{ column.id }}"{% endif %}>
+                        <span class="serviceDesk-cardTop">
+                            <span class="serviceDesk-number">#{{ card.id }}</span>
+                            {% if card.priority in ['High', 'Urgent'] %}
+                                <span class="serviceDesk-priority serviceDesk-priority-{{ card.priority }}">{{ __m(card.priority) }}</span>
+                            {% endif %}
+                        </span>
+                        <span class="serviceDesk-cardSubject">{{ card.subject }}</span>
+                        <span class="serviceDesk-cardMeta">
+                            {{ card.type }}{% if not byStage %} &middot; {{ card.stage }}{% endif %}
+                        </span>
+                        <span class="serviceDesk-cardMeta">
+                            {{ card.requester }} &rarr; {{ card.assignee ?: __m('Unassigned') }}
+                            &middot; {{ formatUsing('relativeTime', card.updated, false) }}
+                        </span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+</div>

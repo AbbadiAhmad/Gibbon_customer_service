@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+v1.3.00
+-------
+Board view on the Tickets page for team members and administrators: a filter on one ticket type shows that type's
+workflow stages as columns and tickets can be dragged between them; other filters show the columns Open / In
+Progress / Closed. Colour per ticket type (cards and list). The page remembers per person whether they last used the
+list or the board.
+Fix: saving a ticket type no longer clears "Requested By" (types saved with an earlier version may show no role
+ticked: tick the roles again and save).
+
 v1.2.00
 -------
 Comment permissions: "Edit Comments" (change the text, delete) and "Change Comment Visibility" (visible to the

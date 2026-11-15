@@ -64,6 +64,10 @@ $row = $form->addRow();
     $row->addCheckbox('teams')->fromArray($teams)->checked($teamIDs);
 
 $row = $form->addRow();
+    $row->addLabel('color', __m('Colour'))->description(__m('Marks the tickets of this type in the list and on the board.'));
+    $row->addColor('color');
+
+$row = $form->addRow();
     $row->addLabel('sequenceNumber', __m('Order'))->description(__m('Position in the list of services.'));
     $row->addNumber('sequenceNumber')->maxLength(4)->required();
 
@@ -75,6 +79,9 @@ $row = $form->addRow();
     $row->addFooter();
     $row->addSubmit();
 
+// loadAllValuesFrom() also sets the checkbox group: it must get the list, not the stored comma-separated text
+// (given the text it ticks nothing, and saving the form would then remove every role category).
+$values['roleCategories'] = explode(',', $values['roleCategories']);
 $form->loadAllValuesFrom($values);
 
 echo $form->getOutput();

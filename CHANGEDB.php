@@ -31,3 +31,17 @@ INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, 
 INSERT INTO `gibbonPermission` (`gibbonRoleID`, `gibbonActionID`) SELECT gibbonRole.gibbonRoleID, gibbonAction.gibbonActionID FROM gibbonRole JOIN gibbonAction ON (gibbonAction.name IN ('Edit Comments_all', 'Change Comment Visibility_all')) JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID AND gibbonModule.name='ServiceDesk') WHERE gibbonRole.name IN ('Administrator');end
 INSERT INTO `gibbonPermission` (`gibbonRoleID`, `gibbonActionID`) SELECT gibbonRole.gibbonRoleID, gibbonAction.gibbonActionID FROM gibbonRole JOIN gibbonAction ON (gibbonAction.name IN ('Edit Comments_my', 'Change Comment Visibility_my')) JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID AND gibbonModule.name='ServiceDesk') WHERE gibbonRole.name IN ('Teacher', 'Support Staff');
 ";
+
+// v1.3.00 - board view: colour per ticket type, last used view per person, board process script in the Tickets action
+++$count;
+$sql[$count][0] = '1.3.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskTicketType` ADD `color` varchar(7) NOT NULL DEFAULT '' AFTER `roleCategories`;end
+UPDATE `gibbonServiceDeskTicketType` SET color='#f59e0b' WHERE name='Absence Report';end
+UPDATE `gibbonServiceDeskTicketType` SET color='#3b82f6' WHERE name='Course Unenrolment';end
+UPDATE `gibbonServiceDeskTicketType` SET color='#8b5cf6' WHERE name='School De-registration';end
+UPDATE `gibbonServiceDeskTicketType` SET color='#ef4444' WHERE name='Complaint';end
+UPDATE `gibbonServiceDeskTicketType` SET color='#10b981' WHERE name='General Request';end
+CREATE TABLE `gibbonServiceDeskViewPreference` (`gibbonPersonID` int(10) unsigned zerofill NOT NULL, `ticketView` enum('List','Board') NOT NULL DEFAULT 'List', PRIMARY KEY (`gibbonPersonID`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
+UPDATE `gibbonAction` SET URLList='tickets.php,tickets_filterProcess.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php' WHERE name='Tickets' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');
+";

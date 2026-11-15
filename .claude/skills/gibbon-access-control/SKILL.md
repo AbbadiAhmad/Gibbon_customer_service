@@ -50,6 +50,10 @@ Every file a browser can request authorises itself. In order:
      checked server-side; stage, requester and school year come from the server.
    * ticket: the new stage must belong to the ticket's type; a new assignee must be in a team of the type; only team
      members may post an internal note (the posted `type` is ignored for requesters).
+   * board: a dropped card posts ticket id + stage id to `tickets_boardProcess.php`, which applies the ticket-page
+     rules again (`canManage`, stage belongs to the ticket's type) and rebuilds the return address from cleaned
+     criteria. The `movable` flag and the board itself (agents only) are conveniences. Saving the last view on a GET
+     is accepted: it only changes the user's own display preference.
    * filters: personal by default; only administrators may share; delete only own filters (shared: administrators).
    * team default assignee: must be a member of that team (else stored as empty); cleared when the member is removed.
    * admin forms: an id from the request is re-read and checked against its parent (field belongs to the type, stage

@@ -18,6 +18,7 @@
 | Staff with the permission create a ticket on behalf of someone (added in 1.1.00) | Action *New Request_onBehalf*: person picker on the service list, all active services, form built for that person, history line "Created by X on behalf of Y" | `request_new.php` (+Process), `TicketAccess::canCreateOnBehalf`, `TicketService::create` |
 | Tickets are assigned directly on creation (added in 1.1.00) | Optional *Default Assignee* on the team (one of its members) | `teams_manage_edit.php`, `TeamGateway::getDefaultAssigneeByTicketType`, `TicketService::create` |
 | Permission holders edit / delete comments and change their visibility, for own or any comment (added in 1.2.00) | Actions *Edit Comments_my/_all*, *Change Comment Visibility_my/_all*; Edit / Delete links on each comment | `tickets_comment_*.php`, `TicketAccess::canEditComment / canChangeCommentVisibility`, `TicketService::updateComment / setCommentVisibility / deleteComment` |
+| Board with the workflow as columns and drag and drop; colours; last view remembered per user (added in 1.3.00) | List / Board switch on the Tickets page; one type in the filter -> stage columns with drag and drop, otherwise status columns; colour per ticket type | `tickets.php` (board section), `templates/board.twig.html`, `js/board.js`, `tickets_boardProcess.php`, `ViewPreferenceGateway` |
 | User saves filters (type, status, assignee) | Filter form on the ticket list + *Save as Filter* | `tickets.php`, `tickets_filterProcess.php`, `TicketFilters` |
 | Admin creates default filters, e.g. absence tickets for a team | Administrators save a filter for *Everyone* or for one team | same |
 
@@ -34,6 +35,7 @@ Team ──< TeamMember >── gibbonPerson (staff)
                                      │
                                      └──< TicketSubscriber        (copy of the person's notification policy)
 
+ViewPreference (per person: List | Board)
 NotificationPreference (per person)         Filter (person NULL = shared; team = shared with that team only)
 ```
 
@@ -90,7 +92,8 @@ the request. **Nobody is notified about their own action** - testing with a sing
 ```
 manifest.php, CHANGEDB.php, version.php     install, upgrade, version (keep the three in step)
 request_new.php (+Process)                  catalog and request form
-tickets.php, tickets_filterProcess.php      list, filters
+tickets.php, tickets_filterProcess.php      list and board, filters
+tickets_boardProcess.php, js/board.js       a card dropped on a stage column (fills and sends a Gibbon form)
 tickets_view.php (+Process)                 ticket: comment | manage | notify
 tickets_comment_edit.php (+Process)         comment text and/or visibility (comment permissions)
 tickets_comment_delete.php (+Process)       delete a comment
@@ -155,5 +158,10 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   ("_my") gets tools on own comments only, edits own text (marked edited), makes own internal note visible (parent
   then sees it and is notified), is refused on the parent's comment; parent has no tools and no access; administrator
   ("_all") edits and deletes other people's comments, with traces in the internal history.
-* **Not tested**: delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
+* Board (`tests/live/board.js`, after upgrading 1.2.00 -> 1.3.00 through Manage Modules): switch; view remembered on
+  the next visit and after a new login; status columns for mixed types with nothing movable; stage columns for one
+  type; a real drag and drop to another stage; a drop on a stage with automation asks for confirmation, records the
+  attendance and the card ends in Done; a parent gets no board; type colour saved; page does not overflow.
+* **Not tested**: drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
+  and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

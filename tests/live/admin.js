@@ -15,6 +15,11 @@ const ret = page => (page.url().match(/return=(\w+)/) || [])[1];
   await admin.check('form#ticketType input[name="teams[]"][value="00000001"]');
   await submit(admin, 'form#ticketType'); console.log('type saved:', ret(admin), admin.url()); await check(admin, 'type saved');
   const typeID = admin.url().match(/gibbonServiceDeskTicketTypeID=(\d+)/)[1];
+  // Saving a type again without touching "Requested By" or "Teams" must keep them (a live bug once emptied them).
+  const ticked = () => admin.$$eval('form#ticketType input[type=checkbox]:checked', c => c.map(e => e.value.replace(/^0+/, '')).join(','));
+  const before = await ticked();
+  await submit(admin, 'form#ticketType');
+  console.log('requested-by and teams kept after saving again (expect true):', before === await ticked() && before.includes('Parent'), '|', before);
 
   // Add a field (name derived from label) and a Select field
   await admin.goto(M + 'types_field_edit.php&gibbonServiceDeskTicketTypeID=' + typeID);

@@ -90,8 +90,20 @@ msgstr ""
 msgid "Available To"
 msgstr ""
 
+#: templates/filters.twig.html
+msgid "Board"
+msgstr ""
+
 #: types_field_edit.php
 msgid "Classes (the classes of those students)"
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Closed tickets are shown for {days} days."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Colour"
 msgstr ""
 
 #: types_field_edit.php
@@ -144,6 +156,10 @@ msgstr ""
 
 #: src/Service/TicketService.php
 msgid "Deleted a comment of {date}."
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Drag a ticket to another column to move it to that stage."
 msgstr ""
 
 #: tickets_comment_edit.php
@@ -222,6 +238,10 @@ msgstr ""
 msgid "Letters and digits, unique in this type. Automation scripts read the answer by this name (for example: students, dateStart, dateEnd, reason, classes). Leave empty to derive it from the label."
 msgstr ""
 
+#: templates/filters.twig.html
+msgid "List"
+msgstr ""
+
 #: types_field_edit.php
 msgid "Long Text"
 msgstr ""
@@ -258,6 +278,10 @@ msgstr ""
 msgid "Marks the students as left in the chosen classes. Reads the fields: classes, dateEffective (optional, default today). Finance is not changed."
 msgstr ""
 
+#: types_manage_edit.php
+msgid "Marks the tickets of this type in the list and on the board."
+msgstr ""
+
 #: tickets.php
 msgid "Me"
 msgstr ""
@@ -290,7 +314,7 @@ msgstr ""
 msgid "My filter"
 msgstr ""
 
-#: request_new.php tickets.php
+#: request_new.php tickets.php templates/board.twig.html
 msgid "New Request"
 msgstr ""
 
@@ -328,6 +352,10 @@ msgstr ""
 
 #: workflow_stage_edit.php
 msgid "None"
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Not all tickets fit on the board: narrow the filter."
 msgstr ""
 
 #: templates/ticket.twig.html
@@ -368,6 +396,10 @@ msgstr ""
 
 #: types_field_edit.php types_manage.php types_manage_edit.php workflow_manage.php workflow_stage_edit.php
 msgid "Order"
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Overview by status. Choose a filter with a single ticket type to see its workflow stages and move tickets."
 msgstr ""
 
 #: types_manage_edit.php
@@ -558,6 +590,10 @@ msgstr ""
 msgid "This only changes this ticket. Your general choice is in Notification Settings."
 msgstr ""
 
+#: tickets.php
+msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
+msgstr ""
+
 #: tickets.php templates/ticket.twig.html
 msgid "Ticket Type"
 msgstr ""
@@ -570,7 +606,7 @@ msgstr ""
 msgid "Tickets"
 msgstr ""
 
-#: tickets.php tickets_view.php templates/ticket.twig.html
+#: tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html
 msgid "Unassigned"
 msgstr ""
 

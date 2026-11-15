@@ -104,7 +104,10 @@ $page->breadcrumbs->add(__m('Parent'), 'parent.php', ['id' => $id])->add(__m('Th
   `addSelectPerson($name)->fromArray($people)->placeholder()` (searchable; **LIVE** with 1000+ people). For a custom list use
   `addSelect($name)->fromArray($people)`.
 * Show/hide rows: `$form->toggleVisibilityByClass('cls')->onSelect('field')->when('Value')` + `$row->addClass('cls')`.
-* Edit forms: `$form->loadAllValuesFrom($values)` after adding the rows.
+* Edit forms: `$form->loadAllValuesFrom($values)` after adding the rows. **LIVE bug**: it overrides `->checked()` /
+  `->selected()` for every field named in `$values`. A checkbox group or multi-select stored as comma-separated text
+  must be given as an array (`$values['x'] = explode(',', $values['x'])`), otherwise nothing is ticked and the next
+  save silently empties the column. Test every edit form by saving it twice without changes.
 * Tables: `DataTable::createPaginated($id, $criteria)` + gateway result, or `DataTable::create($id)` +
   `->render($result->toDataSet())` / an array. `addHeaderAction('add', __('Add'))->setURL()->addParam()
   ->displayLabel()`; `addActionColumn()->addParam('id')->format(fn($row, $actions) => $actions->addAction('edit',
@@ -118,6 +121,18 @@ $page->breadcrumbs->add(__m('Parent'), 'parent.php', ['id' => $id])->add(__m('Th
   the PHP page passes new data, the HTML does not change.
 * Twig views: files in `templates/` are found by name: `echo $page->fetchFromTemplate('x.twig.html', $data)`.
   Twig autoescapes; available functions: `__`, `__m`, `__n`, `formatUsing('dateTimeReadable', value)`, `icon`.
+* JavaScript: `$page->scripts->add('serviceDeskBoard', 'modules/ServiceDesk/js/board.js')` (**LIVE**). Gibbon swaps
+  page content with htmx: attach listeners to `document` (event delegation) and guard against loading twice.
+* **LIVE - changes from JavaScript without AJAX**: put a hidden `Form::createBlank('id', $processURL)` with
+  `addHiddenValue()` fields on the page; the script fills the fields and calls `form.submit()`. The request carries
+  Gibbon's CSRF token and nonce and the process script redirects back as usual (used by the board's drag and drop).
+* **LIVE - wide content**: a flex row with min-width columns widens the whole Gibbon page. Wrap it in
+  `display:grid; grid-template-columns:minmax(0,1fr)` and give the row `overflow-x:auto`.
+* `addColor($name)` renders a colour input posting `#rrggbb` (**LIVE**); validate with a regex before storing and
+  before printing it into a `style` attribute.
+* Lists without paging: `newQueryCriteria(false)->pageSize(300)`; result `->toArray()`.
+* A page fragment must not be a second file in the module root (every root `.php` is an entry point and must be in
+  an action): keep it inside its page or in `src/`.
 * CSS: `$page->stylesheets->add('serviceDesk', 'modules/ServiceDesk/css/module.css')`. Use own class names
   (`serviceDesk-*`) rather than relying on theme utility classes.
 * Role category of the current role: `$session->get('gibbonRoleIDCurrentCategory')` (Staff / Student / Parent /

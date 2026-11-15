@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.2.00';
+$version     = '1.3.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -56,6 +56,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketType` (
     `name` varchar(60) NOT NULL,
     `description` varchar(255) NOT NULL DEFAULT '',
     `roleCategories` varchar(60) NOT NULL DEFAULT 'Staff,Student,Parent,Other',
+    `color` varchar(7) NOT NULL DEFAULT '',
     `active` enum('Y','N') NOT NULL DEFAULT 'Y',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
     PRIMARY KEY (`gibbonServiceDeskTicketTypeID`),
@@ -158,6 +159,13 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskFilter` (
     KEY `gibbonPersonID` (`gibbonPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
+// How a person last looked at the ticket list (list or board); the page opens the same way next time.
+$moduleTables[] = "CREATE TABLE `gibbonServiceDeskViewPreference` (
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `ticketView` enum('List','Board') NOT NULL DEFAULT 'List',
+    PRIMARY KEY (`gibbonPersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Default data (explicit ids so rows can reference each other; no 4-byte characters)
 // ---------------------------------------------------------------------------------------------------------------------
@@ -165,12 +173,12 @@ $moduleTables[] = "INSERT INTO `gibbonServiceDeskTeam` (`gibbonServiceDeskTeamID
     (1, 'Administration', 'School office: attendance, enrolment, registration and general requests.'),
     (2, 'Management', 'School management: complaints.')";
 
-$moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketType` (`gibbonServiceDeskTicketTypeID`, `name`, `description`, `roleCategories`, `sequenceNumber`) VALUES
-    (1, 'Absence Report', 'Tell the school that your child will be (or was) absent.', 'Parent', 1),
-    (2, 'Course Unenrolment', 'Ask to take your child out of one or more classes.', 'Parent', 2),
-    (3, 'School De-registration', 'Ask to withdraw your child from the school.', 'Parent', 3),
-    (4, 'Complaint', 'Raise a complaint. The school will reply on the ticket.', 'Staff,Student,Parent,Other', 4),
-    (5, 'General Request', 'Anything else you need from the school office.', 'Staff,Student,Parent,Other', 5)";
+$moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketType` (`gibbonServiceDeskTicketTypeID`, `name`, `description`, `roleCategories`, `sequenceNumber`, `color`) VALUES
+    (1, 'Absence Report', 'Tell the school that your child will be (or was) absent.', 'Parent', 1, '#f59e0b'),
+    (2, 'Course Unenrolment', 'Ask to take your child out of one or more classes.', 'Parent', 2, '#3b82f6'),
+    (3, 'School De-registration', 'Ask to withdraw your child from the school.', 'Parent', 3, '#8b5cf6'),
+    (4, 'Complaint', 'Raise a complaint. The school will reply on the ticket.', 'Staff,Student,Parent,Other', 4, '#ef4444'),
+    (5, 'General Request', 'Anything else you need from the school office.', 'Staff,Student,Parent,Other', 5, '#10b981')";
 
 $moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketTypeTeam` (`gibbonServiceDeskTicketTypeID`, `gibbonServiceDeskTeamID`) VALUES
     (1, 1), (2, 1), (3, 1), (4, 2), (5, 1)";
@@ -255,7 +263,7 @@ $actionRows[] = [
     'precedence'  => '0',
     'category'    => 'Requests',
     'description' => 'See your own requests and, for team members, the tickets of your teams.',
-    'URLList'     => 'tickets.php,tickets_filterProcess.php,tickets_view.php,tickets_viewProcess.php',
+    'URLList'     => 'tickets.php,tickets_filterProcess.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php',
     'entryURL'    => 'tickets.php',
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',

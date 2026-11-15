@@ -39,6 +39,7 @@ class TicketGateway extends QueryableGateway
             ->cols([
                 'gibbonServiceDeskTicket.*',
                 'gibbonServiceDeskTicketType.name AS typeName',
+                'gibbonServiceDeskTicketType.color AS typeColor',
                 'gibbonServiceDeskStage.name AS stageName',
                 'gibbonServiceDeskStage.category AS stageCategory',
                 'requester.title AS requesterTitle', 'requester.surname AS requesterSurname', 'requester.preferredName AS requesterPreferredName',
@@ -95,6 +96,12 @@ class TicketGateway extends QueryableGateway
                 return $query
                     ->where('gibbonServiceDeskTicket.priority=:filterPriority')
                     ->bindValue('filterPriority', $priority);
+            },
+            // Board view: closed tickets only while they are recent (date = oldest closing day still shown).
+            'closedSince' => function ($query, $date) {
+                return $query
+                    ->where("(gibbonServiceDeskStage.category<>'Closed' OR gibbonServiceDeskTicket.timestampClosed>=:filterClosedSince)")
+                    ->bindValue('filterClosedSince', $date);
             },
             'team' => function ($query, $gibbonServiceDeskTeamID) {
                 return $query
