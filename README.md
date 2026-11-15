@@ -26,6 +26,10 @@ Inspired by the functions of [GibbonEdu/module-helpdesk](https://github.com/Gibb
 Notifications: nobody is told about their own action, so try it with two users (e.g. a parent and a team member).
 Email needs Gibbon's email settings and the organisation email (System Settings) to be filled in.
 
+**Updating**: copy the new code over the folder, then System Admin > Manage Modules > *Update* on ServiceDesk, then
+**System Admin > Cache Manager > clear the template cache** (Gibbon keeps compiled page templates; without this an
+updated page can keep showing its old layout), then log in again (permissions and menu are read at login).
+
 Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 
 ## What people can do
@@ -41,6 +45,12 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 **Staff with *New Request_onBehalf*** (default: Administrator, Support Staff)
 * On *New Request* they see every active service and an *On Behalf Of* picker. The person chosen becomes the
   requester (the form shows that person's children and classes); the ticket history records who created it.
+
+**Comment permissions** (User Admin > Manage Permissions)
+* *Edit Comments_my* / *_all*: change the text of, or delete, own / any comment.
+* *Change Comment Visibility_my* / *_all*: switch own / any comment between visible to the requester and internal
+  (only for people who work on the ticket).
+* Default: Administrator "_all"; Teacher and Support Staff "_my". Changes by others are noted in the team's history.
 
 **Team members** (staff added to a team)
 * See the tickets of the ticket types given to their teams; comment, write internal notes (never shown to the

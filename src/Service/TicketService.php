@@ -250,4 +250,50 @@ class TicketService
         ]);
         $this->ticketGateway->update($ticket['gibbonServiceDeskTicketID'], ['timestampModified' => $now]);
     }
+
+    /**
+     * Changes the text of a comment and marks it as edited. Nobody is notified.
+     */
+    public function updateComment(array $ticket, array $comment, string $text, $actorID)
+    {
+        if ($text === $comment['comment']) return;
+
+        $this->commentGateway->update($comment['gibbonServiceDeskTicketCommentID'], ['comment' => $text, 'timestampEdited' => date('Y-m-d H:i:s')]);
+
+        // Editing someone else's comment leaves a trace for the team.
+        if (intval($comment['gibbonPersonID']) !== intval($actorID)) {
+            $this->writeHistory($ticket, $actorID, __m('Edited a comment of {date}.', ['date' => Format::dateTimeReadable($comment['timestamp'])]), 'Internal Log');
+        }
+    }
+
+    /**
+     * Switches a comment between "Comment" (the requester sees it) and "Internal Note" (team only). When a note
+     * becomes visible, the followers are told as for a new comment.
+     */
+    public function setCommentVisibility(array $ticket, array $comment, string $type, $actorID)
+    {
+        if (!in_array($type, ['Comment', 'Internal Note'], true) || $type == $comment['type']) return;
+
+        $this->commentGateway->update($comment['gibbonServiceDeskTicketCommentID'], ['type' => $type]);
+
+        $this->writeHistory($ticket, $actorID, $type == 'Comment'
+            ? __m('Made a comment of {date} visible to the requester.', ['date' => Format::dateTimeReadable($comment['timestamp'])])
+            : __m('Made a comment of {date} internal.', ['date' => Format::dateTimeReadable($comment['timestamp'])]), 'Internal Log');
+
+        if ($type == 'Comment') {
+            $this->notifier->notify($ticket, __m('New comment').': '.mb_substr($comment['comment'], 0, 200), $actorID, false, empty($ticket['gibbonPersonIDAssignee']));
+        }
+    }
+
+    /**
+     * Deletes a comment. The team's history keeps a line saying that a comment was deleted, not what it said.
+     */
+    public function deleteComment(array $ticket, array $comment, $actorID): bool
+    {
+        if (!$this->commentGateway->delete($comment['gibbonServiceDeskTicketCommentID'])) return false;
+
+        $this->writeHistory($ticket, $actorID, __m('Deleted a comment of {date}.', ['date' => Format::dateTimeReadable($comment['timestamp'])]), 'Internal Log');
+
+        return true;
+    }
 }

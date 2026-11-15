@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v1.2.00
+-------
+Comment permissions: "Edit Comments" (change the text, delete) and "Change Comment Visibility" (visible to the
+requester <-> internal), each for own comments (_my) or any comment (_all). Edited comments are marked; deletions and
+visibility changes are recorded in the ticket's internal history.
+
 v1.1.00
 -------
 New permission "New Request_onBehalf" (create tickets on behalf of others): its holders see every active service and

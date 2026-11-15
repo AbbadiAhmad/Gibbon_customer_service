@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.1.00';
+$version     = '1.2.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -124,6 +124,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketComment` (
     `type` enum('Comment','Internal Note','Log','Internal Log') NOT NULL DEFAULT 'Comment',
     `comment` text NOT NULL,
     `timestamp` datetime NOT NULL,
+    `timestampEdited` datetime NULL,
     PRIMARY KEY (`gibbonServiceDeskTicketCommentID`),
     KEY `ticket` (`gibbonServiceDeskTicketID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -259,6 +260,40 @@ $actionRows[] = [
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',
 ] + $serviceDeskEveryone;
+
+// Comment permissions: two families, each with the levels "_my" (own comments) and "_all" (any comment). They have
+// no menu entry. They add to the ticket rules, never replace them: the ticket must still be visible to the person.
+$serviceDeskCommentActions = [
+    'Edit Comments' => [
+        'description' => 'Change the text of {scope} on tickets, and delete {scope}.',
+        'URLList'     => 'tickets_comment_edit.php,tickets_comment_editProcess.php,tickets_comment_delete.php,tickets_comment_deleteProcess.php',
+    ],
+    'Change Comment Visibility' => [
+        'description' => 'Switch {scope} between visible to the requester and internal. Only on tickets the person works on.',
+        'URLList'     => 'tickets_comment_edit.php,tickets_comment_editProcess.php',
+    ],
+];
+foreach ($serviceDeskCommentActions as $serviceDeskActionName => $serviceDeskAction) {
+    foreach (['my' => 'own comments', 'all' => 'any comment'] as $serviceDeskLevel => $serviceDeskScope) {
+        $actionRows[] = [
+            'name'        => $serviceDeskActionName.'_'.$serviceDeskLevel,
+            'precedence'  => $serviceDeskLevel == 'all' ? '1' : '0',
+            'category'    => 'Requests',
+            'description' => str_replace('{scope}', $serviceDeskScope, $serviceDeskAction['description']),
+            'URLList'     => $serviceDeskAction['URLList'],
+            'entryURL'    => 'tickets_comment_edit.php',
+            'entrySidebar' => 'Y',
+            'menuShow'    => 'N',
+            // Default: administrators any comment; teachers and support staff their own.
+            'defaultPermissionAdmin'   => $serviceDeskLevel == 'all' ? 'Y' : 'N',
+            'defaultPermissionTeacher' => $serviceDeskLevel == 'my' ? 'Y' : 'N',
+            'defaultPermissionStudent' => 'N',
+            'defaultPermissionParent'  => 'N',
+            'defaultPermissionSupport' => $serviceDeskLevel == 'my' ? 'Y' : 'N',
+            'categoryPermissionStaff' => 'Y', 'categoryPermissionStudent' => 'Y', 'categoryPermissionParent' => 'Y', 'categoryPermissionOther' => 'Y',
+        ];
+    }
+}
 
 $actionRows[] = [
     'name'        => 'Notification Settings',

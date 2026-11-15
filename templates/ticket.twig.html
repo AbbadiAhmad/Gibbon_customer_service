@@ -47,7 +47,14 @@ One ticket: summary, the answers of the request form, and the history.
                     {%- endif -%}
                 </strong>
                 &middot; {{ formatUsing('dateTimeReadable', comment.timestamp) }}
+                {% if comment.timestampEdited %}&middot; <em title="{{ formatUsing('dateTimeReadable', comment.timestampEdited) }}">{{ __m('edited') }}</em>{% endif %}
                 {% if isInternal %}<span class="serviceDesk-badge">{{ __m('Internal') }}</span>{% endif %}
+                {% if comment.editURL or comment.deleteURL %}
+                    <span class="serviceDesk-entryTools">
+                        {% if comment.editURL %}<a href="{{ comment.editURL }}">{{ __('Edit') }}</a>{% endif %}
+                        {% if comment.deleteURL %}<a href="{{ comment.deleteURL }}">{{ __('Delete') }}</a>{% endif %}
+                    </span>
+                {% endif %}
             </div>
             <div class="serviceDesk-entryText">{{ comment.comment|nl2br }}</div>
         </div>

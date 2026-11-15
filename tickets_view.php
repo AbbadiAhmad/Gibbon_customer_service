@@ -46,6 +46,18 @@ $page->breadcrumbs->add('#'.intval($gibbonServiceDeskTicketID));
 // TICKET: details, answers of the request form, history (internal entries only for the team)
 $comments = $container->get(CommentGateway::class)->selectCommentsByTicket($gibbonServiceDeskTicketID, $canManage)->fetchAll();
 
+// Comment tools, for people with the comment permissions: edit page (text and/or visibility) and delete.
+$commentURL = $session->get('absoluteURL').'/index.php?q=/modules/ServiceDesk/tickets_comment_%s.php&gibbonServiceDeskTicketID='.$gibbonServiceDeskTicketID.'&gibbonServiceDeskTicketCommentID=';
+foreach ($comments as $index => $comment) {
+    $canEdit = $access->canEditComment($ticket, $comment);
+    if ($canEdit || $access->canChangeCommentVisibility($ticket, $comment)) {
+        $comments[$index]['editURL'] = sprintf($commentURL, 'edit').$comment['gibbonServiceDeskTicketCommentID'];
+    }
+    if ($canEdit) {
+        $comments[$index]['deleteURL'] = sprintf($commentURL, 'delete').$comment['gibbonServiceDeskTicketCommentID'];
+    }
+}
+
 echo $page->fetchFromTemplate('ticket.twig.html', [
     'ticket'    => $ticket,
     'number'    => intval($gibbonServiceDeskTicketID),

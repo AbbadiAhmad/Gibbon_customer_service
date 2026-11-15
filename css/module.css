@@ -34,3 +34,5 @@
 .serviceDesk-log { border-left-color: #d1d5db; background: #f9fafb; color: #4b5563; padding: .45rem 1rem; }
 .serviceDesk-internal { border-left-color: #f59e0b; background: #fffbeb; }
 .serviceDesk-badge { display: inline-block; margin-left: .4rem; padding: 0 .45rem; border-radius: 999px; background: #f59e0b; color: #fff; font-size: .7rem; font-weight: 600; }
+.serviceDesk-entryTools { float: right; }
+.serviceDesk-entryTools a { margin-left: .7rem; }

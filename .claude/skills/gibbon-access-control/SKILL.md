@@ -29,6 +29,12 @@ Every file a browser can request authorises itself. In order:
      all active types and any active user as requester. The process script ignores a posted
      `gibbonPersonIDOnBehalf` unless the permission is held (answers `error0`), and validates the answers against what
      the *requester* may choose (their children), not the creator. The permission gives no access to tickets.
+   * Comments (`canEditComment`, `canChangeCommentVisibility`): level from the action family (`_my` = the comment's
+     author is the user, `_all` = any) **and** the ticket rules: ticket visible; internal notes only for `canManage`;
+     visibility changes only for `canManage`; only types `Comment` / `Internal Note` (never log lines). The comment is
+     always read together with its ticket (`CommentGateway::getCommentByTicket`). The edit process applies text and
+     visibility separately, each only if its own permission covers the comment; changes by others, visibility changes
+     and deletions write an `Internal Log` line.
    * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
      give the same answer.
    * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query

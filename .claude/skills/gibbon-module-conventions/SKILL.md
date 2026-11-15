@@ -67,6 +67,10 @@ errors or facts observed in the running site, not read from source.
   `<Base name>_<suffix>` and a higher `precedence` (here `New Request_onBehalf`). `isActionAccessible()` passes for
   either; `getHighestGroupedAction($guid, '/modules/ServiceDesk/page.php', $connection2)` returns the name of the
   strongest one the current role holds - compare it to decide what to offer. The menu shows one entry.
+  **It only works for one family per page**: when two families list the same page (here `Edit Comments_*` and
+  `Change Comment Visibility_*` on `tickets_comment_edit.php`) it returns the strongest of both together. Query the
+  family yourself: `TicketAccess::getActionLevel('Edit Comments')` -> `all` / `my` / ``. Actions without a menu
+  entry: `menuShow` `N`.
 * **LIVE** upgrade recipe for a new action (CHANGEDB): `INSERT INTO gibbonAction (gibbonModuleID, name, precedence,
   category, description, URLList, entryURL, entrySidebar, menuShow, defaultPermission*, categoryPermission*) VALUES
   ((SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'), ...);end` then `INSERT INTO gibbonPermission
@@ -108,6 +112,10 @@ $page->breadcrumbs->add(__m('Parent'), 'parent.php', ['id' => $id])->add(__m('Th
   `DeleteForm::createForm($processURL)` + hidden id. Row styling: `$table->modifyRows(fn($row, $tr) =>
   $tr->addClass('error'))`. `Format::using('yesNo', 'column')` exists (**LIVE**).
 * Custom return messages: `$page->return->addReturns(['error4' => __m('...')])` on the page the process redirects to.
+* **LIVE - template cache**: Gibbon compiles Twig templates into `uploads/cache/templates` and does not notice a
+  changed file (unless System setting `installType` is Development). After editing a `.twig.html` the page keeps its
+  old output: empty that folder (`tests/live/sync.sh` does) / System Admin > Cache Manager on a real site. Symptom:
+  the PHP page passes new data, the HTML does not change.
 * Twig views: files in `templates/` are found by name: `echo $page->fetchFromTemplate('x.twig.html', $data)`.
   Twig autoescapes; available functions: `__`, `__m`, `__n`, `formatUsing('dateTimeReadable', value)`, `icon`.
 * CSS: `$page->stylesheets->add('serviceDesk', 'modules/ServiceDesk/css/module.css')`. Use own class names

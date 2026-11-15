@@ -29,6 +29,7 @@ class TicketAccess
     protected $teamGateway;
     protected $isAdmin;
     protected $typeIDs;
+    protected $levels = [];
 
     public function __construct(Session $session, Connection $db, TeamGateway $teamGateway)
     {
@@ -93,5 +94,64 @@ class TicketAccess
     public function canCreateOnBehalf(): bool
     {
         return getHighestGroupedAction($this->session->get('guid'), '/modules/ServiceDesk/request_new.php', $this->db->getConnection()) == 'New Request_onBehalf';
+    }
+
+    /**
+     * The level the current role holds in a "_my" / "_all" action family of this module:
+     * "all", "my" or "" (none). Used for "Edit Comments" and "Change Comment Visibility".
+     *
+     * Gibbon's getHighestGroupedAction() cannot be used here: both families list the same page, and it would return
+     * only the strongest action of the two together.
+     */
+    public function getActionLevel(string $family): string
+    {
+        if (!isset($this->levels[$family])) {
+            $data = ['gibbonRoleID' => $this->session->get('gibbonRoleIDCurrent'), 'my' => $family.'_my', 'all' => $family.'_all'];
+            $sql = "SELECT gibbonAction.name
+                    FROM gibbonAction
+                    JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID)
+                    JOIN gibbonPermission ON (gibbonPermission.gibbonActionID=gibbonAction.gibbonActionID)
+                    WHERE gibbonModule.name='ServiceDesk' AND gibbonModule.active='Y'
+                    AND gibbonPermission.gibbonRoleID=:gibbonRoleID
+                    AND gibbonAction.name IN (:my, :all)";
+
+            $names = $this->db->select($sql, $data)->fetchAll(\PDO::FETCH_COLUMN);
+            $this->levels[$family] = in_array($family.'_all', $names) ? 'all' : (in_array($family.'_my', $names) ? 'my' : '');
+        }
+
+        return $this->levels[$family];
+    }
+
+    /**
+     * Is this a comment written by a person (not a log line), that the user may see on a ticket they may see,
+     * and does their level in the action family cover it (own comment, or any)?
+     */
+    protected function coversComment(string $family, array $ticket, array $comment): bool
+    {
+        if (empty($comment) || !in_array($comment['type'], ['Comment', 'Internal Note'], true)) return false;
+        if (!$this->canView($ticket)) return false;
+        if ($comment['type'] == 'Internal Note' && !$this->canManage($ticket)) return false;
+
+        $level = $this->getActionLevel($family);
+        $own = intval($comment['gibbonPersonID']) === intval($this->session->get('gibbonPersonID'));
+
+        return $level == 'all' || ($level == 'my' && $own);
+    }
+
+    /**
+     * May the user change the text of the comment, or delete it? (Action "Edit Comments".)
+     */
+    public function canEditComment(array $ticket, array $comment): bool
+    {
+        return $this->coversComment('Edit Comments', $ticket, $comment);
+    }
+
+    /**
+     * May the user switch the comment between public and internal? (Action "Change Comment Visibility".)
+     * Only people who work on the ticket: nobody else can see internal notes.
+     */
+    public function canChangeCommentVisibility(array $ticket, array $comment): bool
+    {
+        return $this->canManage($ticket) && $this->coversComment('Change Comment Visibility', $ticket, $comment);
     }
 }

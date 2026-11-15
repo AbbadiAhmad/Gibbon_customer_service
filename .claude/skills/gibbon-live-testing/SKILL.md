@@ -26,7 +26,7 @@ node tests/live/install.js                       # installs the module through S
 
 ## After changing code
 ```sh
-tests/live/sync.sh /tmp/servicedesk-live         # copy the module again (a symlink does not work)
+tests/live/sync.sh /tmp/servicedesk-live         # copy the module again (a symlink does not work) + empty the Twig cache
 ```
 Re-run `setup.sh` + `install.js` only when `manifest.php` changed (tables, default data, actions): it rebuilds the
 database. A CHANGEDB upgrade is tested by `onbehalf.js` step 0 when the site holds an older version. To re-run an upgrade on an
@@ -42,6 +42,8 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `notifications.js` | (after `flow.js`) entries on Gibbon's notification page, bell count, the link opens the ticket, a ticket for a team without members reaches the administrators |
 | `onbehalf.js` | (after `flow.js`) updates the module through Manage Modules if the code is newer (CHANGEDB test), then: administrator creates a request on behalf of a parent; teacher without the permission is refused |
 | `assignee.js` | (after `flow.js`) team default assignee: set, cleared, cleared by removing the member |
+| `update.js` | updates the module through Manage Modules when the code is newer (runs CHANGEDB) |
+| `comments.js` | (after `flow.js`) comment permissions: teacher "_my", administrator "_all", parent none; edit, visibility, delete, refusals, traces |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |

@@ -98,7 +98,11 @@ msgstr ""
 msgid "Comma separated."
 msgstr ""
 
-#: tickets_view.php
+#: tickets_comment_edit.php
+msgid "Comment"
+msgstr ""
+
+#: tickets_comment_edit.php tickets_view.php
 msgid "Comment (visible to the requester)"
 msgstr ""
 
@@ -130,8 +134,20 @@ msgstr ""
 msgid "Default workflow (copied to new ticket types)"
 msgstr ""
 
+#: tickets_comment_delete.php
+msgid "Delete Comment"
+msgstr ""
+
 #: tickets.php
 msgid "Delete filter \"{name}\""
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Deleted a comment of {date}."
+msgstr ""
+
+#: tickets_comment_edit.php
+msgid "Edit Comment"
 msgstr ""
 
 #: types_field_edit.php
@@ -148,6 +164,10 @@ msgstr ""
 
 #: types_manage_edit.php
 msgid "Edit Ticket Type"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Edited a comment of {date}."
 msgstr ""
 
 #: workflow_manage.php
@@ -178,11 +198,11 @@ msgstr ""
 msgid "Internal"
 msgstr ""
 
-#: tickets_view.php
+#: tickets_comment_edit.php tickets_view.php
 msgid "Internal note"
 msgstr ""
 
-#: tickets_view.php
+#: tickets_comment_edit.php tickets_view.php
 msgid "Internal notes are only seen by the team."
 msgstr ""
 
@@ -204,6 +224,14 @@ msgstr ""
 
 #: types_field_edit.php
 msgid "Long Text"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Made a comment of {date} internal."
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Made a comment of {date} visible to the requester."
 msgstr ""
 
 #: teams_manage.php teams_manage_edit.php
@@ -538,7 +566,7 @@ msgstr ""
 msgid "Ticket Types"
 msgstr ""
 
-#: tickets.php tickets_view.php
+#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_view.php
 msgid "Tickets"
 msgstr ""
 
@@ -562,7 +590,7 @@ msgstr ""
 msgid "Updated"
 msgstr ""
 
-#: tickets_view.php
+#: tickets_comment_edit.php tickets_view.php
 msgid "Visibility"
 msgstr ""
 
@@ -612,6 +640,10 @@ msgstr ""
 
 #: workflow_manage.php
 msgid "Your request failed because tickets are in this stage. Move them to another stage first."
+msgstr ""
+
+#: templates/ticket.twig.html
+msgid "edited"
 msgstr ""
 
 #: workflow_manage.php

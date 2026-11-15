@@ -40,4 +40,15 @@ class CommentGateway extends QueryableGateway
 
         return $this->db()->select($sql, $data);
     }
+
+    /**
+     * One comment, only if it belongs to the given ticket (ids from a request are never trusted on their own).
+     */
+    public function getCommentByTicket($gibbonServiceDeskTicketCommentID, $gibbonServiceDeskTicketID): array
+    {
+        $data = ['gibbonServiceDeskTicketCommentID' => $gibbonServiceDeskTicketCommentID, 'gibbonServiceDeskTicketID' => $gibbonServiceDeskTicketID];
+        $sql = "SELECT * FROM gibbonServiceDeskTicketComment WHERE gibbonServiceDeskTicketCommentID=:gibbonServiceDeskTicketCommentID AND gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID";
+
+        return $this->db()->select($sql, $data)->fetch() ?: [];
+    }
 }

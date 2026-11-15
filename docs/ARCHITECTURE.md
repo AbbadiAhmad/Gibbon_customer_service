@@ -17,6 +17,7 @@
 | Automation on the workflow: script with a clear interface, transactional, verifies, comments, moves to done | Stage has *automation on entry* + *then move to* | `src/Automation/*`, `TicketService::changeStage` |
 | Staff with the permission create a ticket on behalf of someone (added in 1.1.00) | Action *New Request_onBehalf*: person picker on the service list, all active services, form built for that person, history line "Created by X on behalf of Y" | `request_new.php` (+Process), `TicketAccess::canCreateOnBehalf`, `TicketService::create` |
 | Tickets are assigned directly on creation (added in 1.1.00) | Optional *Default Assignee* on the team (one of its members) | `teams_manage_edit.php`, `TeamGateway::getDefaultAssigneeByTicketType`, `TicketService::create` |
+| Permission holders edit / delete comments and change their visibility, for own or any comment (added in 1.2.00) | Actions *Edit Comments_my/_all*, *Change Comment Visibility_my/_all*; Edit / Delete links on each comment | `tickets_comment_*.php`, `TicketAccess::canEditComment / canChangeCommentVisibility`, `TicketService::updateComment / setCommentVisibility / deleteComment` |
 | User saves filters (type, status, assignee) | Filter form on the ticket list + *Save as Filter* | `tickets.php`, `tickets_filterProcess.php`, `TicketFilters` |
 | Admin creates default filters, e.g. absence tickets for a team | Administrators save a filter for *Everyone* or for one team | same |
 
@@ -51,6 +52,8 @@ Gibbon actions decide which pages a role may open (`manifest.php`). On top of th
 | Administrator | role holds action *Manage Ticket Types* | configure; see and manage all tickets; shared filters |
 | Team member | in an active team linked to the ticket's type | see and manage those tickets; internal notes |
 | Requester | raised the ticket (or it was raised on their behalf) | see it, comment, set own notifications |
+| Holder of *Edit Comments_my / _all* | role holds that action | change the text of, or delete, own / any comment on tickets they can see (internal notes only when they work on the ticket; never log lines) |
+| Holder of *Change Comment Visibility_my / _all* | role holds that action **and** works on the ticket | switch own / any comment between public and internal |
 | Holder of *New Request_onBehalf* | role holds that action | see every active service; send a request for any active user. Gives no access to tickets by itself |
 
 Enforced in three places: the list query (`TicketGateway::queryTickets` adds the scope to the SQL), the ticket page
@@ -89,6 +92,8 @@ manifest.php, CHANGEDB.php, version.php     install, upgrade, version (keep the 
 request_new.php (+Process)                  catalog and request form
 tickets.php, tickets_filterProcess.php      list, filters
 tickets_view.php (+Process)                 ticket: comment | manage | notify
+tickets_comment_edit.php (+Process)         comment text and/or visibility (comment permissions)
+tickets_comment_delete.php (+Process)       delete a comment
 notifications.php (+Process)                personal notification policy
 types_manage*.php, types_field_*.php        ticket types and their form fields      (admin)
 workflow_manage.php, workflow_stage_*.php   default and per-type workflows          (admin)
@@ -146,5 +151,9 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   permission sees only their services and is refused the on-behalf address.
 * Default assignee (`tests/live/assignee.js`): set on the team -> new ticket starts assigned and appears in the
   assignee's "Assigned to Me"; cleared -> unassigned; member removed from the team -> default cleared.
+* Comment permissions (`tests/live/comments.js`, after upgrading 1.1.00 -> 1.2.00 through Manage Modules): teacher
+  ("_my") gets tools on own comments only, edits own text (marked edited), makes own internal note visible (parent
+  then sees it and is notified), is refused on the parent's comment; parent has no tools and no access; administrator
+  ("_all") edits and deletes other people's comments, with traces in the internal history.
 * **Not tested**: delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.
