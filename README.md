@@ -46,6 +46,7 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 
 **Requesters** (and, for shared services, the other adult of the family)
 * *Withdraw this request* while it is open, *Reopen this request* for 30 days after it was closed - on the ticket page.
+  Each ticket type has a switch for both (*Requesters Can Withdraw*, *Requesters Can Reopen*).
 * For absences, unenrolments and de-registrations the other parent of the family sees the ticket too, comments on it and
   is told about updates (setting *Share With Family* per ticket type; with data access only).
 * A tab *Service Desk* on the parents' dashboard lists the open requests.
@@ -79,7 +80,8 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
   **retention** in days on a ticket type and schedule the script that deletes expired closed tickets, e.g. every night:
   `php <gibbon>/modules/ServiceDesk/cli_deleteExpiredTickets.php` (`--dry-run` shows what it would delete).
 * *Manage Workflows*: the default workflow (copied to every new ticket type) and the workflow of each type: stages
-  (flags: *Tell the Teachers* = form tutors and class teachers are notified, notification centre only; *Withdrawn Stage*),
+  (flag *Withdrawn Stage*; automations are a tick list - e.g. *Record absence in Attendance* and *Tell the teachers* on
+  the same stage - and run together: if one fails, none takes effect),
   their status (Open / In Progress / Closed), an automation on entry and the stage to move to afterwards.
 * *Manage Teams*: teams, members, and an optional *Default Assignee* per team: new tickets of the team's ticket
   types are then assigned to that member straight away (empty = tickets start unassigned).
@@ -90,8 +92,8 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 
 | Service | Requested by | Team | Workflow |
 |---|---|---|---|
-| Absence Report | Parents | Administration | New -> **Approved** (automation: record absence, then Done) / In Progress / Done / Rejected |
-| Course Unenrolment | Parents | Administration | New, In Progress, Done, Rejected |
+| Absence Report | Parents | Administration | New -> **Approved** (automations: record absence + tell the teachers, then Done) / In Progress / Done / Rejected / Withdrawn |
+| Course Unenrolment | Parents | Administration | New, In Progress, **Approved** (automation: tell the teachers), Done, Rejected, Withdrawn |
 | School De-registration | Parents | Administration | New, In Progress, Done, Rejected |
 | Complaint | Everyone | Management | New, In Progress, Done, Rejected |
 | General Request | Everyone | Administration | New, In Progress, Done, Rejected |
@@ -126,7 +128,9 @@ class MyScript implements AutomationScript
 }
 ```
 
-The full contract is in `src/Automation/AutomationScript.php`; `RecordAbsence.php` is the worked example.
+The full contract is in `src/Automation/AutomationScript.php`; `RecordAbsence.php` is the worked example and
+`TellTeachers.php` shows a script that uses the module's services (`$context->container()->get(...)`) and returns a
+team-only result line (`AutomationResult::success($message, true)`). A stage can tick several scripts.
 
 ## Translating
 

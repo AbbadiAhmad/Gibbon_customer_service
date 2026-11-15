@@ -22,7 +22,8 @@
 | Requester withdraws or reopens a request (1.5.00) | Link on the ticket -> confirmation page with an optional note; the withdrawn stage / first stage | `tickets_requester.php` (+Process), `TicketService::withdraw / reopen`, `TicketAccess::canWithdraw / canReopen` |
 | Both parents of a family see the ticket (1.5.00) | Type setting *Share With Family*; the other adults of the family (data access) are requester side | `GuardianGateway`, `TicketAccess::isFamilyMember`, scope in `TicketGateway::queryTickets`, `Notifier` |
 | Dashboard widgets (1.5.00) | Hooks on the Parental and Staff dashboards | `hook_dashboard_requests.php`, `hook_dashboard_staff.php`, `DashboardWidget` |
-| Teachers are told when an absence / unenrolment is approved, notification centre only (1.5.00) | Stage flag *Tell the Teachers* | `TicketService::notifyTeachers`, `TeacherFinder`, `Notifier::notifyCentre` |
+| Teachers are told when an absence / unenrolment is approved, notification centre only (1.5.00; an automation script since 1.6.00) | Automation script *Tell the teachers*, ticked on a stage | `src/Automation/Scripts/TellTeachers.php`, `TeacherFinder`, `Notifier::notifyCentre` |
+| Ticket type decides whether requesters may withdraw / reopen (1.6.00) | Switches on the ticket type | `types_manage_edit.php`, `TicketAccess::canWithdraw / canReopen` |
 | Move a ticket to another type (1.5.00) | "Move to Another Ticket Type" form on the ticket | `TicketService::changeType` |
 | Delete tickets; retention per type (1.5.00) | Action *Delete Tickets* + confirmation page; *Retention (days)* on the type + cron script | `tickets_delete.php` (+Process), `cli_deleteExpiredTickets.php`, `TicketService::deleteTicket` |
 | Search in title, description, assignee, reporter, children (1.5.00) | The search field of the filter form | `TicketGateway` filter rule *search*, `Ticket.searchText`, `RequestFields::searchText` |
@@ -43,7 +44,8 @@ Team ──< TeamMember >── gibbonPerson (staff)
                                      └──< TicketSubscriber        (copy of the person's notification policy)
 
 ViewPreference (per person: List | Board)
-TicketType.shareWithFamily, TicketType.retentionDays, Stage.notifyTeachers, Stage.withdrawn, Ticket.searchText (1.5.00)
+TicketType.shareWithFamily, TicketType.retentionDays, Stage.withdrawn, Ticket.searchText (1.5.00)
+TicketType.allowWithdraw, TicketType.allowReopen; Stage.automation = comma-separated script names (1.6.00)
 NotificationPreference (per person)         Filter (person NULL = shared, with audience Agents | Requesters;
                                                     team = agents of that team only)
 ```
@@ -80,9 +82,10 @@ assignee is in a team of the type, the team/type/stage ids in admin forms match 
 `TicketService::changeStage()` is the only way a ticket changes stage:
 
 1. begin transaction; move the ticket into the stage,
-2. if the stage has a script: `run(AutomationContext)`; failure result or exception -> roll back, write an internal
-   log line, return false (ticket stays where it was),
-3. commit; write "Moved to X" (public log) and notify followers; write the script's message as a public log line,
+2. run the stage's scripts in their listed order: `run(AutomationContext)`; a failure result or exception of any of
+   them -> roll back everything, write an internal log line, return false (ticket stays where it was),
+3. commit; write "Moved to X" (public log) and notify followers; write each script's message as a log line (public,
+   or internal when the script says so),
 4. if the stage has `nextStage`: repeat for that stage (at most 5 chained stages).
 
 Scripts: `src/Automation/Scripts/*.php`, discovered by `AutomationRegistry` (no registration). Contract and rules in
@@ -196,6 +199,10 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   administrator, nothing left in four tables, log line without content; the retention script (dry run, real run,
   second run, other types untouched, refuses a web request); 19 searches incl. internal notes not found and old
   tickets found; widgets on both dashboards for five different users.
+* 1.6.00 (`options.js`; upgrade 1.5.00 -> 1.6.00 and a fresh install): the old teacher switch converted to the script;
+  stage form saved twice keeps the ticked scripts; both scripts succeed (attendance + notices); a weekend absence
+  fails and leaves **no** teacher notice, no attendance row, ticket in New; unticking the teacher script; no script
+  ticked clears "then move to"; the two ticket type switches hide the links and make the pages refuse.
 * **Not tested**: the retention script from a real cron; drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
   and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

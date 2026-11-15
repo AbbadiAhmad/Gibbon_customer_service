@@ -61,6 +61,7 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `lifecycle.js` | move to another type, delete (permissions, tables emptied, log line), retention script (dry run, real run, refuses the web) |
 | `search.js` | 19 searches incl. old tickets, internal notes not found, wildcards and quotes, saved filter, board |
 | `widgets.js` | dashboard tabs of a parent, co-parent, parent without requests, team member, teacher in no team, administrator |
+| `options.js` | several automation scripts on one stage (both succeed; one fails -> nothing happens), stage form keeps ticks, ticket type switches for withdraw / reopen |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |

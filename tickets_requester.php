@@ -41,7 +41,7 @@ $page->breadcrumbs
 $form = Form::create('requesterAction', $session->get('absoluteURL').'/modules/ServiceDesk/tickets_requesterProcess.php');
 $form->setTitle($action == 'withdraw' ? __m('Withdraw Request') : __m('Reopen Request'));
 $form->setDescription(htmlspecialchars('#'.intval($gibbonServiceDeskTicketID).' '.$ticket['subject']).'<br/>'.($action == 'withdraw'
-    ? __m('The request is closed as withdrawn and the team is told. You can reopen it for {days} days.', ['days' => TicketAccess::REOPEN_DAYS])
+    ? __m('The request is closed as withdrawn and the team is told.').(($ticket['allowReopen'] ?? 'Y') == 'Y' ? ' '.__m('You can reopen it for {days} days.', ['days' => TicketAccess::REOPEN_DAYS]) : '')
     : __m('The request goes back to the start of its workflow and the team is told.')));
 $form->addHiddenValue('address', $session->get('address'));
 $form->addHiddenValue('gibbonServiceDeskTicketID', $gibbonServiceDeskTicketID);

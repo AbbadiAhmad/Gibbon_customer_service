@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.5.00';
+$version     = '1.6.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -57,6 +57,8 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketType` (
     `description` varchar(255) NOT NULL DEFAULT '',
     `roleCategories` varchar(60) NOT NULL DEFAULT 'Staff,Student,Parent,Other',
     `shareWithFamily` enum('Y','N') NOT NULL DEFAULT 'N',
+    `allowWithdraw` enum('Y','N') NOT NULL DEFAULT 'Y',
+    `allowReopen` enum('Y','N') NOT NULL DEFAULT 'Y',
     `color` varchar(7) NOT NULL DEFAULT '',
     `retentionDays` int(5) unsigned NULL,
     `active` enum('Y','N') NOT NULL DEFAULT 'Y',
@@ -93,9 +95,8 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskStage` (
     `name` varchar(40) NOT NULL,
     `category` enum('Open','In Progress','Closed') NOT NULL DEFAULT 'Open',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
-    `automation` varchar(60) NULL,
+    `automation` varchar(255) NULL,
     `nextStage` varchar(40) NULL,
-    `notifyTeachers` enum('Y','N') NOT NULL DEFAULT 'N',
     `withdrawn` enum('Y','N') NOT NULL DEFAULT 'N',
     PRIMARY KEY (`gibbonServiceDeskStageID`),
     KEY `gibbonServiceDeskTicketTypeID` (`gibbonServiceDeskTicketTypeID`)
@@ -207,23 +208,23 @@ $moduleTables[] = "INSERT INTO `gibbonServiceDeskField` (`gibbonServiceDeskTicke
     (5, 'details', 'Details', '', 'Long Text', NULL, 'Y', 1)";
 
 // The default workflow (type NULL) and its copy for every default type. Every workflow has a "Withdrawn" stage (flag
-// withdrawn): where a requester's "Withdraw this request" sends the ticket. The Absence Report gets an "Approved" stage
-// whose automation records the absence in Attendance and then moves the ticket to "Done"; the Course Unenrolment gets
-// an "Approved" stage without automation (the team updates enrolment and finance by hand). Both tell the teachers of the
-// children (flag notifyTeachers).
+// withdrawn): where a requester's "Withdraw this request" sends the ticket. `automation` lists the scripts of a stage,
+// comma separated. The Absence Report gets an "Approved" stage that records the absence in Attendance, tells the
+// teachers and then moves the ticket to "Done"; the Course Unenrolment gets an "Approved" stage that only tells the
+// teachers (the team updates enrolment and finance by hand).
 $serviceDeskWorkflow = [['New', 'Open'], ['In Progress', 'In Progress'], ['Done', 'Closed'], ['Rejected', 'Closed'], ['Withdrawn', 'Closed']];
 foreach ([null, 1, 2, 3, 4, 5] as $serviceDeskTypeID) {
     $rows = [];
     foreach ($serviceDeskWorkflow as $index => $stage) {
-        $rows[] = "(".($serviceDeskTypeID ?? 'NULL').", '{$stage[0]}', '{$stage[1]}', ".(($index + 1) * 10).", NULL, NULL, 'N', '".($stage[0] == 'Withdrawn' ? 'Y' : 'N')."')";
+        $rows[] = "(".($serviceDeskTypeID ?? 'NULL').", '{$stage[0]}', '{$stage[1]}', ".(($index + 1) * 10).", NULL, NULL, '".($stage[0] == 'Withdrawn' ? 'Y' : 'N')."')";
     }
     if ($serviceDeskTypeID === 1) {
-        $rows[] = "(1, 'Approved', 'In Progress', 25, 'RecordAbsence', 'Done', 'Y', 'N')";
+        $rows[] = "(1, 'Approved', 'In Progress', 25, 'RecordAbsence,TellTeachers', 'Done', 'N')";
     }
     if ($serviceDeskTypeID === 2) {
-        $rows[] = "(2, 'Approved', 'In Progress', 25, NULL, NULL, 'Y', 'N')";
+        $rows[] = "(2, 'Approved', 'In Progress', 25, 'TellTeachers', NULL, 'N')";
     }
-    $moduleTables[] = "INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `automation`, `nextStage`, `notifyTeachers`, `withdrawn`) VALUES ".implode(', ', $rows);
+    $moduleTables[] = "INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `automation`, `nextStage`, `withdrawn`) VALUES ".implode(', ', $rows);
 }
 
 $moduleTables[] = "INSERT INTO `gibbonServiceDeskFilter` (`gibbonPersonID`, `gibbonServiceDeskTeamID`, `audience`, `name`, `criteria`, `sequenceNumber`) VALUES

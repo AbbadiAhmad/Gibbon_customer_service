@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+v1.6.00
+-------
+- A stage can run several automation scripts (tick list). They share one transaction: if one fails, none takes effect.
+- "Tell the teachers" is now an automation script like the others (it was a separate stage switch); the upgrade
+  converts the stages that used the switch.
+- Ticket type switches "Requesters Can Withdraw" and "Requesters Can Reopen" (both on by default).
+
 v1.5.00
 -------
 - Requesters can withdraw a request (stage flagged "Withdrawn Stage") and reopen it for 30 days after it was closed.

@@ -14,10 +14,6 @@ msgstr ""
 msgid "A notification was added to your notification centre (the bell at the top of the page)."
 msgstr ""
 
-#: workflow_stage_edit.php
-msgid "A script that runs when a ticket enters this stage. If it fails, the ticket stays in the stage it came from and the reason is written on the ticket as an internal note."
-msgstr ""
-
 #: types_manage.php
 msgid "A ticket type is a service people can request. It has its own request form, the teams that handle it, and its own workflow."
 msgstr ""
@@ -398,6 +394,10 @@ msgstr ""
 msgid "No open ticket is assigned to you."
 msgstr ""
 
+#: src/Automation/Scripts/TellTeachers.php
+msgid "No teachers were found to tell."
+msgstr ""
+
 #: types_manage.php
 msgid "No team"
 msgstr ""
@@ -408,10 +408,6 @@ msgstr ""
 
 #: tickets.php
 msgid "Nobody (unassigned)"
-msgstr ""
-
-#: workflow_stage_edit.php
-msgid "None"
 msgstr ""
 
 #: templates/board.twig.html
@@ -436,6 +432,10 @@ msgstr ""
 
 #: notifications.php
 msgid "Notification Settings"
+msgstr ""
+
+#: src/Automation/Scripts/TellTeachers.php
+msgid "Notifies the form tutors and class teachers of the children (notification centre only, never email; without the reason). Reads the fields of type Students (all class teachers) and Classes (the teachers of those classes)."
 msgstr ""
 
 #: request_new.php
@@ -522,6 +522,14 @@ msgstr ""
 msgid "Requesters (parents, students and staff who are in no team)"
 msgstr ""
 
+#: types_manage_edit.php
+msgid "Requesters Can Reopen"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Requesters Can Withdraw"
+msgstr ""
+
 #: types_field_edit.php types_manage_edit.php
 msgid "Required"
 msgstr ""
@@ -540,6 +548,10 @@ msgstr ""
 
 #: tickets.php
 msgid "Save as Filter"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Scripts that run when a ticket enters this stage. Tick as many as you need: they run together, and if one fails nothing is changed - the ticket stays in the stage it came from and the reason is written on the ticket as an internal note."
 msgstr ""
 
 #: types_field_edit.php
@@ -626,8 +638,8 @@ msgstr ""
 msgid "Teams"
 msgstr ""
 
-#: workflow_stage_edit.php
-msgid "Tell the Teachers"
+#: src/Automation/Scripts/TellTeachers.php
+msgid "Tell the teachers"
 msgstr ""
 
 #: notifications.php
@@ -695,7 +707,15 @@ msgid "The request goes back to the start of its workflow and the team is told."
 msgstr ""
 
 #: tickets_requester.php
-msgid "The request is closed as withdrawn and the team is told. You can reopen it for {days} days."
+msgid "The request is closed as withdrawn and the team is told."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "The requester can reopen the request themselves for {days} days after it was closed. Off: they send a new request."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "The requester can withdraw the request themselves while it is open or in progress (it moves to the workflow's withdrawn stage). Off: only the team can close it. What an automation already did, such as a recorded absence, is not undone by withdrawing."
 msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
@@ -811,11 +831,7 @@ msgid "What the stage means for filters and lists: waiting, being worked on, or 
 msgstr ""
 
 #: workflow_stage_edit.php
-msgid "When a ticket enters this stage, the form tutors and class teachers of the children on the ticket get a notification (notification centre only, never email). It says what was approved for whom and when, not why."
-msgstr ""
-
-#: workflow_stage_edit.php
-msgid "Where the ticket goes when the automation succeeded. Empty: it stays in this stage."
+msgid "Where the ticket goes when the automation succeeded. Empty: it stays in this stage. Only used when an automation is ticked."
 msgstr ""
 
 #: workflow_stage_edit.php
@@ -858,6 +874,10 @@ msgstr ""
 msgid "You are not following this ticket. Choose a channel to be told about its updates."
 msgstr ""
 
+#: tickets_requester.php
+msgid "You can reopen it for {days} days."
+msgstr ""
+
 #: hook_dashboard_requests.php hook_dashboard_staff.php
 msgid "You have no open requests."
 msgstr ""
@@ -891,14 +911,10 @@ msgid "requesters"
 msgstr ""
 
 #: workflow_manage.php
-msgid "tells the teachers"
-msgstr ""
-
-#: workflow_manage.php
 msgid "then move to {stage}"
 msgstr ""
 
-#: src/Service/TicketService.php
+#: src/Automation/Scripts/TellTeachers.php
 msgid "{count} teacher(s) were told (notification centre only)."
 msgstr ""
 
@@ -914,7 +930,7 @@ msgstr ""
 msgid "{name} withdrew the request."
 msgstr ""
 
-#: src/Service/TicketService.php
+#: src/Automation/Scripts/TellTeachers.php
 msgid "{type} approved: {details}."
 msgstr ""
 

@@ -163,6 +163,14 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * Domain = module name; files `i18n/<locale>/LC_MESSAGES/ServiceDesk.mo`. Template: `php tests/make-pot.php`.
 * Names stored in the database and shown to users (type names, labels, stage names) are also passed through `__m()`.
 
+## Lists stored as comma-separated text
+* `Stage.automation`, `TicketType.roleCategories`: store `implode(',', ...)` of **validated** keys in a fixed order
+  (`array_intersect($allKeysInOrder, $posted)`); read with `array_filter(explode(',', $value))`; edit with
+  `addCheckbox($name)->fromArray($options)` and give `loadAllValuesFrom()` the array, never the text (see the LIVE bug
+  above). Unknown keys read from the database are skipped, not fatal.
+* Dropping a column in CHANGEDB: migrate its meaning first (`UPDATE ... WHERE oldColumn='Y'`), then `ALTER TABLE ... DROP`,
+  as separate `;end` statements in that order (1.6.00 is the example).
+
 ## Dashboard hooks, CLI scripts, plain gateways
 * **Dashboard hook** (**LIVE**): `$hooks[]` in `manifest.php` / an INSERT in CHANGEDB:
   `INSERT INTO gibbonHook (name, type, options, gibbonModuleID) VALUES ('Service Desk', 'Parental Dashboard' | 'Staff Dashboard',

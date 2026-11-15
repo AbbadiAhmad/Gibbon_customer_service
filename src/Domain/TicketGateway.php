@@ -155,6 +155,7 @@ class TicketGateway extends QueryableGateway
         $data = ['gibbonServiceDeskTicketID' => $gibbonServiceDeskTicketID];
         $sql = "SELECT gibbonServiceDeskTicket.*,
                     gibbonServiceDeskTicketType.name AS typeName, gibbonServiceDeskTicketType.shareWithFamily,
+                    gibbonServiceDeskTicketType.allowWithdraw, gibbonServiceDeskTicketType.allowReopen,
                     gibbonServiceDeskStage.name AS stageName, gibbonServiceDeskStage.category AS stageCategory,
                     requester.title AS requesterTitle, requester.surname AS requesterSurname, requester.preferredName AS requesterPreferredName,
                     assignee.title AS assigneeTitle, assignee.surname AS assigneeSurname, assignee.preferredName AS assigneePreferredName

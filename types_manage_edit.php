@@ -30,7 +30,7 @@ $page->breadcrumbs
     ->add(__m('Manage Ticket Types'), 'types_manage.php')
     ->add(empty($gibbonServiceDeskTicketTypeID) ? __m('Add Ticket Type') : __m('Edit Ticket Type'));
 
-$values = ['roleCategories' => 'Staff,Student,Parent,Other', 'shareWithFamily' => 'N', 'retentionDays' => '', 'active' => 'Y', 'sequenceNumber' => 0];
+$values = ['roleCategories' => 'Staff,Student,Parent,Other', 'shareWithFamily' => 'N', 'allowWithdraw' => 'Y', 'allowReopen' => 'Y', 'retentionDays' => '', 'active' => 'Y', 'sequenceNumber' => 0];
 $teamIDs = [];
 if (!empty($gibbonServiceDeskTicketTypeID)) {
     $values = $ticketTypeGateway->getByID($gibbonServiceDeskTicketTypeID);
@@ -66,6 +66,14 @@ $row = $form->addRow();
 $row = $form->addRow();
     $row->addLabel('shareWithFamily', __m('Share With Family'))->description(__m('The other adults of the requester\'s family (with data access) also see these tickets, comment on them, withdraw and reopen them. Leave off for private matters such as complaints.'));
     $row->addYesNo('shareWithFamily')->required();
+
+$row = $form->addRow();
+    $row->addLabel('allowWithdraw', __m('Requesters Can Withdraw'))->description(__m('The requester can withdraw the request themselves while it is open or in progress (it moves to the workflow\'s withdrawn stage). Off: only the team can close it. What an automation already did, such as a recorded absence, is not undone by withdrawing.'));
+    $row->addYesNo('allowWithdraw')->required();
+
+$row = $form->addRow();
+    $row->addLabel('allowReopen', __m('Requesters Can Reopen'))->description(__m('The requester can reopen the request themselves for {days} days after it was closed. Off: they send a new request.', ['days' => \Gibbon\Module\ServiceDesk\Service\TicketAccess::REOPEN_DAYS]));
+    $row->addYesNo('allowReopen')->required();
 
 $row = $form->addRow();
     $row->addLabel('color', __m('Colour'))->description(__m('Marks the tickets of this type in the list and on the board.'));

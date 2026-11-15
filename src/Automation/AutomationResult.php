@@ -18,19 +18,27 @@ class AutomationResult
 {
     protected $success;
     protected $message;
+    protected $internal;
 
-    protected function __construct(bool $success, string $message)
+    protected function __construct(bool $success, string $message, bool $internal = false)
     {
         $this->success = $success;
         $this->message = $message;
+        $this->internal = $internal;
     }
 
     /**
-     * @param string $message Written on the ticket as a comment the requester can read.
+     * @param string $message  Written on the ticket's history.
+     * @param bool   $internal True: only the team reads the message. False (default): the requester reads it too.
      */
-    public static function success(string $message = ''): self
+    public static function success(string $message = '', bool $internal = false): self
     {
-        return new self(true, $message);
+        return new self(true, $message, $internal);
+    }
+
+    public function isInternal(): bool
+    {
+        return $this->internal;
     }
 
     /**

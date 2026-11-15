@@ -45,9 +45,8 @@ class TicketService
     protected $automations;
     protected $teamGateway;
     protected $ticketTypeGateway;
-    protected $teacherFinder;
 
-    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, TeamGateway $teamGateway, TicketTypeGateway $ticketTypeGateway, TeacherFinder $teacherFinder)
+    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, TeamGateway $teamGateway, TicketTypeGateway $ticketTypeGateway)
     {
         $this->db = $db;
         $this->ticketGateway = $ticketGateway;
@@ -58,7 +57,6 @@ class TicketService
         $this->automations = $automations;
         $this->teamGateway = $teamGateway;
         $this->ticketTypeGateway = $ticketTypeGateway;
-        $this->teacherFinder = $teacherFinder;
     }
 
     /**
@@ -191,8 +189,15 @@ class TicketService
         $alreadyThere = intval($ticket['gibbonServiceDeskStageID']) === intval($stage['gibbonServiceDeskStageID']);
         if ($alreadyThere && !$rerun) return true;
 
-        $script = !empty($stage['automation']) ? $this->automations->get($stage['automation']) : null;
-        $result = null;
+        // The stage's automation scripts, in the order they are listed. Scripts that no longer exist are skipped.
+        $scripts = [];
+        foreach (array_filter(array_map('trim', explode(',', (string) ($stage['automation'] ?? '')))) as $key) {
+            if ($script = $this->automations->get($key)) {
+                $scripts[] = $script;
+            }
+        }
+        $results = [];
+        $running = null;
         $now = date('Y-m-d H:i:s');
 
         $this->db->beginTransaction();
@@ -203,18 +208,20 @@ class TicketService
                 'timestampClosed'          => $stage['category'] == 'Closed' ? ($ticket['timestampClosed'] ?? null) ?: $now : null,
             ]);
 
-            if ($script !== null) {
-                $result = $script->run(new AutomationContext($ticket, $stage, $actorID, $this->db));
+            // All scripts share the transaction: if one fails, what the others did is undone as well.
+            foreach ($scripts as $running) {
+                $result = $running->run(new AutomationContext($ticket, $stage, $actorID, $this->db));
                 if (!$result->isSuccess()) {
                     throw new \RuntimeException($result->getMessage());
                 }
+                $results[] = $result;
             }
 
             $this->db->commit();
         } catch (\Throwable $e) {
             $this->db->rollBack();
             $this->writeHistory($ticket, null, __m('Automation "{automation}" failed, the ticket was not moved to {stage}: {reason}', [
-                'automation' => $script !== null ? $script->getName() : $stage['automation'],
+                'automation' => $running !== null ? $running->getName() : $stage['automation'],
                 'stage'      => __m($stage['name']),
                 'reason'     => $e->getMessage(),
             ]), 'Internal Log');
@@ -230,17 +237,14 @@ class TicketService
 
         $ticket = $this->ticketGateway->getTicketByID($gibbonServiceDeskTicketID);
 
-        // A stage can tell the teachers of the children (form tutors, class teachers) that the request is approved.
-        if (($stage['notifyTeachers'] ?? 'N') == 'Y' && (!$alreadyThere || $rerun)) {
-            $this->notifyTeachers($ticket, $actorID);
-        }
-
-        if ($result !== null && $result->getMessage() !== '') {
-            $this->writeHistory($ticket, null, $result->getMessage(), 'Log');
+        foreach ($results as $result) {
+            if ($result->getMessage() !== '') {
+                $this->writeHistory($ticket, null, $result->getMessage(), $result->isInternal() ? 'Internal Log' : 'Log');
+            }
         }
 
         // After a successful automation, move on to the configured next stage.
-        if ($script !== null && !empty($stage['nextStage']) && $depth < self::MAX_AUTOMATION_CHAIN) {
+        if (!empty($scripts) && !empty($stage['nextStage']) && $depth < self::MAX_AUTOMATION_CHAIN) {
             $next = $this->stageGateway->getStageByName($ticket['gibbonServiceDeskTicketTypeID'], $stage['nextStage']);
             if (!empty($next) && intval($next['gibbonServiceDeskStageID']) !== intval($stage['gibbonServiceDeskStageID'])) {
                 $this->changeStage($ticket, $next, null, false, $depth + 1);
@@ -307,26 +311,6 @@ class TicketService
         $this->writeHistory($ticket, $actorID, __m('Deleted a comment of {date}.', ['date' => Format::dateTimeReadable($comment['timestamp'])]), 'Internal Log');
 
         return true;
-    }
-
-    /**
-     * Tells the teachers of the children on the ticket - form tutors and class teachers - through the notification
-     * centre (never by email). The notice says what was approved for whom and when, never why: reasons such as
-     * "Medical" stay on the ticket.
-     */
-    public function notifyTeachers(array $ticket, $actorID)
-    {
-        $answers = RequestFields::decode($ticket['fields']);
-        $teachers = array_diff($this->teacherFinder->findForAnswers($answers, $ticket['gibbonSchoolYearID']), [intval($actorID)]);
-        if (empty($teachers)) return;
-
-        $details = RequestFields::summary($answers);
-        $this->notifier->notifyCentre($teachers, '#'.intval($ticket['gibbonServiceDeskTicketID']).' '.__m('{type} approved: {details}.', [
-            'type'    => __m($ticket['typeName']),
-            'details' => $details,
-        ]));
-
-        $this->writeHistory($ticket, null, __m('{count} teacher(s) were told (notification centre only).', ['count' => count($teachers)]), 'Internal Log');
     }
 
     /**

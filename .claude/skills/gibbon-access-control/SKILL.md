@@ -39,7 +39,7 @@ Every file a browser can request authorises itself. In order:
      requester **and has `childDataAccess = 'Y'`**. The same rule appears twice and must stay in step: in SQL for the
      list scope (`TicketGateway::queryTickets`) and in `GuardianGateway::isCoAdult` for single tickets and
      `selectCoAdultIDs` for notifications. `isRequesterSide` (requester or family) may comment, withdraw, reopen.
-   * Withdraw / reopen (`canWithdraw`, `canReopen`): requester side only; withdraw while Open / In Progress and only if
+   * Withdraw / reopen (`canWithdraw`, `canReopen`): requester side only; the ticket type must allow it (`allowWithdraw`, `allowReopen`, read with the ticket in `getTicketByID`); withdraw while Open / In Progress and only if
      the workflow has a `withdrawn` stage; reopen for `REOPEN_DAYS` after `timestampClosed`. The confirmation page
      and its process script check the same functions; failing says "not found".
    * Delete (`canDelete`): the action *Delete Tickets* **and** `canView`. The retention script has no user: it only
@@ -48,7 +48,7 @@ Every file a browser can request authorises itself. In order:
      must exist and be active; afterwards `canView` is re-checked for the redirect.
    * Teacher notices go to people who may not see the ticket: the text must contain no reason, no free text, no
      internal data (`RequestFields::summary` builds it from children, classes and dates only) and is sent through the
-     notification centre only (`Notifier::notifyCentre`).
+     notification centre only (`Notifier::notifyCentre`). Since 1.6.00 this is the script `TellTeachers`.
    * Search: a filter rule inside `queryTickets`, so it only narrows what the person may see. It searches public
      comments (`type IN ('Comment','Log')`) and never internal notes or internal log lines, otherwise a requester
      could probe them.

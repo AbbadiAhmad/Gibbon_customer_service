@@ -48,7 +48,7 @@ const sameSet = (a, b) => JSON.stringify([...a].sort((x, y) => x - y)) === JSON.
 
   // UNENROLMENT: one class of the first child only (MAHL13.1, teacher 120)
   const unenrol = await fileTicket(2, async () => { await parent.check('form#request input[type=checkbox][value="925-2389"]'); });
-  console.log('unenrolment ticket', unenrol, '- approving:', await moveTo(unenrol, 'Approved'));
+  console.log('unenrolment ticket', unenrol, '- approving:', await moveTo(unenrol, 'Approved *'));
   const got2 = recipients(unenrol);
   console.log('unenrolment: only the form tutor of the child and the teacher of that class (expect true):', sameSet(got2, [2363, 120]), '- got', got2.join(','));
   console.log('  text:', sql(`select text from gibbonNotification where text like '#${unenrol} % approved: %' limit 1`)[0][0]);

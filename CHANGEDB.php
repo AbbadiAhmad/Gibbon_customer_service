@@ -83,3 +83,14 @@ INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, 
 INSERT INTO `gibbonPermission` (`gibbonRoleID`, `gibbonActionID`) SELECT gibbonRole.gibbonRoleID, gibbonAction.gibbonActionID FROM gibbonRole JOIN gibbonAction ON (gibbonAction.name='Delete Tickets') JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID AND gibbonModule.name='ServiceDesk') WHERE gibbonRole.name='Administrator';end
 ".implode(";end\n", $serviceDeskHooks).";
 ";
+
+// v1.6.00 - several automation scripts per stage; "tell the teachers" becomes the script TellTeachers; ticket type
+//           switches for withdraw / reopen by requesters
+++$count;
+$sql[$count][0] = '1.6.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskStage` MODIFY `automation` varchar(255) NULL;end
+UPDATE `gibbonServiceDeskStage` SET automation=CONCAT_WS(',', NULLIF(automation, ''), 'TellTeachers') WHERE notifyTeachers='Y';end
+ALTER TABLE `gibbonServiceDeskStage` DROP `notifyTeachers`;end
+ALTER TABLE `gibbonServiceDeskTicketType` ADD `allowWithdraw` enum('Y','N') NOT NULL DEFAULT 'Y' AFTER `shareWithFamily`, ADD `allowReopen` enum('Y','N') NOT NULL DEFAULT 'Y' AFTER `allowWithdraw`;
+";

@@ -48,7 +48,11 @@ if (!empty($gibbonServiceDeskStageID)) {
 
 $name = trim($_POST['name'] ?? '');
 $category = $_POST['category'] ?? '';
-$automation = $_POST['automation'] ?? '';
+// Only installed scripts, stored in the order of the list on the form.
+$registry = $container->get(AutomationRegistry::class);
+$posted = array_map('strval', (array) ($_POST['automation'] ?? []));
+$automation = implode(',', array_intersect(array_keys($registry->options()), $posted));
+$unknownScripts = array_diff(array_filter($posted), array_keys($registry->options()));
 $nextStage = $_POST['nextStage'] ?? '';
 
 // The automation must be an installed script; the next stage must be another stage of this workflow.
@@ -60,7 +64,7 @@ foreach ($stageGateway->selectStagesByType($gibbonServiceDeskTicketTypeID)->fetc
 }
 
 if ($name === '' || !in_array($category, TicketFilters::STATUSES, true)
-    || (!empty($automation) && $container->get(AutomationRegistry::class)->get($automation) === null)
+    || !empty($unknownScripts)
     || (!empty($nextStage) && !in_array($nextStage, $siblings, true))) {
     header("Location: {$URL}&return=error1");
     exit;
@@ -77,7 +81,6 @@ $data = [
     'category'       => $category,
     'sequenceNumber' => intval($_POST['sequenceNumber'] ?? 0),
     'automation'     => !empty($automation) ? $automation : null,
-    'notifyTeachers' => ($_POST['notifyTeachers'] ?? 'N') == 'Y' ? 'Y' : 'N',
     'withdrawn'      => ($_POST['withdrawn'] ?? 'N') == 'Y' && $category == 'Closed' ? 'Y' : 'N',
     'nextStage'      => !empty($automation) && !empty($nextStage) ? $nextStage : null,
 ];

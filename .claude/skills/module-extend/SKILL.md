@@ -25,6 +25,8 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | A dashboard tab | `hook_dashboard_*.php` + the `$hooks[]` entry in `manifest.php` and the same INSERT in CHANGEDB; logic in `src/Service/DashboardWidget.php` |
 | A scheduled job | `cli_<name>.php` (CLI check first) + the service method it calls; document the cron line in `README.md` |
 | Something that must disappear with a ticket | `TicketService::deleteTicket` (comments, subscribers, notifications whose text starts with `#<id> `) - a new table that refers to a ticket must be added there |
+| Something that should happen when a ticket enters a stage | an automation script (`src/Automation/Scripts/`), not a new stage column: stages tick any number of scripts, they share the transaction. `TellTeachers.php` replaced a stage flag this way in 1.6.00 |
+| A switch for what requesters may do on a ticket type | a Y/N column on `gibbonServiceDeskTicketType` (manifest + CHANGEDB), selected in `TicketGateway::getTicketByID`, checked in `TicketAccess::can...()`, a toggle in `types_manage_edit.php` + its process |
 | A stage behaviour (flag) | a column on `gibbonServiceDeskStage` (manifest + CHANGEDB + copy in `StageGateway::copyDefaultWorkflow`), fields in `workflow_stage_edit.php` + its process, behaviour in `TicketService::changeStage` |
 | A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
 | A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |

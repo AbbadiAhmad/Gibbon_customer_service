@@ -119,22 +119,25 @@ class TicketAccess
     }
 
     /**
-     * May the user withdraw the request? Requester side only, while the ticket is not finished, and only when the
-     * workflow has a "Withdrawn" stage to send it to.
+     * May the user withdraw the request? Requester side only, if the ticket type lets requesters withdraw, while the
+     * ticket is not finished, and only when the workflow has a "Withdrawn" stage to send it to.
      */
     public function canWithdraw(array $ticket): bool
     {
         return $this->isRequesterSide($ticket)
+            && ($ticket['allowWithdraw'] ?? 'Y') == 'Y'
             && in_array($ticket['stageCategory'], ['Open', 'In Progress'], true)
             && !empty($this->stageGateway->getWithdrawnStage($ticket['gibbonServiceDeskTicketTypeID']));
     }
 
     /**
-     * May the user reopen the request? Requester side only, for REOPEN_DAYS after it was closed.
+     * May the user reopen the request? Requester side only, if the ticket type lets requesters reopen, for
+     * REOPEN_DAYS after it was closed.
      */
     public function canReopen(array $ticket): bool
     {
         return $this->isRequesterSide($ticket)
+            && ($ticket['allowReopen'] ?? 'Y') == 'Y'
             && $ticket['stageCategory'] == 'Closed'
             && !empty($ticket['timestampClosed'])
             && strtotime($ticket['timestampClosed']) >= strtotime('-'.self::REOPEN_DAYS.' days');
