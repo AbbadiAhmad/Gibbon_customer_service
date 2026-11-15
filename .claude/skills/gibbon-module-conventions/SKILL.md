@@ -136,6 +136,17 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
   `Mailer` (`SetFrom`, `AddAddress`, `Subject`, `renderBody('mail/notification.twig.html', ['title', 'body',
   'button' => ['url', 'text']])`, `Send`) for email. Action link format:
   `/index.php?q=/modules/ServiceDesk/tickets_view.php&id=...`. Wrap in try/catch: never break the request.
+* **LIVE**: the centre works when the row has `gibbonModuleID` of an installed module (the gateway looks it up by
+  module *name*: it must be exactly `ServiceDesk`), `status='New'` and a link starting with `/index.php`. The bell
+  count comes from `index_notification_ajax.php`; the list is `index.php?q=notifications.php`; "Action & Archive" is
+  an htmx link to `notificationsActionProcess.php` which redirects to `absoluteURL + actionLink`.
+* **LIVE**: email is sent only with a sender: `organisationEmail` (empty in the demo data) and the SMTP settings are
+  read from the *session*, i.e. at login. Create the `Mailer` lazily (`global $container; $container->get(Mailer::
+  class)`) and write all centre entries before sending any email.
+* "Notifications do not work" checklist: (1) the actor is never notified - test with two users; (2) is the
+  recipient a follower of the ticket or in a team of its type (empty teams -> administrators)? (3) the person's
+  policy rows (`gibbonServiceDeskNotificationPreference`, `gibbonServiceDeskTicketSubscriber`); (4) rows in
+  `gibbonNotification`; (5) PHP error log / `gibbonLog` title "Service Desk".
 
 ## Gibbon data used by this module
 * Children of a parent: `gibbonFamilyAdult` (`childDataAccess='Y'`) -> `gibbonFamilyChild` -> `gibbonPerson`

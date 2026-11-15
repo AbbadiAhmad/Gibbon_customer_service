@@ -74,7 +74,10 @@ Scripts: `src/Automation/Scripts/*.php`, discovered by `AutomationRegistry` (no 
 `Notifier::notify($ticket, $text, $actorID, $internal, $withTeam)` - recipients are the ticket's subscribers (+ the
 team members for new/unassigned tickets), minus the actor, minus non-team people for internal events. Each recipient
 gets the channels of their row: notification centre (Gibbon `gibbonNotification`) and/or email (Gibbon `Mailer`).
-Failures are caught and logged; they never break the request.
+All notification-centre entries are written before any email is sent, and the mailer is only created when an email
+is really sent, so mail trouble cannot affect the centre. A new ticket of a type whose teams are empty goes to the
+administrators. Failures are caught and logged (PHP error log + Gibbon log, title "Service Desk"); they never break
+the request. **Nobody is notified about their own action** - testing with a single user shows no notifications.
 
 ## 6. File map
 
@@ -132,5 +135,8 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   type gets the default workflow; fields add/duplicate-name; stage add/delete; filter save (team-shared)/delete; type
   with tickets cannot be deleted; server-side required-field check; notification rows and per-ticket policy checked in
   the database.
-* **Not tested**: real email delivery (no mail server in the test environment); Gibbon versions below v31; upgrade
+* Notification centre (`tests/live/notifications.js`): entries listed on Gibbon's notification page, bell count,
+  "Action & Archive" opens the ticket, empty-team ticket reaches the administrators. Email: sent through SMTP to a
+  local sink (`tests/live/mail-on.sh`), sender, recipients, subject and ticket link checked.
+* **Not tested**: delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31; upgrade
   path (there is only one version); students as requesters; uninstall; other languages; very large data.

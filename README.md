@@ -23,6 +23,9 @@ Inspired by the functions of [GibbonEdu/module-helpdesk](https://github.com/Gibb
 4. Review **User Admin > Manage Permissions** if roles other than Administrator should configure the module.
 5. Log out and in again (Gibbon caches the menu per session).
 
+Notifications: nobody is told about their own action, so try it with two users (e.g. a parent and a team member).
+Email needs Gibbon's email settings and the organisation email (System Settings) to be filled in.
+
 Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 
 ## What people can do

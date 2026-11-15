@@ -38,6 +38,8 @@ Modules > Update.
 | `smoke.js` | every page as administrator, looking for PHP/SQL errors and Gibbon error boxes. Three FAILs are expected: an administrator (Staff) opening parent-only request forms 1 and 2, and a stage id that belongs to another workflow |
 | `flow.js` | admin adds a team member; parent files an absence for two children; teacher comments (internal + public), assigns, sets priority, approves; automation records attendance and closes; parent sees the result without internal notes; per-ticket and personal notification settings; another parent is refused |
 | `admin.js` | new ticket type gets the default workflow; fields (derived name, select, duplicate name); stage add/delete; staff request form; custom filter, save shared with a team, delete; type with tickets cannot be deleted; automation failure (weekend-only absence): ticket stays, internal log, warning; server-side required check |
+| `notifications.js` | (after `flow.js`) entries on Gibbon's notification page, bell count, the link opens the ticket, a ticket for a team without members reaches the administrators |
+| `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |
 
@@ -57,4 +59,4 @@ and the rows of `gibbonNotification`, `gibbonServiceDeskTicketSubscriber`.
 * Write test files with the editor tool, not a shell heredoc, when they contain arrow functions and template strings.
 
 ## What a live run does not prove
-Email delivery (no mail server here), other Gibbon versions, other languages, production data volumes. Say so.
+Delivery through a real mail provider (only a local SMTP sink is used), other Gibbon versions, other languages, production data volumes. Say so.

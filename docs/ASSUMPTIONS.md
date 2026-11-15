@@ -11,7 +11,7 @@ Things taken as true without asking. If one is wrong, tell me and the affected p
 | A4 | The Attendance module is used, an active attendance code named exactly `Absent` exists, and the allowed reasons are those in School Admin > Attendance Settings (the default form offers Medical, Family, Education, Other). An unknown reason is stored as empty. | `RecordAbsence` |
 | A5 | An absence is a whole-day absence. School days are decided by Gibbon (`isSchoolOpen`: term dates, weekdays, special days). Periods over 60 days are refused by the script. Past and same-day dates are allowed. | `RecordAbsence` |
 | A6 | Unenrolling from a class means: the class enrolment becomes "Student - Left" with an unenrol date (Gibbon's own convention), not deleting it. | `UnenrolFromClasses` |
-| A7 | Mail is sent with Gibbon's own mailer and settings. If mail is not configured, emails silently do not go out; the notification centre still works. | `Notifier` |
+| A7 | Mail is sent with Gibbon's own mailer and settings (System Admin > Email Settings) and from the *organisation email* (System Settings); without a sender address no email is attempted. Mail problems never hold back the notification centre and are written to the PHP error log and Gibbon's log (title "Service Desk"). | `Notifier` |
 
 ## About how the module should behave
 | # | Assumption | Affects |

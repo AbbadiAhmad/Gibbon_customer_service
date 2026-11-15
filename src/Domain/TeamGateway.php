@@ -153,4 +153,20 @@ class TeamGateway extends QueryableGateway
 
         return $this->db()->select($sql);
     }
+
+    /**
+     * The Service Desk administrators: active people with a role that holds the action "Manage Ticket Types".
+     * They are told about a new ticket when no team member is there to receive it.
+     */
+    public function selectAdministrators()
+    {
+        $sql = "SELECT DISTINCT gibbonPerson.gibbonPersonID
+                FROM gibbonAction
+                JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID)
+                JOIN gibbonPermission ON (gibbonPermission.gibbonActionID=gibbonAction.gibbonActionID)
+                JOIN gibbonPerson ON (FIND_IN_SET(gibbonPermission.gibbonRoleID, gibbonPerson.gibbonRoleIDAll))
+                WHERE gibbonModule.name='ServiceDesk' AND gibbonAction.name='Manage Ticket Types' AND gibbonPerson.status='Full'";
+
+        return $this->db()->select($sql);
+    }
 }

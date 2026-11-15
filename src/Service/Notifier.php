@@ -12,6 +12,7 @@ the Free Software Foundation, either version 3 of the License, or
 namespace Gibbon\Module\ServiceDesk\Service;
 
 use Gibbon\Contracts\Comms\Mailer;
+use Gibbon\Domain\System\LogGateway;
 use Gibbon\Contracts\Database\Connection;
 use Gibbon\Contracts\Services\Session;
 use Gibbon\Domain\System\NotificationGateway;
@@ -29,16 +30,14 @@ class Notifier
 {
     protected $session;
     protected $db;
-    protected $mailer;
     protected $notificationGateway;
     protected $subscriberGateway;
     protected $teamGateway;
 
-    public function __construct(Session $session, Connection $db, Mailer $mailer, NotificationGateway $notificationGateway, SubscriberGateway $subscriberGateway, TeamGateway $teamGateway)
+    public function __construct(Session $session, Connection $db, NotificationGateway $notificationGateway, SubscriberGateway $subscriberGateway, TeamGateway $teamGateway)
     {
         $this->session = $session;
         $this->db = $db;
-        $this->mailer = $mailer;
         $this->notificationGateway = $notificationGateway;
         $this->subscriberGateway = $subscriberGateway;
         $this->teamGateway = $teamGateway;
@@ -68,7 +67,16 @@ class Notifier
             }
 
             if ($withTeam) {
-                foreach (array_keys($team) as $gibbonPersonID) {
+                // A ticket type whose teams have no members yet would reach nobody: tell the administrators instead.
+                $audience = $team;
+                if (empty($audience)) {
+                    foreach ($this->teamGateway->selectAdministrators()->fetchAll() as $admin) {
+                        $audience[intval($admin['gibbonPersonID'])] = true;
+                    }
+                    $team = $audience;
+                }
+
+                foreach (array_keys($audience) as $gibbonPersonID) {
                     if (!isset($people[$gibbonPersonID])) {
                         $people[$gibbonPersonID] = $this->subscriberGateway->getPreference($gibbonPersonID);
                     }
@@ -83,16 +91,19 @@ class Notifier
             $text = '#'.intval($gibbonServiceDeskTicketID).' '.$ticket['subject'].': '.$text;
             $link = '/index.php?q=/modules/ServiceDesk/tickets_view.php&gibbonServiceDeskTicketID='.$gibbonServiceDeskTicketID;
 
+            // Notification centre first, for everyone: a slow or broken mail server must never hold it back.
             foreach ($people as $gibbonPersonID => $policy) {
                 if ($policy['notifyInApp'] == 'Y') {
                     $this->sendInApp($gibbonPersonID, $text, $link);
                 }
+            }
+            foreach ($people as $gibbonPersonID => $policy) {
                 if ($policy['notifyEmail'] == 'Y') {
                     $this->sendEmail($gibbonPersonID, $text, $link);
                 }
             }
         } catch (\Throwable $e) {
-            error_log('ServiceDesk notification failed: '.$e->getMessage());
+            $this->logFailure('Notification failed', $e);
         }
     }
 
@@ -116,8 +127,9 @@ class Notifier
         if (empty($email) || empty($from)) return;
 
         try {
-            $mail = $this->mailer;
-            $mail->clearAllRecipients();
+            // The mailer is created only when an email is really sent, so mail settings cannot affect anything else.
+            global $container;
+            $mail = $container->get(Mailer::class);
             $mail->SetFrom($from, $this->session->get('organisationName'));
             $mail->AddAddress($email);
             $mail->Subject = '['.$this->session->get('organisationNameShort').'] '.mb_substr($text, 0, 120);
@@ -128,7 +140,28 @@ class Notifier
             ]);
             $mail->Send();
         } catch (\Throwable $e) {
-            error_log('ServiceDesk email failed: '.$e->getMessage());
+            $this->logFailure('Email failed', $e);
+        }
+    }
+
+    /**
+     * Failures never break the user's request, but they must be findable: System Admin > System Check / View Logs
+     * (gibbonLog, title "Service Desk"), and the PHP error log.
+     */
+    protected function logFailure(string $what, \Throwable $e)
+    {
+        error_log('ServiceDesk: '.$what.': '.$e->getMessage());
+
+        try {
+            global $container;
+            $container->get(LogGateway::class)->addLog(
+                $this->session->get('gibbonSchoolYearID'),
+                'ServiceDesk',
+                $this->session->get('gibbonPersonID'),
+                'Service Desk',
+                ['problem' => $what, 'message' => $e->getMessage()]
+            );
+        } catch (\Throwable $ignored) {
         }
     }
 }
