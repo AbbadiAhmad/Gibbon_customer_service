@@ -68,3 +68,4 @@
 .serviceDesk-priority-High { background: #f97316; }
 .serviceDesk-priority-Urgent { background: #dc2626; }
 .serviceDesk-filterOther { border-style: dashed; color: #6b7280; }
+.serviceDesk-filterDelete { text-align: right; font-size: .85rem; margin: 0 0 .5rem; }

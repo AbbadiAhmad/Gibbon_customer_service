@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.4.00';
+$version     = '1.4.01';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -267,7 +267,7 @@ $actionRows[] = [
     'precedence'  => '0',
     'category'    => 'Requests',
     'description' => 'See your own requests and, for team members, the tickets of your teams.',
-    'URLList'     => 'tickets.php,tickets_filterProcess.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php',
+    'URLList'     => 'tickets.php,tickets_filterProcess.php,tickets_filter_delete.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php',
     'entryURL'    => 'tickets.php',
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',

@@ -46,6 +46,7 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `comments.js` | (after `flow.js`) comment permissions: teacher "_my", administrator "_all", parent none; edit, visibility, delete, refusals, traces |
 | `board.js` | (after `flow.js`) view switch and its per-person memory, status vs stage columns, real drag and drop (`locator.dragTo`), automation confirmation dialog, parent has no board, type colour |
 | `audience.js` | (after `flow.js`) which shared filters a parent, a staff member in no team (`120`), a team member and the administrator see |
+| `reporter.js` | (after `flow.js`) what the requester is told: public comment, assignment, stage change yes; internal note and own actions no; the notification self-test |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |

@@ -120,11 +120,49 @@ class Notifier
         }
     }
 
-    protected function sendEmail($gibbonPersonID, string $text, string $link)
+    /**
+     * Tries both channels for one person, whatever their policy, and says what happened. Used by "Send me a test
+     * notification" so that a school can check its own installation (module name, mail settings) in one click.
+     *
+     * @return array ['inApp' => [ok, message], 'email' => [ok, message]]
+     */
+    public function sendTest($gibbonPersonID): array
+    {
+        $text = __m('Service Desk test notification ({time}).', ['time' => date('H:i:s')]);
+        $link = '/index.php?q=/modules/ServiceDesk/notifications.php';
+        $result = [];
+
+        try {
+            $this->sendInApp($gibbonPersonID, $text, $link);
+            $found = $this->db->selectOne(
+                "SELECT COUNT(*) FROM gibbonNotification WHERE gibbonPersonID=:gibbonPersonID AND text=:text AND status='New' AND gibbonModuleID IS NOT NULL",
+                ['gibbonPersonID' => $gibbonPersonID, 'text' => $text]
+            );
+            $result['inApp'] = $found > 0
+                ? [true, __m('A notification was added to your notification centre (the bell at the top of the page).')]
+                : [false, __m('The notification could not be stored. Is the module installed under the name ServiceDesk?')];
+        } catch (\Throwable $e) {
+            $result['inApp'] = [false, $e->getMessage()];
+        }
+
+        $result['email'] = $this->sendEmail($gibbonPersonID, $text, $link);
+
+        return $result;
+    }
+
+    /**
+     * @return array [sent, message] - the message explains a failure in words an administrator can act on.
+     */
+    protected function sendEmail($gibbonPersonID, string $text, string $link): array
     {
         $email = $this->db->selectOne("SELECT email FROM gibbonPerson WHERE gibbonPersonID=:gibbonPersonID AND status='Full' AND NOT email=''", ['gibbonPersonID' => $gibbonPersonID]);
         $from = $this->session->get('organisationEmail') ?: $this->session->get('organisationAdministratorEmail');
-        if (empty($email) || empty($from)) return;
+        if (empty($email)) {
+            return [false, __m('No email was sent: your user account has no email address.')];
+        }
+        if (empty($from)) {
+            return [false, __m('No email was sent: the school has no sender address. Set the organisation email in System Admin > System Settings.')];
+        }
 
         try {
             // The mailer is created only when an email is really sent, so mail settings cannot affect anything else.
@@ -138,9 +176,16 @@ class Notifier
                 'body'   => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
                 'button' => ['url' => ltrim($link, '/'), 'text' => __('View Details')],
             ]);
-            $mail->Send();
+            if ($mail->Send()) {
+                return [true, __m('An email was sent to {email}.', ['email' => $email])];
+            }
+
+            // The mailer reports failures in ErrorInfo instead of throwing.
+            $this->logFailure('Email failed', new \RuntimeException((string) $mail->ErrorInfo));
+            return [false, __m('The email to {email} could not be sent: {error}', ['email' => $email, 'error' => (string) $mail->ErrorInfo])];
         } catch (\Throwable $e) {
             $this->logFailure('Email failed', $e);
+            return [false, __m('The email to {email} could not be sent: {error}', ['email' => $email, 'error' => $e->getMessage()])];
         }
     }
 

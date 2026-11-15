@@ -59,7 +59,9 @@ const ret = page => (page.url().match(/return=(\w+)/) || [])[1];
   await admin.selectOption('form#filterSave select[name=share]', '1');
   await submit(admin, 'form#filterSave'); console.log('filter saved:', ret(admin), admin.url()); await check(admin, 'saved filter view'); await shot(admin, 'tickets_saved');
   console.log('rows via saved filter:', await admin.$$eval('table tbody tr', r => r.length));
-  await submit(admin, 'form#filterDelete'); console.log('filter deleted:', ret(admin));
+  await admin.click('.serviceDesk-filterDelete a'); await admin.waitForLoadState(); await check(admin, 'filter delete confirmation');
+  console.log('confirmation page shown, filter still there (expect true):', admin.url().includes('tickets_filter_delete.php'));
+  await submit(admin, 'form'); console.log('filter deleted:', ret(admin));
 
   // Type with tickets cannot be deleted (expect error4)
   await admin.goto(M + 'types_manage_delete.php&gibbonServiceDeskTicketTypeID=1'); await submit(admin, 'form'); console.log('delete type with tickets (expect error4):', ret(admin)); await check(admin, 'error4 shown');

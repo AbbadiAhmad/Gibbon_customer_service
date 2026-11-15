@@ -35,7 +35,8 @@ const names = async page => { await page.goto(M + 'tickets.php&view=list'); retu
   await admin.selectOption('form#filterSave select[name=share]', 'requesters');
   await submit(admin, 'form#filterSave'); console.log('saved for requesters:', (admin.url().match(/return=(\w+)/) || [])[1]);
   console.log('parent gets it (expect true):', (await names(parent)).includes(name), '| team member does not (expect true):', !(await names(member)).includes(name));
-  await submit(admin, 'form#filterDelete');
+  await admin.click('.serviceDesk-filterDelete a'); await admin.waitForLoadState();
+  await submit(admin, 'form');
   console.log('administrator deleted it; gone for the parent (expect true):', !(await names(parent)).includes(name));
   await browser.close();
 })().catch(e => { console.error('ERR', e.message.split('\n').slice(0, 6).join('\n')); process.exit(1); });

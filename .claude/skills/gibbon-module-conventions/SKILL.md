@@ -177,7 +177,11 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * **LIVE**: email is sent only with a sender: `organisationEmail` (empty in the demo data) and the SMTP settings are
   read from the *session*, i.e. at login. Create the `Mailer` lazily (`global $container; $container->get(Mailer::
   class)`) and write all centre entries before sending any email.
-* "Notifications do not work" checklist: (1) the actor is never notified - test with two users; (2) is the
+* **LIVE**: `Mailer::Send()` returns false and sets `$mail->ErrorInfo` on failure - it does not throw. Check the
+  return value. `Notifier::sendTest()` (button on Notification Settings) reports both channels to the user.
+* Messages for the next page after a redirect: `$session->set('key', $data)` in the process script, read and
+  `$session->forget('key')` on the page.
+* "Notifications do not work" checklist: (0) ask the user to press *Send Me a Test Notification*; (1) the actor is never notified - test with two users; (2) is the
   recipient a follower of the ticket or in a team of its type (empty teams -> administrators)? (3) the person's
   policy rows (`gibbonServiceDeskNotificationPreference`, `gibbonServiceDeskTicketSubscriber`); (4) rows in
   `gibbonNotification`; (5) PHP error log / `gibbonLog` title "Service Desk".

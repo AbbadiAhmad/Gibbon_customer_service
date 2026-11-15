@@ -167,6 +167,9 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   staff member in no team see All / Open / Closed; a team member sees the agent filters and the team's filter; the
   administrator sees all with the requesters' ones marked; a filter shared with requesters reaches the parent and not
   the team member.
+* Reporter notifications (`tests/live/reporter.js`): the requester gets a notification for a public comment, an
+  assignment and a stage change made by a team member; none for an internal note or for their own comment; the team
+  member is told about the requester's comment; the self-test reports both channels.
 * **Not tested**: drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
   and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

@@ -10,6 +10,10 @@ msgstr ""
 msgid "A class enrolment could not be updated."
 msgstr ""
 
+#: src/Service/Notifier.php
+msgid "A notification was added to your notification centre (the bell at the top of the page)."
+msgstr ""
+
 #: workflow_stage_edit.php
 msgid "A script that runs when a ticket enters this stage. If it fails, the ticket stays in the stage it came from and the reason is written on the ticket as an internal note."
 msgstr ""
@@ -56,6 +60,10 @@ msgstr ""
 
 #: notifications.php
 msgid "Also change the tickets you already follow."
+msgstr ""
+
+#: src/Service/Notifier.php
+msgid "An email was sent to {email}."
 msgstr ""
 
 #: notifications.php
@@ -148,6 +156,10 @@ msgstr ""
 
 #: tickets_comment_delete.php
 msgid "Delete Comment"
+msgstr ""
+
+#: tickets_filter_delete.php
+msgid "Delete Filter"
 msgstr ""
 
 #: tickets.php
@@ -334,6 +346,14 @@ msgstr ""
 msgid "New {type} request from {name}."
 msgstr ""
 
+#: src/Service/Notifier.php
+msgid "No email was sent: the school has no sender address. Set the organisation email in System Admin > System Settings."
+msgstr ""
+
+#: src/Service/Notifier.php
+msgid "No email was sent: your user account has no email address."
+msgstr ""
+
 #: types_manage.php
 msgid "No team"
 msgstr ""
@@ -450,12 +470,24 @@ msgstr ""
 msgid "Select (choose one option)"
 msgstr ""
 
+#: notifications.php
+msgid "Send Me a Test Notification"
+msgstr ""
+
 #: request_new.php
 msgid "Send Request"
 msgstr ""
 
+#: notifications.php
+msgid "Sends a test notification to you through both channels, whatever you chose above, and tells you whether each one worked. Remember: you are never notified about your own comments and changes, only about those of other people."
+msgstr ""
+
 #: src/Service/Notifier.php templates/ticket.twig.html
 msgid "Service Desk"
+msgstr ""
+
+#: src/Service/Notifier.php
+msgid "Service Desk test notification ({time})."
 msgstr ""
 
 #: templates/filters.twig.html
@@ -514,6 +546,10 @@ msgstr ""
 msgid "Teams"
 msgstr ""
 
+#: notifications.php
+msgid "Test"
+msgstr ""
+
 #: types_field_edit.php
 msgid "Text"
 msgstr ""
@@ -542,8 +578,16 @@ msgstr ""
 msgid "The bell at the top of the page."
 msgstr ""
 
+#: src/Service/Notifier.php
+msgid "The email to {email} could not be sent: {error}"
+msgstr ""
+
 #: teams_manage.php
 msgid "The members of a team see and process the tickets of the ticket types given to the team (see Manage Ticket Types)."
+msgstr ""
+
+#: src/Service/Notifier.php
+msgid "The notification could not be stored. Is the module installed under the name ServiceDesk?"
 msgstr ""
 
 #: types_field_edit.php
@@ -598,6 +642,10 @@ msgstr ""
 msgid "There are no students linked to your account."
 msgstr ""
 
+#: tickets_filter_delete.php
+msgid "This is a shared filter: it will disappear for everyone who uses it."
+msgstr ""
+
 #: tickets_view.php
 msgid "This only changes this ticket. Your general choice is in Notification Settings."
 msgstr ""
@@ -614,7 +662,7 @@ msgstr ""
 msgid "Ticket Types"
 msgstr ""
 
-#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_view.php
+#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_filter_delete.php tickets_view.php
 msgid "Tickets"
 msgstr ""
 

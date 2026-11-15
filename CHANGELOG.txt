@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v1.4.01
+-------
+Deleting a saved filter asks for confirmation. Notification Settings has "Send me a test notification", which tries
+both channels for the current user and reports what happened (including the mail server's error message).
+
 v1.4.00
 -------
 Shared filters have an audience: "Staff working on tickets" (administrators and team members, optionally one team)

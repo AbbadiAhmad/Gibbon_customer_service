@@ -164,13 +164,11 @@ echo '</details>';
 
 // DELETE the saved filter being shown (own filters; shared ones for administrators)
 if (!empty($activeFilter) && ($isAdmin || !empty($activeFilter['gibbonPersonID']))) {
-    $form = Form::createBlank('filterDelete', $session->get('absoluteURL').'/modules/ServiceDesk/tickets_filterProcess.php');
-    $form->addHiddenValue('address', $session->get('address'));
-    $form->addHiddenValue('action', 'delete');
-    $form->addHiddenValue('gibbonServiceDeskFilterID', $activeFilter['gibbonServiceDeskFilterID']);
-    $form->addRow()->addSubmit(__m('Delete filter "{name}"', ['name' => $activeFilter['name']]))->addClass('text-right');
-
-    echo $form->getOutput();
+    // A link to a confirmation page; the filter is only removed by the form there.
+    echo '<p class="serviceDesk-filterDelete">'.Format::link(
+        $moduleURL.'/tickets_filter_delete.php&gibbonServiceDeskFilterID='.intval($activeFilter['gibbonServiceDeskFilterID']),
+        htmlspecialchars(__m('Delete filter "{name}"', ['name' => $activeFilter['name']]))
+    ).'</p>';
 }
 
 // BOARD

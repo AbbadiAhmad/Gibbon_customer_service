@@ -53,3 +53,10 @@ $sql[$count][1] = "
 ALTER TABLE `gibbonServiceDeskFilter` ADD `audience` enum('Agents','Requesters') NOT NULL DEFAULT 'Agents' AFTER `gibbonServiceDeskTeamID`;end
 INSERT INTO `gibbonServiceDeskFilter` (`gibbonPersonID`, `gibbonServiceDeskTeamID`, `audience`, `name`, `criteria`, `sequenceNumber`) VALUES (NULL, NULL, 'Requesters', 'Open', '{\\\"status\\\":[\\\"Open\\\",\\\"In Progress\\\"]}', 1), (NULL, NULL, 'Requesters', 'Closed', '{\\\"status\\\":[\\\"Closed\\\"]}', 2);
 ";
+
+// v1.4.01 - confirmation page for deleting a saved filter
+++$count;
+$sql[$count][0] = '1.4.01';
+$sql[$count][1] = "
+UPDATE `gibbonAction` SET URLList='tickets.php,tickets_filterProcess.php,tickets_filter_delete.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php' WHERE name='Tickets' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');
+";

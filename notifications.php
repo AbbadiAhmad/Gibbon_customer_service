@@ -10,6 +10,7 @@ the Free Software Foundation, either version 3 of the License, or
 */
 
 use Gibbon\Forms\Form;
+use Gibbon\Services\Format;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
 
 if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/notifications.php') == false) {
@@ -42,5 +43,24 @@ $row = $form->addRow();
 $row = $form->addRow();
     $row->addFooter();
     $row->addSubmit();
+
+echo $form->getOutput();
+
+// TEST: tries both channels for the current user and shows what happened
+if ($session->has('serviceDeskNotificationTest')) {
+    foreach ((array) $session->get('serviceDeskNotificationTest') as $channel) {
+        echo Format::alert(htmlspecialchars($channel[1] ?? ''), !empty($channel[0]) ? 'success' : 'error');
+    }
+    $session->forget('serviceDeskNotificationTest');
+}
+
+$form = Form::create('notificationTest', $session->get('absoluteURL').'/modules/ServiceDesk/notificationsProcess.php');
+$form->setTitle(__m('Test'));
+$form->setDescription(__m('Sends a test notification to you through both channels, whatever you chose above, and tells you whether each one worked. Remember: you are never notified about your own comments and changes, only about those of other people.'));
+$form->addHiddenValue('address', $session->get('address'));
+$form->addHiddenValue('action', 'test');
+
+$row = $form->addRow();
+    $row->addSubmit(__m('Send Me a Test Notification'));
 
 echo $form->getOutput();
