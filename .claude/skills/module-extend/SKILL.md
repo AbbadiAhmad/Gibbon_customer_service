@@ -1,47 +1,60 @@
 ---
-name: customerservice-extend-module
-description: Checklist for adding a feature, page, setting or table to the administration Gibbon module - where code goes, the schema/upgrade/docs steps, naming, tolerance rules, how to verify without a live Gibbon. Use before any change to this repository.
+name: module-extend
+description: Checklist for adding a feature, page, field type, automation script, filter, setting or table to the ServiceDesk Gibbon module - where code goes, the schema/upgrade/docs steps, naming, how to verify. Use before any change to this repository.
 ---
 
-# Extending administration
+# Extending ServiceDesk
 
-Read `docs/ARCHITECTURE.md` first (model, who can see what, file map). Also follow `gibbon-module-conventions` and `gibbon-access-control`.
+Read `docs/ARCHITECTURE.md` first (use cases, model, access rules, file map, missing use cases M1-M15 that the owner
+may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, and test with `gibbon-live-testing`.
 
 ## Where things go
 | You are adding | Put it in |
 |---|---|
-| SQL / a query | the matching `src/Domain/*Gateway.php` (new table group -> new gateway) |
-| Logic without UI (rules, parsing, formatting) | `src/Service/` as a static/pure class so it can be tested stand-alone |
-| A form question type or a new mapping target | `FormMapper` (`inputTypes`, `validateMapping`, `map`) + the input switch in `cs_request_new.php` + tests in `tests/logic.php` |
-| A page | `cs_<area>_<verb>.php` (`manage`, `edit` for add+edit, `view`) + `cs_<area>_process.php` for its POST |
-| A record the shared delete page may remove | a `case` in `csDeleteTarget()` (set `action`, `allowed`, `back`, `delete`) |
-| A ticket-page tool (sub-forms) | a section in `cs_ticket_view.php` + an `action` case in `cs_ticket_extrasProcess.php` (non-main) or `cs_ticket_process.php` (status/assign/comment) |
-| Something that happens on a ticket event | `Notifier` method + `AutomationEngine::fire('trigger', $id)` at the same spot |
-| A new filter field | `BoardFilter::specialFields()` + `special()`; it then works in boards, automation conditions and the filter forms |
+| SQL | the matching `src/Domain/*Gateway.php` (new table -> new gateway) |
+| A rule or multi-step change to a ticket | `src/Service/TicketService.php` (history + notification + automation happen there; process scripts call it) |
+| Who may see/do something | `src/Service/TicketAccess.php` |
+| A request-form field type | `RequestFields`: `TYPES`, `addToForm()`, `collect()` (validate!), `describe()`; the `type` enum of `gibbonServiceDeskField` (manifest + CHANGEDB); the type list in `types_field_edit.php` |
+| An automation script | new class in `src/Automation/Scripts/` implementing `AutomationScript` - nothing else (copy `RecordAbsence.php`) |
+| A filter criterion | `TicketFilters::clean()` + `apply()`, a rule in `TicketGateway::queryTickets()`, a row in the form of `tickets.php` |
+| A permission variant of an existing page | a grouped action `<Name>_<suffix>` in `manifest.php` + CHANGEDB, a `can...()` method in `TicketAccess` using `getHighestGroupedAction` (see `canCreateOnBehalf`) |
+| Something on the board | board section of `tickets.php` (columns, card data, limits), `templates/board.twig.html`, `js/board.js`, `tickets_boardProcess.php`; stage changes still go through `TicketService::changeStage()` |
+| A per-person display preference | `ViewPreferenceGateway` (one row per person) |
+| A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
+| A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |
+| A view with more than a few lines of HTML | `templates/<name>.twig.html` + classes in `css/module.css` |
+| Default data | `manifest.php` INSERTs (explicit ids) - upgrades do not insert defaults |
 
-## Change checklist (do all of it)
-1. Schema change? Update `manifest.php` (tables, seed) **and** add a new `CHANGEDB.php` entry (never edit old ones); bump `$version` / `$moduleVersion` together.
-2. New page/action? `manifest.php` `$actionRows` (+ every page and process in `URLList`) **and** the CHANGEDB `INSERT gibbonAction` + `gibbonPermission` pair.
-3. Guards: `csAccess` + `csSanitizeRequest` on pages; `csRequirePost` + sanitize + `csAccess` on processes; record-level checks (see `gibbon-access-control`).
-4. Tables start with `gibbon` (`gibbonCs...`); columns keep the `cs...ID` style; keep the word-boundary rename in mind if you ever mass-replace names.
-5. Tolerance: board filters/rules must never error on a custom field that a type lacks - empty value semantics only. Unknown action classes, unknown triggers or
-   deleted records are skipped, not fatal. Notifications and automation failures are caught and logged, they never break the user's request.
-6. User text through `__()`; escape on output.
-7. Update `README.md` (feature description), `CHANGELOG.txt`, and `docs/ARCHITECTURE.md` if the model, a decision or the file map changed.
-8. Verify and report honestly: `php -l` all files, then `php tests/install.php`, `php tests/upgrade.php`, `php tests/logic.php` against a throw-away MariaDB
-   (`tests/db-start.sh` starts one on port 3399 and creates the databases), then `php tests/migrate.php` (upgrade with data). Add a check to `tests/logic.php`
-   for every new query/rule. State that no live Gibbon run happened unless one did.
-9. A live Gibbon run that reports an error is the best test there is: fix the cause, then add its pattern to `tests/static.php` (and a check to `tests/logic.php` if it is logic) so it cannot come back. Run `php tests/static.php` with the others.
-10. Commit on the working branch with a message that says what and why; do not open a pull request unless asked.
+## Change checklist
+1. Schema change: `manifest.php` **and** a new `CHANGEDB.php` entry (never edit a released one; migrate data if
+   columns change); bump `$version` (manifest) and `$moduleVersion` (version.php) together; add to `CHANGELOG.txt`.
+2. New page/action: `manifest.php` `$actionRows` + `URLList`; for an upgrade also `INSERT gibbonAction` and
+   `gibbonPermission` in CHANGEDB.
+3. Guards on every entry point (`gibbon-access-control`), including re-validation in the process script.
+4. User text through `__m()` (module) or `__()` (text core already has); then `php tests/make-pot.php`.
+5. Ids: compare and key with `intval()` (zero-filled strings from the database).
+6. Docs: `README.md` (feature), `docs/ARCHITECTURE.md` (model, rules, file map, test status), a row in
+   `docs/DECISIONS.md` for every question you had to answer yourself, a row in `docs/ASSUMPTIONS.md` for every
+   assumption. When a "missing use case" gets built, move it out of section 7.
+7. Verify: `php tests/static.php`, then the live tests; add a step to `tests/live/flow.js` or `admin.js` for the new
+   behaviour, and a pattern to `tests/static.php` for every mistake a live run uncovers. Report what was run.
+8. New verified knowledge or pitfall -> add it to the matching skill in `.claude/skills/` (the owner asked for this).
+9. Commit on the working branch with a message that says what and why; no pull request unless asked.
 
 ## Conventions worth keeping
-* Status names are free text matching board columns; `New` is the entry status; reopen goes back to `New`. Every status has a category in `gibbonCsStatus`
-  (To Do / In Progress / Done) and "finished" means category Done - use `Workflow::isDone()` / `Workflow::DONE_SQL`, never a list of names. A board column editor
-  creates statuses; a new status must be given a category.
-* Default data lives only in `src/Install/DefaultData.php`; keep names consistent between boards, workflows, types and forms (a form's question targets must name real ticket fields); no emoji (utf8 connection).
-* When a change removes or reshapes columns, the CHANGEDB step must MIGRATE the data (see 0.8.0), and `tests/migrate.php` must load a snapshot of the previous release (`tests/fixtures/install-<version>.sql`, made with `mariadb-dump` of `tests/install.php`) and assert the result. Take that snapshot BEFORE changing the schema.
-* **Forms are not ticket types.** A ticket type = what a ticket is (team, workflow, ticket fields, internal flag); a form = what people fill in (questions, mapping to ticket fields, visibility, link name). Never put form or portal settings on the type, and never read form data from the type. Every question has exactly one `target`; see `docs/ARCHITECTURE.md`.
-* Admin = holds *Manage Ticket Types*. Space admins act through space roles, not through that action.
-* One status-change path (`$changeStatus` in `cs_ticket_process.php`) - extend it instead of writing a second one; automation uses `AutomationContext::changeStatus`.
-* Events written by people or automation to the activity log: public only if the requester should see them; configuration-ish events are `Internal`.
-* Dates in the database are `Y-m-d`; show with `Format::date`; parse with `csParseDate`.
+* Keep it simple: the owner chose a small model on purpose (one list page, one workflow per type, no boards, no
+  custom roles). Prefer a new ticket type / field / stage / script over new tables or pages.
+* One path per change: stage changes only through `TicketService::changeStage()`, comments through `addComment()`,
+  so history, notifications and automation stay consistent.
+* A ticket keeps a snapshot of its form answers (`fields` JSON with `name, label, type, value, display`); scripts
+  read `value` by field `name` via `AutomationContext::field()`. Changing a type's form never rewrites tickets.
+* Stages reference their "next stage" by name within the workflow; renaming goes through
+  `StageGateway::renameNextStage()`. Stage `category` (Open / In Progress / Closed) is what filters and colours use -
+  never test for a stage name in code.
+* The default workflow is the stages with no ticket type; it is copied on type creation, not linked.
+* History line types: `Comment` and `Log` are public, `Internal Note` and `Internal Log` are for the team.
+* Notification policy: person default (`gibbonServiceDeskNotificationPreference`, no row = both on) copied to
+  `gibbonServiceDeskTicketSubscriber` by `SubscriberGateway::subscribe()` when the person becomes involved.
+* Things that must not break the user's request (notifications, email) are caught and logged.
+* Dates in the database are `Y-m-d` / `Y-m-d H:i:s`; show with `Format::date`, `Format::dateTimeReadable`,
+  `Format::relativeTime`.

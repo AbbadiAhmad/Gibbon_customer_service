@@ -1,0 +1,32 @@
+CHANGELOG
+=========
+
+v1.3.00
+-------
+Board view on the Tickets page for team members and administrators: a filter on one ticket type shows that type's
+workflow stages as columns and tickets can be dragged between them; other filters show the columns Open / In
+Progress / Closed. Colour per ticket type (cards and list). The page remembers per person whether they last used the
+list or the board.
+Fix: saving a ticket type no longer clears "Requested By" (types saved with an earlier version may show no role
+ticked: tick the roles again and save).
+
+v1.2.00
+-------
+Comment permissions: "Edit Comments" (change the text, delete) and "Change Comment Visibility" (visible to the
+requester <-> internal), each for own comments (_my) or any comment (_all). Edited comments are marked; deletions and
+visibility changes are recorded in the ticket's internal history.
+
+v1.1.00
+-------
+New permission "New Request_onBehalf" (create tickets on behalf of others): its holders see every active service and
+can send a request for another person, who becomes the requester; the ticket history says who created it.
+Teams can have a default assignee: new tickets of the team's ticket types are assigned to that person straight away.
+Notifications: a new ticket for a type whose teams have no members goes to the administrators; notification centre
+entries are written before emails; failures are written to Gibbon's log.
+
+v1.0.00
+-------
+First release. Service catalog and request forms per ticket type (with child and class pickers for parents),
+teams, tickets with comments / internal notes / history, workflow per ticket type copied from a default workflow,
+automation scripts on stage entry (Record absence in Attendance, Unenrol from classes), notification policy per
+person and per ticket (notification centre and email), personal and shared saved filters.

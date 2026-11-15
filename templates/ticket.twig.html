@@ -1,0 +1,66 @@
+{#<!--
+Gibbon: the flexible, open school platform
+Copyright © 2010, Gibbon Foundation
+
+One ticket: summary, the answers of the request form, and the history.
+-->#}
+
+<div class="serviceDesk-ticket">
+    <h2 class="serviceDesk-subject">
+        <span class="serviceDesk-number">#{{ number }}</span> {{ ticket.subject }}
+    </h2>
+
+    <div class="serviceDesk-summary">
+        <div><span>{{ __m('Ticket Type') }}</span>{{ __m(ticket.typeName) }}</div>
+        <div><span>{{ __m('Stage') }}</span><span class="serviceDesk-stage serviceDesk-stage-{{ ticket.stageCategory|replace({' ': ''}) }}">{{ __m(ticket.stageName) }}</span></div>
+        <div><span>{{ __m('Requester') }}</span>{{ requester }}</div>
+        <div><span>{{ __m('Assignee') }}</span>{{ assignee ?: __m('Unassigned') }}</div>
+        {% if canManage %}
+            <div><span>{{ __m('Priority') }}</span>{{ __m(ticket.priority) }}</div>
+        {% endif %}
+        <div><span>{{ __m('Created') }}</span>{{ formatUsing('dateTimeReadable', ticket.timestampCreated) }}</div>
+    </div>
+
+    {% if fields %}
+        <table class="serviceDesk-fields">
+            {% for field in fields %}
+                <tr>
+                    <th>{{ field.label }}</th>
+                    <td>{{ field.text|nl2br }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <h3>{{ __m('History') }}</h3>
+
+    {% for comment in comments %}
+        {% set isLog = comment.type in ['Log', 'Internal Log'] %}
+        {% set isInternal = comment.type in ['Internal Note', 'Internal Log'] %}
+        <div class="serviceDesk-entry {{ isLog ? 'serviceDesk-log' }} {{ isInternal ? 'serviceDesk-internal' }}">
+            <div class="serviceDesk-entryMeta">
+                <strong>
+                    {%- if comment.gibbonPersonID -%}
+                        {{ formatUsing('name', '', comment.preferredName, comment.surname, 'Student', false) }}
+                    {%- else -%}
+                        {{ __m('Service Desk') }}
+                    {%- endif -%}
+                </strong>
+                &middot; {{ formatUsing('dateTimeReadable', comment.timestamp) }}
+                {% if comment.timestampEdited %}&middot; <em title="{{ formatUsing('dateTimeReadable', comment.timestampEdited) }}">{{ __m('edited') }}</em>{% endif %}
+                {% if isInternal %}<span class="serviceDesk-badge">{{ __m('Internal') }}</span>{% endif %}
+                {% if comment.editURL or comment.deleteURL %}
+                    <span class="serviceDesk-entryTools">
+                        {% if comment.editURL %}<a href="{{ comment.editURL }}">{{ __('Edit') }}</a>{% endif %}
+                        {% if comment.deleteURL %}<a href="{{ comment.deleteURL }}">{{ __('Delete') }}</a>{% endif %}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="serviceDesk-entryText">{{ comment.comment|nl2br }}</div>
+        </div>
+    {% else %}
+        <div class="serviceDesk-entry serviceDesk-log">
+            <div class="serviceDesk-entryText">{{ __m('Nothing has happened on this ticket yet.') }}</div>
+        </div>
+    {% endfor %}
+</div>

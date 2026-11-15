@@ -1,0 +1,688 @@
+# Service Desk module for Gibbon - translation template.
+# Copy to i18n/<locale>/LC_MESSAGES/ServiceDesk.po (e.g. ar_SA, fr_FR), translate, and compile to ServiceDesk.mo.
+msgid ""
+msgstr ""
+"Project-Id-Version: ServiceDesk\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "A class enrolment could not be updated."
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "A script that runs when a ticket enters this stage. If it fails, the ticket stays in the stage it came from and the reason is written on the ticket as an internal note."
+msgstr ""
+
+#: types_manage.php
+msgid "A ticket type is a service people can request. It has its own request form, the teams that handle it, and its own workflow."
+msgstr ""
+
+#: tickets_view.php
+msgid "Add Comment"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Add Field"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "Add Members"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Add Stage"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "Add Team"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Add Ticket Type"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "After saving you can add the members of the team."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "After saving you can build the request form. The new type starts with a copy of the default workflow."
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "All"
+msgstr ""
+
+#: notifications.php
+msgid "Also change the tickets you already follow."
+msgstr ""
+
+#: notifications.php
+msgid "Apply to My Current Tickets"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Assigned to {name}."
+msgstr ""
+
+#: tickets.php tickets_view.php templates/ticket.twig.html
+msgid "Assignee"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Automation"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Automation \"{automation}\" failed, the ticket was not moved to {stage}: {reason}"
+msgstr ""
+
+#: workflow_manage.php workflow_stage_edit.php
+msgid "Automation on Entry"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Available Automation Scripts"
+msgstr ""
+
+#: tickets.php
+msgid "Available To"
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "Board"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Classes (the classes of those students)"
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Closed tickets are shown for {days} days."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Colour"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Comma separated."
+msgstr ""
+
+#: tickets_comment_edit.php
+msgid "Comment"
+msgstr ""
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Comment (visible to the requester)"
+msgstr ""
+
+#: templates/ticket.twig.html
+msgid "Created"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Created by {creator} on behalf of {name}."
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "Custom"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Date"
+msgstr ""
+
+#: teams_manage.php teams_manage_edit.php
+msgid "Default Assignee"
+msgstr ""
+
+#: workflow_manage.php
+msgid "Default Workflow"
+msgstr ""
+
+#: workflow_manage.php
+msgid "Default workflow (copied to new ticket types)"
+msgstr ""
+
+#: tickets_comment_delete.php
+msgid "Delete Comment"
+msgstr ""
+
+#: tickets.php
+msgid "Delete filter \"{name}\""
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Deleted a comment of {date}."
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Drag a ticket to another column to move it to that stage."
+msgstr ""
+
+#: tickets_comment_edit.php
+msgid "Edit Comment"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Edit Field"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Edit Stage"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "Edit Team"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Edit Ticket Type"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Edited a comment of {date}."
+msgstr ""
+
+#: workflow_manage.php
+msgid "Every new ticket type gets a copy of these stages. Changing them here does not change existing ticket types."
+msgstr ""
+
+#: tickets.php
+msgid "Everyone (shared filter)"
+msgstr ""
+
+#: types_field_edit.php types_manage_edit.php
+msgid "Field Name"
+msgstr ""
+
+#: tickets.php
+msgid "Filter tickets"
+msgstr ""
+
+#: templates/ticket.twig.html
+msgid "History"
+msgstr ""
+
+#: notifications.php
+msgid "How do you want to be told about updates on your tickets? Your choice is copied to every new ticket you are involved in; you can still change it on a single ticket."
+msgstr ""
+
+#: templates/ticket.twig.html
+msgid "Internal"
+msgstr ""
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Internal note"
+msgstr ""
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Internal notes are only seen by the team."
+msgstr ""
+
+#: tickets.php
+msgid "Keep these criteria under a name."
+msgstr ""
+
+#: types_field_edit.php types_manage_edit.php
+msgid "Label"
+msgstr ""
+
+#: request_new.php
+msgid "Leave empty to send a request for yourself. The person chosen becomes the requester of the ticket."
+msgstr ""
+
+#: types_field_edit.php
+msgid "Letters and digits, unique in this type. Automation scripts read the answer by this name (for example: students, dateStart, dateEnd, reason, classes). Leave empty to derive it from the label."
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "List"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Long Text"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Made a comment of {date} internal."
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Made a comment of {date} visible to the requester."
+msgstr ""
+
+#: teams_manage.php teams_manage_edit.php
+msgid "Manage Teams"
+msgstr ""
+
+#: tickets_view.php
+msgid "Manage Ticket"
+msgstr ""
+
+#: types_field_edit.php types_manage.php types_manage_edit.php
+msgid "Manage Ticket Types"
+msgstr ""
+
+#: workflow_manage.php workflow_stage_edit.php
+msgid "Manage Workflows"
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "Marks the students absent for each school day of the period. Reads the fields: students, dateStart, dateEnd (optional), reason (optional)."
+msgstr ""
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "Marks the students as left in the chosen classes. Reads the fields: classes, dateEffective (optional, default today). Finance is not changed."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Marks the tickets of this type in the list and on the board."
+msgstr ""
+
+#: tickets.php
+msgid "Me"
+msgstr ""
+
+#: teams_manage.php teams_manage_edit.php
+msgid "Members"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "Members of an inactive team no longer see its tickets."
+msgstr ""
+
+#: tickets_view.php
+msgid "Members of the teams that handle this ticket type."
+msgstr ""
+
+#: workflow_manage.php
+msgid "Missing script: {script}"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Moved to {stage}."
+msgstr ""
+
+#: tickets_view.php
+msgid "My Notifications for this Ticket"
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "My filter"
+msgstr ""
+
+#: request_new.php tickets.php templates/board.twig.html
+msgid "New Request"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "New comment"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "New internal note"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "New tickets of this team's ticket types are assigned to this member straight away. Leave empty and tickets start unassigned."
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "New tickets start in the stage with the lowest number."
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "New {type} request from {name}."
+msgstr ""
+
+#: types_manage.php
+msgid "No team"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "Nobody (tickets start unassigned)"
+msgstr ""
+
+#: tickets.php
+msgid "Nobody (unassigned)"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "None"
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Not all tickets fit on the board: narrow the filter."
+msgstr ""
+
+#: templates/ticket.twig.html
+msgid "Nothing has happened on this ticket yet."
+msgstr ""
+
+#: notifications.php tickets_view.php
+msgid "Notification Centre"
+msgstr ""
+
+#: notifications.php
+msgid "Notification Settings"
+msgstr ""
+
+#: request_new.php
+msgid "On Behalf Of"
+msgstr ""
+
+#: tickets.php
+msgid "Only me"
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "Only {found} of {expected} absences could be recorded."
+msgstr ""
+
+#: types_field_edit.php
+msgid "Optional help text under the label."
+msgstr ""
+
+#: request_new.php
+msgid "Optional: a short title for your request."
+msgstr ""
+
+#: types_field_edit.php
+msgid "Options"
+msgstr ""
+
+#: types_field_edit.php types_manage.php types_manage_edit.php workflow_manage.php workflow_stage_edit.php
+msgid "Order"
+msgstr ""
+
+#: templates/board.twig.html
+msgid "Overview by status. Choose a filter with a single ticket type to see its workflow stages and move tickets."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Position in the list of services."
+msgstr ""
+
+#: tickets.php tickets_view.php templates/ticket.twig.html
+msgid "Priority"
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "Priority set to {priority}."
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "Record absence in Attendance"
+msgstr ""
+
+#: teams_manage_edit.php
+msgid "Remove"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Request Form"
+msgstr ""
+
+#: types_manage.php types_manage_edit.php
+msgid "Requested By"
+msgstr ""
+
+#: tickets.php templates/ticket.twig.html
+msgid "Requester"
+msgstr ""
+
+#: types_field_edit.php types_manage_edit.php
+msgid "Required"
+msgstr ""
+
+#: tickets.php
+msgid "Save Filter"
+msgstr ""
+
+#: tickets.php
+msgid "Save as Filter"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Select (choose one option)"
+msgstr ""
+
+#: request_new.php
+msgid "Send Request"
+msgstr ""
+
+#: src/Service/Notifier.php templates/ticket.twig.html
+msgid "Service Desk"
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "Shared filter"
+msgstr ""
+
+#: templates/filters.twig.html
+msgid "Shared with team {team}"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Shown to people choosing a service."
+msgstr ""
+
+#: tickets.php tickets_view.php templates/ticket.twig.html
+msgid "Stage"
+msgstr ""
+
+#: tickets_view.php
+msgid "Stages marked * run an automation when the ticket enters them."
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Stay in this stage"
+msgstr ""
+
+#: src/Service/RequestFields.php
+msgid "Student and class"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Students (parents choose among their children)"
+msgstr ""
+
+#: request_new.php tickets.php
+msgid "Subject"
+msgstr ""
+
+#: tickets.php
+msgid "Subject or requester name."
+msgstr ""
+
+#: tickets.php
+msgid "Team: {team}"
+msgstr ""
+
+#: types_manage.php types_manage_edit.php
+msgid "Teams"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Text"
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The absence period is longer than {days} days: record it by hand."
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The absence period is missing or invalid."
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The absence was recorded in Attendance: {students} student(s), {days} school day(s), {period}."
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The attendance code \"Absent\" does not exist or is not active."
+msgstr ""
+
+#: notifications.php
+msgid "The bell at the top of the page."
+msgstr ""
+
+#: teams_manage.php
+msgid "The members of a team see and process the tickets of the ticket types given to the team (see Manage Ticket Types)."
+msgstr ""
+
+#: types_field_edit.php
+msgid "The question as people see it."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "The questions people answer when they send this request. A subject line is always offered. The field name is what automation scripts use to read the answer."
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The school is closed on every day of the absence period."
+msgstr ""
+
+#: workflow_manage.php
+msgid "The stages of this ticket type. New tickets start in the first stage; team members move them between stages."
+msgstr ""
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "The students were unenrolled from {count} class(es)."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "The teams whose members see and process these tickets."
+msgstr ""
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "The ticket has no classes that can be processed automatically."
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The ticket has no students."
+msgstr ""
+
+#: src/Service/TicketService.php
+msgid "The ticket is no longer assigned."
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Then Move To"
+msgstr ""
+
+#: src/Service/RequestFields.php
+msgid "There are no classes to choose from."
+msgstr ""
+
+#: templates/catalog.twig.html
+msgid "There are no services available to you at the moment."
+msgstr ""
+
+#: src/Service/RequestFields.php
+msgid "There are no students linked to your account."
+msgstr ""
+
+#: tickets_view.php
+msgid "This only changes this ticket. Your general choice is in Notification Settings."
+msgstr ""
+
+#: tickets.php
+msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
+msgstr ""
+
+#: tickets.php templates/ticket.twig.html
+msgid "Ticket Type"
+msgstr ""
+
+#: teams_manage.php
+msgid "Ticket Types"
+msgstr ""
+
+#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_view.php
+msgid "Tickets"
+msgstr ""
+
+#: tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html
+msgid "Unassigned"
+msgstr ""
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "Unenrol from classes"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Unique in this workflow."
+msgstr ""
+
+#: tickets_view.php
+msgid "Update Ticket"
+msgstr ""
+
+#: tickets.php
+msgid "Updated"
+msgstr ""
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Visibility"
+msgstr ""
+
+#: templates/catalog.twig.html
+msgid "What do you need?"
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "What the stage means for filters and lists: waiting, being worked on, or finished."
+msgstr ""
+
+#: workflow_stage_edit.php
+msgid "Where the ticket goes when the automation succeeded. Empty: it stays in this stage."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Who can send this kind of request."
+msgstr ""
+
+#: types_manage.php types_manage_edit.php workflow_manage.php
+msgid "Workflow"
+msgstr ""
+
+#: workflow_manage.php
+msgid "Workflow: {type}"
+msgstr ""
+
+#: types_field_edit.php
+msgid "Yes/No"
+msgstr ""
+
+#: request_new.php
+msgid "You are creating a request on behalf of {name}."
+msgstr ""
+
+#: tickets_view.php
+msgid "You are not following this ticket. Choose a channel to be told about its updates."
+msgstr ""
+
+#: workflow_manage.php
+msgid "Your request failed because a workflow needs at least one stage."
+msgstr ""
+
+#: types_manage.php
+msgid "Your request failed because this ticket type has tickets. Make it inactive instead."
+msgstr ""
+
+#: workflow_manage.php
+msgid "Your request failed because tickets are in this stage. Move them to another stage first."
+msgstr ""
+
+#: templates/ticket.twig.html
+msgid "edited"
+msgstr ""
+
+#: workflow_manage.php
+msgid "then move to {stage}"
+msgstr ""
+
