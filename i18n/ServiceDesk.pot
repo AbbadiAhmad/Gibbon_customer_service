@@ -54,8 +54,8 @@ msgstr ""
 msgid "All"
 msgstr ""
 
-#: hook_dashboard_requests.php hook_dashboard_staff.php
-msgid "All my requests"
+#: src/Service/DashboardWidget.php
+msgid "All {count} open tickets"
 msgstr ""
 
 #: notifications.php
@@ -68,10 +68,6 @@ msgstr ""
 
 #: notifications.php
 msgid "Apply to My Current Tickets"
-msgstr ""
-
-#: hook_dashboard_staff.php
-msgid "Assigned to me"
 msgstr ""
 
 #: src/Service/TicketService.php
@@ -258,6 +254,10 @@ msgstr ""
 msgid "Label"
 msgstr ""
 
+#: tickets.php
+msgid "Last Update"
+msgstr ""
+
 #: request_new.php
 msgid "Leave empty to send a request for yourself. The person chosen becomes the requester of the ticket."
 msgstr ""
@@ -354,11 +354,11 @@ msgstr ""
 msgid "My filter"
 msgstr ""
 
-#: hook_dashboard_requests.php hook_dashboard_staff.php
+#: src/Service/DashboardWidget.php
 msgid "My open requests"
 msgstr ""
 
-#: hook_dashboard_requests.php hook_dashboard_staff.php request_new.php tickets.php templates/board.twig.html
+#: request_new.php tickets.php src/Service/DashboardWidget.php templates/board.twig.html
 msgid "New Request"
 msgstr ""
 
@@ -390,10 +390,6 @@ msgstr ""
 msgid "No email was sent: your user account has no email address."
 msgstr ""
 
-#: hook_dashboard_staff.php
-msgid "No open ticket is assigned to you."
-msgstr ""
-
 #: src/Automation/Scripts/TellTeachers.php
 msgid "No teachers were found to tell."
 msgstr ""
@@ -422,10 +418,6 @@ msgstr ""
 msgid "Nothing has happened on this ticket yet."
 msgstr ""
 
-#: hook_dashboard_staff.php
-msgid "Nothing is waiting for someone to pick it up."
-msgstr ""
-
 #: notifications.php tickets_view.php
 msgid "Notification Centre"
 msgstr ""
@@ -450,8 +442,12 @@ msgstr ""
 msgid "Only {found} of {expected} absences could be recorded."
 msgstr ""
 
-#: hook_dashboard_staff.php
-msgid "Open the board"
+#: src/Service/DashboardWidget.php
+msgid "Open the Service Desk"
+msgstr ""
+
+#: src/Service/DashboardWidget.php
+msgid "Open tickets for me"
 msgstr ""
 
 #: types_field_edit.php
@@ -790,16 +786,16 @@ msgstr ""
 msgid "Ticket number, subject, details, children, classes, dates, requester, assignee and comments. Several words must all be found."
 msgstr ""
 
-#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_delete.php tickets_filter_delete.php tickets_requester.php tickets_view.php
+#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_delete.php tickets_filter_delete.php tickets_requester.php tickets_view.php src/Service/DashboardWidget.php
 msgid "Tickets"
 msgstr ""
 
-#: hook_dashboard_staff.php tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html
-msgid "Unassigned"
+#: tickets.php
+msgid "Tickets marked \"Updated\" have changed since you last opened them."
 msgstr ""
 
-#: hook_dashboard_staff.php
-msgid "Unassigned tickets"
+#: tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html
+msgid "Unassigned"
 msgstr ""
 
 #: src/Automation/Scripts/UnenrolFromClasses.php
@@ -814,7 +810,7 @@ msgstr ""
 msgid "Update Ticket"
 msgstr ""
 
-#: tickets.php
+#: tickets.php src/Service/DashboardWidget.php templates/board.twig.html
 msgid "Updated"
 msgstr ""
 
@@ -876,10 +872,6 @@ msgstr ""
 
 #: tickets_requester.php
 msgid "You can reopen it for {days} days."
-msgstr ""
-
-#: hook_dashboard_requests.php hook_dashboard_staff.php
-msgid "You have no open requests."
 msgstr ""
 
 #: workflow_manage.php

@@ -52,6 +52,9 @@ Every file a browser can request authorises itself. In order:
    * Search: a filter rule inside `queryTickets`, so it only narrows what the person may see. It searches public
      comments (`type IN ('Comment','Log')`) and never internal notes or internal log lines, otherwise a requester
      could probe them.
+   * "Updated" mark: computed per person in `queryTickets` (4th argument = the ticket types the person manages); people
+     who do not manage a ticket are compared against `timestampModifiedPublic`, so internal activity is not revealed to
+     requesters even as a mark. Marking a ticket as seen on a GET (opening it) only changes the person's own state.
    * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
      give the same answer.
    * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query

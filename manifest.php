@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.6.00';
+$version     = '1.7.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -115,6 +115,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicket` (
     `priority` enum('Low','Normal','High','Urgent') NOT NULL DEFAULT 'Normal',
     `timestampCreated` datetime NOT NULL,
     `timestampModified` datetime NOT NULL,
+    `timestampModifiedPublic` datetime NULL,
     `timestampClosed` datetime NULL,
     PRIMARY KEY (`gibbonServiceDeskTicketID`),
     KEY `type` (`gibbonServiceDeskTicketTypeID`),
@@ -165,6 +166,14 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskFilter` (
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
     PRIMARY KEY (`gibbonServiceDeskFilterID`),
     KEY `gibbonPersonID` (`gibbonPersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+// When a person last opened a ticket: a ticket changed after that is shown to them as "Updated".
+$moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketSeen` (
+    `gibbonServiceDeskTicketID` int(10) unsigned zerofill NOT NULL,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `timestampSeen` datetime NOT NULL,
+    PRIMARY KEY (`gibbonServiceDeskTicketID`,`gibbonPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // How a person last looked at the ticket list (list or board); the page opens the same way next time.
@@ -376,9 +385,9 @@ $actionRows[] = [
 ] + $serviceDeskAdminOnly;
 
 // ---------------------------------------------------------------------------------------------------------------------
-// Dashboard hooks: "my open requests" on the parents' dashboard, "tickets to pick up" on the staff dashboard. The
-// include file returns the HTML; it is shown to roles that hold the action named here.
+// Dashboard hooks. Gibbon runs a module on the home page only through a dashboard tab; the hook uses that to add the box
+// "My open tickets" to the sidebar and hides the tab again (see src/Service/DashboardWidget.php).
 // ---------------------------------------------------------------------------------------------------------------------
-foreach (['Parental Dashboard' => 'hook_dashboard_requests.php', 'Staff Dashboard' => 'hook_dashboard_staff.php'] as $serviceDeskHookType => $serviceDeskHookFile) {
-    $hooks[] = "INSERT INTO `gibbonHook` (`name`, `type`, `options`, `gibbonModuleID`) VALUES ('Service Desk', '".$serviceDeskHookType."', '".serialize(['sourceModuleName' => $name, 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => $serviceDeskHookFile])."', (SELECT gibbonModuleID FROM gibbonModule WHERE name='".$name."'));";
+foreach (['Parental Dashboard', 'Staff Dashboard', 'Student Dashboard'] as $serviceDeskHookType) {
+    $hooks[] = "INSERT INTO `gibbonHook` (`name`, `type`, `options`, `gibbonModuleID`) VALUES ('Service Desk', '".$serviceDeskHookType."', '".serialize(['sourceModuleName' => $name, 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => 'hook_dashboard.php'])."', (SELECT gibbonModuleID FROM gibbonModule WHERE name='".$name."'));";
 }

@@ -13,6 +13,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
 use Gibbon\Module\ServiceDesk\Domain\StageGateway;
+use Gibbon\Module\ServiceDesk\Domain\SeenGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
 use Gibbon\Module\ServiceDesk\Domain\CommentGateway;
@@ -42,6 +43,9 @@ if (empty($ticket) || !$access->canView($ticket)) {
 }
 
 $canManage = $access->canManage($ticket);
+
+// Opening the ticket is what clears its "Updated" mark for this person.
+$container->get(SeenGateway::class)->markSeen($gibbonServiceDeskTicketID, $gibbonPersonID);
 $page->breadcrumbs->add('#'.intval($gibbonServiceDeskTicketID));
 
 // TICKET: details, answers of the request form, history (internal entries only for the team)

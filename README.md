@@ -16,6 +16,8 @@ Inspired by the functions of [GibbonEdu/module-helpdesk](https://github.com/Gibb
 
 ## Install
 
+The module is self-contained: **no Gibbon core file is changed**, also not for the box on the home page.
+
 1. Copy (or clone) this repository to `<gibbon>/modules/ServiceDesk` (the folder name must be exactly `ServiceDesk`).
 2. Gibbon > **System Admin > Manage Modules** > install *ServiceDesk*.
 3. **ServiceDesk > Manage Teams**: add staff to the teams *Administration* and *Management*. Until a team has members,
@@ -49,7 +51,10 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
   Each ticket type has a switch for both (*Requesters Can Withdraw*, *Requesters Can Reopen*).
 * For absences, unenrolments and de-registrations the other parent of the family sees the ticket too, comments on it and
   is told about updates (setting *Share With Family* per ticket type; with data access only).
-* A tab *Service Desk* on the parents' dashboard lists the open requests.
+* On the home page a box in the sidebar (below the Message Wall) shows the two most recently updated open requests;
+  it is not shown when there is none. Team members see the tickets waiting for them there.
+* Tickets that changed since you last opened them are marked **Updated** and bold - in the list, on the board and in
+  that box. The list shows updated tickets first; click a column heading to sort.
 * The search field finds tickets by number, subject, details, children, classes, dates, requester, assignee and comments.
 
 **Staff with *New Request_onBehalf*** (default: Administrator, Support Staff)
@@ -63,8 +68,7 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 * Default: Administrator "_all"; Teacher and Support Staff "_my". Changes by others are noted in the team's history.
 
 **Team members** (staff added to a team)
-* Move a ticket to another ticket type when it was filed under the wrong service. Team members and administrators see
-  *Unassigned tickets* / *Assigned to me* on the staff dashboard.
+* Move a ticket to another ticket type when it was filed under the wrong service.
 * See the tickets of the ticket types given to their teams; comment, write internal notes (never shown to the
   requester), assign, set priority, move between stages.
 * Use the shared filters made for everyone or for their team (e.g. *Absence Intake*).

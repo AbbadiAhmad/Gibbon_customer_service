@@ -60,7 +60,8 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `teachers.js` | teacher notices on approval: recipients computed independently in SQL, text without reason, not emailed (uses the SMTP sink) |
 | `lifecycle.js` | move to another type, delete (permissions, tables emptied, log line), retention script (dry run, real run, refuses the web) |
 | `search.js` | 19 searches incl. old tickets, internal notes not found, wildcards and quotes, saved filter, board |
-| `widgets.js` | dashboard tabs of a parent, co-parent, parent without requests, team member, teacher in no team, administrator |
+| `widgets.js` | home page sidebar box: parent with two children (one box, below the Message Wall, tab hidden, other tabs work), no box without open tickets, team member, teacher, student |
+| `updated.js` | the "Updated" mark (new ticket, parent comment, team answer, internal note, own changes, board move, closed) and sorting by clicking headings |
 | `options.js` | several automation scripts on one stage (both succeed; one fails -> nothing happens), stage form keeps ticks, ticket type switches for withdraw / reopen |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |

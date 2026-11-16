@@ -89,6 +89,7 @@ class TicketService
             'searchText'                    => RequestFields::searchText($answers),
             'timestampCreated'              => $now,
             'timestampModified'             => $now,
+            'timestampModifiedPublic'       => $now,
             'timestampClosed'               => $stage['category'] == 'Closed' ? $now : null,
         ]);
         if (empty($gibbonServiceDeskTicketID)) return false;
@@ -264,7 +265,10 @@ class TicketService
             'comment'                   => $text,
             'timestamp'                 => $now,
         ]);
-        $this->ticketGateway->update($ticket['gibbonServiceDeskTicketID'], ['timestampModified' => $now]);
+        // Requesters are only alerted by what they can read: internal entries do not move the public timestamp.
+        $this->ticketGateway->update($ticket['gibbonServiceDeskTicketID'], in_array($type, ['Comment', 'Log'], true)
+            ? ['timestampModified' => $now, 'timestampModifiedPublic' => $now]
+            : ['timestampModified' => $now]);
     }
 
     /**
@@ -398,6 +402,7 @@ class TicketService
         $this->db->beginTransaction();
         $this->db->delete("DELETE FROM gibbonServiceDeskTicketComment WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
         $this->db->delete("DELETE FROM gibbonServiceDeskTicketSubscriber WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
+        $this->db->delete("DELETE FROM gibbonServiceDeskTicketSeen WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
         $this->db->delete("DELETE gibbonNotification FROM gibbonNotification JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonNotification.gibbonModuleID) WHERE gibbonModule.name='ServiceDesk' AND gibbonNotification.text LIKE :prefix", ['prefix' => '#'.intval($ticket['gibbonServiceDeskTicketID']).' %']);
         $deleted = $this->ticketGateway->delete($ticket['gibbonServiceDeskTicketID']);
 

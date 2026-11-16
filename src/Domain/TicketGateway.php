@@ -32,7 +32,12 @@ class TicketGateway extends QueryableGateway
      * Filters understood here (see TicketFilters): type (ids), status (stage categories), stage (name),
      * assignee (me / none / person id), requester (me), priority, team (id).
      */
-    public function queryTickets(QueryCriteria $criteria, $gibbonPersonID, bool $isAdmin)
+    /**
+     * Column `unread` (1/0): has the ticket changed since this person last opened it? People who work on the ticket
+     * (administrator, or its type is in $managedTypeIDs) count every change; everybody else only public changes, so a
+     * requester is not alerted by an internal note. A ticket never opened counts as unread while it is not closed.
+     */
+    public function queryTickets(QueryCriteria $criteria, $gibbonPersonID, bool $isAdmin, array $managedTypeIDs = [])
     {
         $query = $this
             ->newQuery()
@@ -46,7 +51,17 @@ class TicketGateway extends QueryableGateway
                 'gibbonServiceDeskStage.category AS stageCategory',
                 'requester.title AS requesterTitle', 'requester.surname AS requesterSurname', 'requester.preferredName AS requesterPreferredName',
                 'assignee.title AS assigneeTitle', 'assignee.surname AS assigneeSurname', 'assignee.preferredName AS assigneePreferredName',
+                "(CASE
+                    WHEN seen.timestampSeen IS NULL THEN (gibbonServiceDeskStage.category<>'Closed')
+                    WHEN (CASE WHEN :unreadAdmin=1 OR FIND_IN_SET(gibbonServiceDeskTicket.gibbonServiceDeskTicketTypeID+0, :unreadManaged)
+                               THEN gibbonServiceDeskTicket.timestampModified
+                               ELSE gibbonServiceDeskTicket.timestampModifiedPublic END) > seen.timestampSeen THEN 1
+                    ELSE 0 END) AS unread",
             ])
+            ->bindValue('unreadAdmin', $isAdmin ? 1 : 0)
+            ->bindValue('unreadManaged', implode(',', array_map('intval', $managedTypeIDs)))
+            ->leftJoin('gibbonServiceDeskTicketSeen AS seen', 'seen.gibbonServiceDeskTicketID=gibbonServiceDeskTicket.gibbonServiceDeskTicketID AND seen.gibbonPersonID=:unreadPerson')
+            ->bindValue('unreadPerson', $gibbonPersonID)
             ->innerJoin('gibbonServiceDeskTicketType', 'gibbonServiceDeskTicketType.gibbonServiceDeskTicketTypeID=gibbonServiceDeskTicket.gibbonServiceDeskTicketTypeID')
             ->innerJoin('gibbonServiceDeskStage', 'gibbonServiceDeskStage.gibbonServiceDeskStageID=gibbonServiceDeskTicket.gibbonServiceDeskStageID')
             ->leftJoin('gibbonPerson AS requester', 'requester.gibbonPersonID=gibbonServiceDeskTicket.gibbonPersonIDRequester')

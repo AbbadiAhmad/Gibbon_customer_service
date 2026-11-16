@@ -10,6 +10,7 @@ the Free Software Foundation, either version 3 of the License, or
 */
 
 use Gibbon\Data\Validator;
+use Gibbon\Module\ServiceDesk\Domain\SeenGateway;
 use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketGateway;
 use Gibbon\Module\ServiceDesk\Service\TicketAccess;
@@ -50,5 +51,8 @@ if (!$container->get(TicketService::class)->changeStage($ticket, $stage, $sessio
     header("Location: {$URL}&return=warning1");
     exit;
 }
+
+// The person moved the card themselves: the change is not news to them.
+$container->get(SeenGateway::class)->markSeen($ticket['gibbonServiceDeskTicketID'], $session->get('gibbonPersonID'));
 
 header("Location: {$URL}&return=success0");

@@ -178,11 +178,11 @@ if ($view == 'Board') {
     $boardMaxCards = 300;
 
     // TICKETS: same criteria and same access rules as the list, without paging; closed tickets only while recent.
-    $criteria = $ticketGateway->newQueryCriteria(false)->sortBy('timestampModified', 'DESC')->pageSize($boardMaxCards);
+    $criteria = $ticketGateway->newQueryCriteria(false)->sortBy('unread', 'DESC')->sortBy('timestampModified', 'DESC')->sortBy('gibbonServiceDeskTicket.gibbonServiceDeskTicketID', 'DESC')->pageSize($boardMaxCards);
     $criteria = TicketFilters::apply($criteria, $values)
         ->filterBy('closedSince', date('Y-m-d', strtotime("-{$boardClosedDays} days")));
 
-    $tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin)->toArray();
+    $tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin, $access->getTeamTypeIDs())->toArray();
 
     // COLUMNS: one ticket type in the filter -> that type's workflow stages (cards can be moved);
     // otherwise the three statuses, which exist in every workflow (overview only: a status is a different stage per type).
@@ -219,6 +219,7 @@ if ($view == 'Board') {
             'assignee'  => !empty($ticket['gibbonPersonIDAssignee']) ? Format::name('', $ticket['assigneePreferredName'], $ticket['assigneeSurname'], 'Student', false) : '',
             'priority'  => $ticket['priority'],
             'updated'   => $ticket['timestampModified'],
+            'unread'    => !empty($ticket['unread']),
             // Only tickets the person works on can be moved (their own requests of other teams cannot).
             'movable'   => !empty($singleType) && $access->canManage($ticket),
         ];
@@ -252,10 +253,11 @@ if ($view == 'Board') {
 }
 
 // QUERY
-$criteria = $ticketGateway->newQueryCriteria(true)->sortBy('timestampModified', 'DESC');
+// Default order: tickets with news first, then the most recently updated. Clicking a column heading sorts by it.
+$criteria = $ticketGateway->newQueryCriteria(true)->sortBy('unread', 'DESC')->sortBy('timestampModified', 'DESC')->sortBy('gibbonServiceDeskTicket.gibbonServiceDeskTicketID', 'DESC');
 $criteria = TicketFilters::apply($criteria, $values)->fromPOST();
 
-$tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin);
+$tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin, $access->getTeamTypeIDs());
 
 // TABLE
 $table = DataTable::createPaginated('tickets', $criteria);
@@ -265,7 +267,10 @@ $table->addHeaderAction('add', __m('New Request'))
     ->setURL('/modules/ServiceDesk/request_new.php')
     ->displayLabel();
 
+$table->setDescription(__m('Tickets marked "Updated" have changed since you last opened them.'));
+
 $table->modifyRows(function ($ticket, $row) {
+    if (!empty($ticket['unread'])) $row->addClass('serviceDesk-unread');
     return $ticket['stageCategory'] == 'Closed' ? $row->addClass('dull') : $row;
 });
 
@@ -279,7 +284,8 @@ $table->addColumn('subject', __m('Subject'))
     ->format(function ($ticket) use ($moduleURL) {
         $url = $moduleURL.'/tickets_view.php&gibbonServiceDeskTicketID='.$ticket['gibbonServiceDeskTicketID'];
         $dot = preg_match('/^#[0-9a-fA-F]{6}$/', $ticket['typeColor']) ? '<span class="serviceDesk-dot" style="background:'.$ticket['typeColor'].'"></span>' : '';
-        return Format::link($url, htmlspecialchars($ticket['subject'])).'<br/>'.$dot.Format::small(htmlspecialchars(__m($ticket['typeName'])));
+        $new = !empty($ticket['unread']) ? ' <span class="serviceDesk-new">'.__m('Updated').'</span>' : '';
+        return Format::link($url, htmlspecialchars($ticket['subject'])).$new.'<br/>'.$dot.Format::small(htmlspecialchars(__m($ticket['typeName'])));
     });
 
 if ($isAgent) {
@@ -308,8 +314,10 @@ if ($isAgent) {
     $table->addColumn('priority', __m('Priority'))->translatable();
 }
 
-$table->addColumn('timestampModified', __m('Updated'))
-    ->format(Format::using('relativeTime', 'timestampModified'));
+$table->addColumn('timestampModified', __m('Last Update'))
+    ->format(function ($ticket) {
+        return Format::relativeTime($ticket['timestampModified']).'<br/>'.Format::small(Format::dateTimeReadable($ticket['timestampModified']));
+    });
 
 $table->addActionColumn()
     ->addParam('gibbonServiceDeskTicketID')

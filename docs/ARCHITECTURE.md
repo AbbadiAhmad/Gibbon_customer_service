@@ -21,7 +21,8 @@
 | Board with the workflow as columns and drag and drop; colours; last view remembered per user (added in 1.3.00) | List / Board switch on the Tickets page; one type in the filter -> stage columns with drag and drop, otherwise status columns; colour per ticket type | `tickets.php` (board section), `templates/board.twig.html`, `js/board.js`, `tickets_boardProcess.php`, `ViewPreferenceGateway` |
 | Requester withdraws or reopens a request (1.5.00) | Link on the ticket -> confirmation page with an optional note; the withdrawn stage / first stage | `tickets_requester.php` (+Process), `TicketService::withdraw / reopen`, `TicketAccess::canWithdraw / canReopen` |
 | Both parents of a family see the ticket (1.5.00) | Type setting *Share With Family*; the other adults of the family (data access) are requester side | `GuardianGateway`, `TicketAccess::isFamilyMember`, scope in `TicketGateway::queryTickets`, `Notifier` |
-| Dashboard widgets (1.5.00) | Hooks on the Parental and Staff dashboards | `hook_dashboard_requests.php`, `hook_dashboard_staff.php`, `DashboardWidget` |
+| Open tickets on the home page (1.5.00 as dashboard tabs; a sidebar box since 1.7.00) | One hook file for the Parental, Staff and Student dashboards; it fills Gibbon's sidebar slot and hides its own tab | `hook_dashboard.php`, `DashboardWidget` |
+| A ticket with news is flagged; the list can be sorted (1.7.00) | "Updated" mark from the time each person last opened the ticket; default order updated first | `SeenGateway`, column `unread` in `TicketGateway::queryTickets`, `tickets.php` |
 | Teachers are told when an absence / unenrolment is approved, notification centre only (1.5.00; an automation script since 1.6.00) | Automation script *Tell the teachers*, ticked on a stage | `src/Automation/Scripts/TellTeachers.php`, `TeacherFinder`, `Notifier::notifyCentre` |
 | Ticket type decides whether requesters may withdraw / reopen (1.6.00) | Switches on the ticket type | `types_manage_edit.php`, `TicketAccess::canWithdraw / canReopen` |
 | Move a ticket to another type (1.5.00) | "Move to Another Ticket Type" form on the ticket | `TicketService::changeType` |
@@ -44,6 +45,7 @@ Team ──< TeamMember >── gibbonPerson (staff)
                                      └──< TicketSubscriber        (copy of the person's notification policy)
 
 ViewPreference (per person: List | Board)
+TicketSeen (per person per ticket: when last opened); Ticket.timestampModifiedPublic = last change a requester can read (1.7.00)
 TicketType.shareWithFamily, TicketType.retentionDays, Stage.withdrawn, Ticket.searchText (1.5.00)
 TicketType.allowWithdraw, TicketType.allowReopen; Stage.automation = comma-separated script names (1.6.00)
 NotificationPreference (per person)         Filter (person NULL = shared, with audience Agents | Requesters;
@@ -113,7 +115,7 @@ tickets_comment_edit.php (+Process)         comment text and/or visibility (comm
 tickets_requester.php (+Process)            withdraw / reopen by the requester side
 tickets_delete.php (+Process)               delete a ticket (action Delete Tickets)
 cli_deleteExpiredTickets.php                retention: run from cron (CLI only)
-hook_dashboard_requests.php, hook_dashboard_staff.php   dashboard tabs for parents / staff
+hook_dashboard.php                          home page: sidebar box "my open tickets" (parents, staff, students)
 tickets_comment_delete.php (+Process)       delete a comment
 notifications.php (+Process)                personal notification policy
 types_manage*.php, types_field_*.php        ticket types and their form fields      (admin)
@@ -125,7 +127,8 @@ src/Service/TicketAccess.php                who may see / manage
 src/Service/RequestFields.php               form fields: build, validate, describe
 src/Service/People.php                      children of a parent, classes, staff (Gibbon tables)
 src/Service/TeacherFinder.php               form tutors and class teachers of the children on a ticket
-src/Service/DashboardWidget.php             the ticket lists on the dashboards
+src/Service/DashboardWidget.php             the sidebar box on the home page
+src/Domain/SeenGateway.php                  when a person last opened a ticket ("Updated" mark)
 src/Domain/GuardianGateway.php              the other adults of a family
 src/Service/Notifier.php, TicketFilters.php notifications; filter criteria
 src/Automation/                             interface, context, result, registry, Scripts/
@@ -203,6 +206,11 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   stage form saved twice keeps the ticked scripts; both scripts succeed (attendance + notices); a weekend absence
   fails and leaves **no** teacher notice, no attendance row, ticket in New; unticking the teacher script; no script
   ticked clears "then move to"; the two ticket type switches hide the links and make the pages refuse.
+* 1.7.00 (`widgets.js`, `updated.js`; upgrade 1.6.00 -> 1.7.00 and a fresh install): sidebar box below the Message
+  Wall, once for a parent with two children, none without open tickets, for team member, teacher and student; the
+  "Service Desk" tab is hidden and the other dashboard tabs still work; the "Updated" mark for new tickets, a
+  parent's comment, a team answer, not for internal notes (requester) nor own changes nor board moves; sorting by
+  clicking headings. **No Gibbon core file is changed.**
 * **Not tested**: the retention script from a real cron; drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
   and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

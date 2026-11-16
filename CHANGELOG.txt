@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+v1.7.00
+-------
+- Home page: a box "My open requests" / "Open tickets for me" in the sidebar, below the Message Wall, for parents,
+  students and staff, with the two most recently updated open tickets. No box when there is no open ticket. It
+  replaces the "Service Desk" dashboard tabs.
+- Tickets that changed since you last opened them are marked "Updated" and shown in bold in the list, on the board
+  and in the sidebar box. Requesters are only alerted by changes they can read.
+- The list starts with updated tickets first; the "Last Update" column shows the date and time; click a column
+  heading to sort.
+
 v1.6.00
 -------
 - A stage can run several automation scripts (tick list). They share one transaction: if one fails, none takes effect.

@@ -94,3 +94,21 @@ UPDATE `gibbonServiceDeskStage` SET automation=CONCAT_WS(',', NULLIF(automation,
 ALTER TABLE `gibbonServiceDeskStage` DROP `notifyTeachers`;end
 ALTER TABLE `gibbonServiceDeskTicketType` ADD `allowWithdraw` enum('Y','N') NOT NULL DEFAULT 'Y' AFTER `shareWithFamily`, ADD `allowReopen` enum('Y','N') NOT NULL DEFAULT 'Y' AFTER `allowWithdraw`;
 ";
+
+// v1.7.00 - sidebar box instead of dashboard tabs (one hook file, also for students); "Updated" mark (seen table, public
+//           modification time). Requesters and assignees start with their existing tickets marked as seen.
+++$count;
+$sql[$count][0] = '1.7.00';
+$serviceDeskHooks = [];
+foreach (['Parental Dashboard', 'Staff Dashboard', 'Student Dashboard'] as $serviceDeskHookType) {
+    $serviceDeskHooks[] = "INSERT INTO `gibbonHook` (`name`, `type`, `options`, `gibbonModuleID`) VALUES ('Service Desk', '".$serviceDeskHookType."', '".serialize(['sourceModuleName' => 'ServiceDesk', 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => 'hook_dashboard.php'])."', (SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'))";
+}
+$sql[$count][1] = "
+CREATE TABLE `gibbonServiceDeskTicketSeen` (`gibbonServiceDeskTicketID` int(10) unsigned zerofill NOT NULL, `gibbonPersonID` int(10) unsigned zerofill NOT NULL, `timestampSeen` datetime NOT NULL, PRIMARY KEY (`gibbonServiceDeskTicketID`,`gibbonPersonID`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
+ALTER TABLE `gibbonServiceDeskTicket` ADD `timestampModifiedPublic` datetime NULL AFTER `timestampModified`;end
+UPDATE `gibbonServiceDeskTicket` SET timestampModifiedPublic=timestampModified;end
+INSERT IGNORE INTO `gibbonServiceDeskTicketSeen` (`gibbonServiceDeskTicketID`, `gibbonPersonID`, `timestampSeen`) SELECT gibbonServiceDeskTicketID, gibbonPersonIDRequester, NOW() FROM `gibbonServiceDeskTicket`;end
+INSERT IGNORE INTO `gibbonServiceDeskTicketSeen` (`gibbonServiceDeskTicketID`, `gibbonPersonID`, `timestampSeen`) SELECT gibbonServiceDeskTicketID, gibbonPersonIDAssignee, NOW() FROM `gibbonServiceDeskTicket` WHERE gibbonPersonIDAssignee IS NOT NULL;end
+DELETE FROM `gibbonHook` WHERE gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');end
+".implode(";end\n", $serviceDeskHooks).";
+";

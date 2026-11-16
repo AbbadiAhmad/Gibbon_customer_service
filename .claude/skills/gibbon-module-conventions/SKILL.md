@@ -163,6 +163,17 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * Domain = module name; files `i18n/<locale>/LC_MESSAGES/ServiceDesk.mo`. Template: `php tests/make-pot.php`.
 * Names stored in the database and shown to users (type names, labels, stage names) are also passed through `__m()`.
 
+## "Changed since I last looked" (unread marks)
+* One row per person per record with `timestampSeen` (`gibbonServiceDeskTicketSeen`), written when the record's page is
+  opened (and after the person's own actions that do not end on that page, e.g. a board move). In the list query LEFT JOIN
+  it for the current person and compute a column (`unread`) so it can be shown **and sorted by**
+  (`$criteria->sortBy('unread', 'DESC')->sortBy('timestampModified', 'DESC')->sortBy('table.id', 'DESC')` - `sortBy` can
+  be called several times; add the id as a tie-break, timestamps have one-second resolution).
+* Keep a second timestamp for "last change the requester can read" when some changes are internal, otherwise people are
+  alerted by things they cannot see.
+* On upgrade insert "seen now" rows for the people involved, or every old record lights up.
+* `DataTable::createPaginated` columns are sortable by clicking the heading out of the box (**LIVE**), also computed ones.
+
 ## Lists stored as comma-separated text
 * `Stage.automation`, `TicketType.roleCategories`: store `implode(',', ...)` of **validated** keys in a fixed order
   (`array_intersect($allKeysInOrder, $posted)`); read with `array_filter(explode(',', $value))`; edit with
@@ -182,6 +193,17 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
   the module's classes are not autoloadable yet** (error "Alias ... is not being managed by the container"): call
   `$container->get(\Gibbon\Services\ModuleLoader::class)->registerModuleNamespace('ServiceDesk');` first. Add the module
   stylesheet with `$page->stylesheets->add(...)`. A tab for which Gibbon has no icon still renders.
+* **A box in the home page sidebar without touching core** (**LIVE**, v31): inside a dashboard hook set
+  `$session->set('sidebarExtra', $html)` and `$session->set('sidebarExtraPosition', 'bottom')` (below the Message Wall
+  and the other sidebar boxes; `'top'` is the default). `index.php` moves that session value into the sidebar after the
+  dashboard is built. Do **not** also call `$page->addSidebarExtra()`: with position `bottom` the template prints every
+  entry, including Gibbon's own empty one, and an empty second box appears.
+* **A hook always produces a tab** (the tab template prints every tab, also an empty one; parents get it once per
+  child, and the include file has the child's `$gibbonPersonID` in scope). To have no tab, return a marker plus an
+  inline script that removes its own `[role=tabpanel]` and the `[role=tab]` button with the same index
+  (`DashboardWidget::hook`); keep a harmless fallback (a link) for a Gibbon whose markup differs. Guard work that must
+  happen once per page with a static flag: the hook runs once per child for parents.
+* A parent, staff and student hook can share one include file; a Student Dashboard hook exists too.
 * **CLI script** (`cli_*.php`, **LIVE**): first statement `if (PHP_SAPI !== 'cli') { exit(...); }`, then `require_once
   __DIR__.'/../../gibbon.php';` (works from the shell with the module copied under `modules/`), then
   `$container->get(...)`. `$argv` for options. It needs no action in `manifest.php`; `tests/static.php` checks the

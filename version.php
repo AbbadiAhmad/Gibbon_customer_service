@@ -9,5 +9,5 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 */
 
-$moduleVersion = '1.6.00';
+$moduleVersion = '1.7.00';
 $coreVersion = '28.0.00';
