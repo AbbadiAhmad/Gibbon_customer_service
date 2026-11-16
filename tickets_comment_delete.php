@@ -20,8 +20,8 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/tickets_commen
     return;
 }
 
-$gibbonServiceDeskTicketID = $_GET['gibbonServiceDeskTicketID'] ?? '';
-$gibbonServiceDeskTicketCommentID = $_GET['gibbonServiceDeskTicketCommentID'] ?? '';
+$gibbonServiceDeskTicketID = intval($_GET['gibbonServiceDeskTicketID'] ?? 0) ?: '';
+$gibbonServiceDeskTicketCommentID = intval($_GET['gibbonServiceDeskTicketCommentID'] ?? 0) ?: '';
 
 $ticket = $container->get(TicketGateway::class)->getTicketByID($gibbonServiceDeskTicketID);
 $comment = !empty($ticket) ? $container->get(CommentGateway::class)->getCommentByTicket($gibbonServiceDeskTicketCommentID, $gibbonServiceDeskTicketID) : [];

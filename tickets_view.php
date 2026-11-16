@@ -13,7 +13,9 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
 use Gibbon\Module\ServiceDesk\Domain\StageGateway;
+use Gibbon\Module\ServiceDesk\Domain\SeenGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketGateway;
+use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
 use Gibbon\Module\ServiceDesk\Domain\CommentGateway;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
 use Gibbon\Module\ServiceDesk\Service\TicketAccess;
@@ -29,7 +31,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/tickets_view.p
 $page->breadcrumbs->add(__m('Tickets'), 'tickets.php');
 $page->stylesheets->add('serviceDesk', 'modules/ServiceDesk/css/module.css');
 
-$gibbonServiceDeskTicketID = $_GET['gibbonServiceDeskTicketID'] ?? '';
+$gibbonServiceDeskTicketID = intval($_GET['gibbonServiceDeskTicketID'] ?? 0) ?: '';
 $gibbonPersonID = $session->get('gibbonPersonID');
 $access = $container->get(TicketAccess::class);
 
@@ -41,6 +43,9 @@ if (empty($ticket) || !$access->canView($ticket)) {
 }
 
 $canManage = $access->canManage($ticket);
+
+// Opening the ticket is what clears its "Updated" mark for this person.
+$container->get(SeenGateway::class)->markSeen($gibbonServiceDeskTicketID, $gibbonPersonID);
 $page->breadcrumbs->add('#'.intval($gibbonServiceDeskTicketID));
 
 // TICKET: details, answers of the request form, history (internal entries only for the team)
@@ -69,6 +74,22 @@ echo $page->fetchFromTemplate('ticket.twig.html', [
 ]);
 
 $processURL = $session->get('absoluteURL').'/modules/ServiceDesk/tickets_viewProcess.php';
+$moduleURL = $session->get('absoluteURL').'/index.php?q=/modules/ServiceDesk';
+
+// REQUESTER: withdraw or reopen (the requester, or another adult of the family); DELETE: with the permission
+$tools = [];
+if ($access->canWithdraw($ticket)) {
+    $tools[] = Format::link($moduleURL.'/tickets_requester.php&action=withdraw&gibbonServiceDeskTicketID='.intval($gibbonServiceDeskTicketID), __m('Withdraw this request'));
+}
+if ($access->canReopen($ticket)) {
+    $tools[] = Format::link($moduleURL.'/tickets_requester.php&action=reopen&gibbonServiceDeskTicketID='.intval($gibbonServiceDeskTicketID), __m('Reopen this request'));
+}
+if ($access->canDelete($ticket)) {
+    $tools[] = Format::link($moduleURL.'/tickets_delete.php&gibbonServiceDeskTicketID='.intval($gibbonServiceDeskTicketID), __m('Delete this ticket'));
+}
+if (!empty($tools)) {
+    echo '<p class="serviceDesk-tools">'.implode(' &middot; ', $tools).'</p>';
+}
 
 // COMMENT
 $form = Form::create('comment', $processURL);
@@ -129,6 +150,32 @@ if ($canManage) {
         $row->addSubmit(__m('Update Ticket'));
 
     echo $form->getOutput();
+
+    // MOVE to another ticket type, when the request was filed under the wrong service
+    $types = [];
+    foreach ($container->get(TicketTypeGateway::class)->selectActiveTypes()->fetchAll() as $type) {
+        if (intval($type['gibbonServiceDeskTicketTypeID']) !== intval($ticket['gibbonServiceDeskTicketTypeID'])) {
+            $types[intval($type['gibbonServiceDeskTicketTypeID'])] = __m($type['name']);
+        }
+    }
+
+    if (!empty($types)) {
+        $form = Form::create('move', $processURL);
+        $form->setTitle(__m('Move to Another Ticket Type'));
+        $form->setDescription(__m('For a request filed under the wrong service. The teams of the new type take over; the stage of the same name is kept, otherwise the ticket starts in the first stage. The assignee stays only if they are in a team of the new type.'));
+        $form->addHiddenValue('address', $session->get('address'));
+        $form->addHiddenValue('gibbonServiceDeskTicketID', $gibbonServiceDeskTicketID);
+        $form->addHiddenValue('action', 'move');
+
+        $row = $form->addRow();
+            $row->addLabel('gibbonServiceDeskTicketTypeID', __m('Ticket Type'));
+            $row->addSelect('gibbonServiceDeskTicketTypeID')->fromArray($types)->placeholder()->required();
+
+        $row = $form->addRow();
+            $row->addSubmit(__m('Move Ticket'));
+
+        echo $form->getOutput();
+    }
 }
 
 // NOTIFICATIONS for this ticket: the user's copy of their notification policy, or the chance to start following

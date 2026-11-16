@@ -23,8 +23,8 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/workflow_stage
 }
 
 // One page for add (no stage id) and edit. No ticket type = the default workflow.
-$gibbonServiceDeskTicketTypeID = $_GET['gibbonServiceDeskTicketTypeID'] ?? '';
-$gibbonServiceDeskStageID = $_GET['gibbonServiceDeskStageID'] ?? '';
+$gibbonServiceDeskTicketTypeID = intval($_GET['gibbonServiceDeskTicketTypeID'] ?? 0) ?: '';
+$gibbonServiceDeskStageID = intval($_GET['gibbonServiceDeskStageID'] ?? 0) ?: '';
 $stageGateway = $container->get(StageGateway::class);
 
 if (!empty($gibbonServiceDeskTicketTypeID) && !$container->get(TicketTypeGateway::class)->exists($gibbonServiceDeskTicketTypeID)) {
@@ -36,7 +36,7 @@ $page->breadcrumbs
     ->add(__m('Manage Workflows'), 'workflow_manage.php', ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID])
     ->add(empty($gibbonServiceDeskStageID) ? __m('Add Stage') : __m('Edit Stage'));
 
-$values = ['category' => 'In Progress', 'sequenceNumber' => 0];
+$values = ['category' => 'In Progress', 'sequenceNumber' => 0, 'automation' => '', 'withdrawn' => 'N'];
 if (!empty($gibbonServiceDeskStageID)) {
     $values = $stageGateway->getByID($gibbonServiceDeskStageID);
     if (empty($values) || intval($values['gibbonServiceDeskTicketTypeID']) !== intval($gibbonServiceDeskTicketTypeID)) {
@@ -62,12 +62,16 @@ $row = $form->addRow();
     $row->addLabel('sequenceNumber', __m('Order'))->description(__m('New tickets start in the stage with the lowest number.'));
     $row->addNumber('sequenceNumber')->maxLength(4)->required();
 
-$form->addRow()->addHeading(__m('Automation'))->append(__m('A script that runs when a ticket enters this stage. If it fails, the ticket stays in the stage it came from and the reason is written on the ticket as an internal note.'));
+$row = $form->addRow();
+    $row->addLabel('withdrawn', __m('Withdrawn Stage'))->description(__m('Where tickets go when the requester withdraws the request. One per workflow; it should have the status Closed.'));
+    $row->addYesNo('withdrawn')->required();
+
+$form->addRow()->addHeading(__m('Automation'))->append(__m('Scripts that run when a ticket enters this stage. Tick as many as you need: they run together, and if one fails nothing is changed - the ticket stays in the stage it came from and the reason is written on the ticket as an internal note.'));
 
 $registry = $container->get(AutomationRegistry::class);
 $row = $form->addRow();
     $row->addLabel('automation', __m('Automation on Entry'));
-    $row->addSelect('automation')->fromArray($registry->options())->placeholder(__m('None'));
+    $row->addCheckbox('automation')->fromArray($registry->options());
 
 $otherStages = [];
 foreach ($stageGateway->selectStagesByType($gibbonServiceDeskTicketTypeID)->fetchAll() as $stage) {
@@ -76,13 +80,15 @@ foreach ($stageGateway->selectStagesByType($gibbonServiceDeskTicketTypeID)->fetc
     }
 }
 $row = $form->addRow();
-    $row->addLabel('nextStage', __m('Then Move To'))->description(__m('Where the ticket goes when the automation succeeded. Empty: it stays in this stage.'));
+    $row->addLabel('nextStage', __m('Then Move To'))->description(__m('Where the ticket goes when the automation succeeded. Empty: it stays in this stage. Only used when an automation is ticked.'));
     $row->addSelect('nextStage')->fromArray($otherStages)->placeholder(__m('Stay in this stage'));
 
 $row = $form->addRow();
     $row->addFooter();
     $row->addSubmit();
 
+// A checkbox group needs the list, not the stored comma-separated text.
+$values['automation'] = array_filter(explode(',', (string) ($values['automation'] ?? '')));
 $form->loadAllValuesFrom($values);
 
 echo $form->getOutput();

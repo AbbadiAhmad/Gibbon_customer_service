@@ -22,7 +22,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/teams_manage_e
 }
 
 // One page for add (no id) and edit.
-$gibbonServiceDeskTeamID = $_GET['gibbonServiceDeskTeamID'] ?? '';
+$gibbonServiceDeskTeamID = intval($_GET['gibbonServiceDeskTeamID'] ?? 0) ?: '';
 $teamGateway = $container->get(TeamGateway::class);
 
 $page->breadcrumbs

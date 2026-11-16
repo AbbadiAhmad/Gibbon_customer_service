@@ -2,7 +2,7 @@
 # Builds a throw-away, real Gibbon (core + demo data) with this module copied in, for the live tests.
 # Needs: git, php 8.1+ (pdo_mysql, gd, intl, zip, curl, mbstring, gettext, bcmath), composer, mariadb-server, node + playwright.
 # Usage: tests/live/setup.sh [work directory]      (default: /tmp/servicedesk-live)
-# Then:  node tests/live/install.js && node tests/live/flow.js && node tests/live/notifications.js && node tests/live/onbehalf.js && node tests/live/assignee.js && node tests/live/comments.js && node tests/live/board.js && node tests/live/admin.js && node tests/live/smoke.js
+# Then:  node tests/live/install.js && node tests/live/flow.js && node tests/live/notifications.js && node tests/live/reporter.js && node tests/live/onbehalf.js && node tests/live/assignee.js && node tests/live/comments.js && node tests/live/board.js && node tests/live/audience.js && node tests/live/family.js && node tests/live/teachers.js && node tests/live/lifecycle.js && node tests/live/search.js && node tests/live/widgets.js && node tests/live/updated.js && node tests/live/options.js && node tests/live/admin.js && node tests/live/smoke.js
 # After changing module code run tests/live/sync.sh [work directory] (copies the module again; no reinstall needed
 # unless manifest.php changed - then run setup.sh again, it rebuilds the database).
 set -e

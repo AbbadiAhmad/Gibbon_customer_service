@@ -41,7 +41,7 @@ $ticketGateway = $container->get(TicketGateway::class);
 $teamGateway = $container->get(TeamGateway::class);
 
 // CRITERIA: from a saved filter, or from the filter form
-$filters = $container->get(FilterGateway::class)->selectFiltersByPerson($gibbonPersonID, $isAdmin)->fetchAll();
+$filters = $container->get(FilterGateway::class)->selectFiltersByPerson($gibbonPersonID, $isAdmin, $isAgent)->fetchAll();
 $filters = array_combine(array_map('intval', array_column($filters, 'gibbonServiceDeskFilterID')), $filters);
 
 $gibbonServiceDeskFilterID = intval($_GET['gibbonServiceDeskFilterID'] ?? 0);
@@ -73,6 +73,7 @@ echo $page->fetchFromTemplate('filters.twig.html', [
     'isCustom' => empty($activeFilter) && !empty($values),
     'url'      => $moduleURL.'/tickets.php',
     'view'     => $view,
+    'isAgent'  => $isAgent,
     'viewURL'  => $isAgent ? $moduleURL.'/tickets.php'.($criteriaQuery !== '' ? '&'.$criteriaQuery : '').'&view=' : '',
 ]);
 
@@ -82,7 +83,7 @@ $form->setClass('noIntBorder w-full');
 $form->addHiddenValue('q', '/modules/ServiceDesk/tickets.php');
 
 $row = $form->addRow();
-    $row->addLabel('search', __('Search For'))->description(__m('Subject or requester name.'));
+    $row->addLabel('search', __('Search For'))->description(__m('Ticket number, subject, details, children, classes, dates, requester, assignee and comments. Several words must all be found.'));
     $row->addTextField('search')->setValue($values['search'] ?? '')->maxLength(60);
 
 $types = [];
@@ -141,12 +142,16 @@ if (!empty($values) && empty($activeFilter)) {
         $row->addTextField('name')->maxLength(60)->required();
 
     if ($isAdmin) {
-        $shareWith = ['' => __m('Only me'), 'all' => __m('Everyone (shared filter)')];
+        $shareWith = [
+            ''           => __m('Only me'),
+            'agents'     => __m('Staff working on tickets (administrators and team members)'),
+            'requesters' => __m('Requesters (parents, students and staff who are in no team)'),
+        ];
         foreach ($teamGateway->selectTeamOptions()->fetchKeyPair() as $gibbonServiceDeskTeamID => $teamName) {
             $shareWith[intval($gibbonServiceDeskTeamID)] = __m('Team: {team}', ['team' => $teamName]);
         }
         $row = $form->addRow();
-            $row->addLabel('share', __m('Available To'));
+            $row->addLabel('share', __m('Available To'))->description(__m('The audience of a shared filter. A filter never shows a person more tickets than they may see.'));
             $row->addSelect('share')->fromArray($shareWith);
     }
 
@@ -159,13 +164,11 @@ echo '</details>';
 
 // DELETE the saved filter being shown (own filters; shared ones for administrators)
 if (!empty($activeFilter) && ($isAdmin || !empty($activeFilter['gibbonPersonID']))) {
-    $form = Form::createBlank('filterDelete', $session->get('absoluteURL').'/modules/ServiceDesk/tickets_filterProcess.php');
-    $form->addHiddenValue('address', $session->get('address'));
-    $form->addHiddenValue('action', 'delete');
-    $form->addHiddenValue('gibbonServiceDeskFilterID', $activeFilter['gibbonServiceDeskFilterID']);
-    $form->addRow()->addSubmit(__m('Delete filter "{name}"', ['name' => $activeFilter['name']]))->addClass('text-right');
-
-    echo $form->getOutput();
+    // A link to a confirmation page; the filter is only removed by the form there.
+    echo '<p class="serviceDesk-filterDelete">'.Format::link(
+        $moduleURL.'/tickets_filter_delete.php&gibbonServiceDeskFilterID='.intval($activeFilter['gibbonServiceDeskFilterID']),
+        htmlspecialchars(__m('Delete filter "{name}"', ['name' => $activeFilter['name']]))
+    ).'</p>';
 }
 
 // BOARD
@@ -175,11 +178,11 @@ if ($view == 'Board') {
     $boardMaxCards = 300;
 
     // TICKETS: same criteria and same access rules as the list, without paging; closed tickets only while recent.
-    $criteria = $ticketGateway->newQueryCriteria(false)->sortBy('timestampModified', 'DESC')->pageSize($boardMaxCards);
+    $criteria = $ticketGateway->newQueryCriteria(false)->pageSize($boardMaxCards);
     $criteria = TicketFilters::apply($criteria, $values)
         ->filterBy('closedSince', date('Y-m-d', strtotime("-{$boardClosedDays} days")));
 
-    $tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin)->toArray();
+    $tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin, $access->getTeamTypeIDs())->toArray();
 
     // COLUMNS: one ticket type in the filter -> that type's workflow stages (cards can be moved);
     // otherwise the three statuses, which exist in every workflow (overview only: a status is a different stage per type).
@@ -215,7 +218,8 @@ if ($view == 'Board') {
             'requester' => Format::name('', $ticket['requesterPreferredName'], $ticket['requesterSurname'], 'Student', false),
             'assignee'  => !empty($ticket['gibbonPersonIDAssignee']) ? Format::name('', $ticket['assigneePreferredName'], $ticket['assigneeSurname'], 'Student', false) : '',
             'priority'  => $ticket['priority'],
-            'updated'   => $ticket['timestampModified'],
+            'updated'   => $ticket['lastUpdate'],
+            'unread'    => !empty($ticket['unread']),
             // Only tickets the person works on can be moved (their own requests of other teams cannot).
             'movable'   => !empty($singleType) && $access->canManage($ticket),
         ];
@@ -249,10 +253,12 @@ if ($view == 'Board') {
 }
 
 // QUERY
-$criteria = $ticketGateway->newQueryCriteria(true)->sortBy('timestampModified', 'DESC');
+// Without a chosen order the gateway lists tickets with news first, then the most recently updated. Clicking a
+// column heading sorts by that column.
+$criteria = $ticketGateway->newQueryCriteria(true);
 $criteria = TicketFilters::apply($criteria, $values)->fromPOST();
 
-$tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin);
+$tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin, $access->getTeamTypeIDs());
 
 // TABLE
 $table = DataTable::createPaginated('tickets', $criteria);
@@ -262,11 +268,15 @@ $table->addHeaderAction('add', __m('New Request'))
     ->setURL('/modules/ServiceDesk/request_new.php')
     ->displayLabel();
 
+$table->setDescription(__m('Tickets marked "Updated" have changed since you last opened them.'));
+
 $table->modifyRows(function ($ticket, $row) {
+    if (!empty($ticket['unread'])) $row->addClass('serviceDesk-unread');
     return $ticket['stageCategory'] == 'Closed' ? $row->addClass('dull') : $row;
 });
 
 $table->addColumn('gibbonServiceDeskTicketID', '#')
+    ->sortable(['gibbonServiceDeskTicket.gibbonServiceDeskTicketID'])
     ->width('6%')
     ->format(function ($ticket) {
         return intval($ticket['gibbonServiceDeskTicketID']);
@@ -276,7 +286,8 @@ $table->addColumn('subject', __m('Subject'))
     ->format(function ($ticket) use ($moduleURL) {
         $url = $moduleURL.'/tickets_view.php&gibbonServiceDeskTicketID='.$ticket['gibbonServiceDeskTicketID'];
         $dot = preg_match('/^#[0-9a-fA-F]{6}$/', $ticket['typeColor']) ? '<span class="serviceDesk-dot" style="background:'.$ticket['typeColor'].'"></span>' : '';
-        return Format::link($url, htmlspecialchars($ticket['subject'])).'<br/>'.$dot.Format::small(htmlspecialchars(__m($ticket['typeName'])));
+        $new = !empty($ticket['unread']) ? ' <span class="serviceDesk-new">'.__m('Updated').'</span>' : '';
+        return Format::link($url, htmlspecialchars($ticket['subject'])).$new.'<br/>'.$dot.Format::small(htmlspecialchars(__m($ticket['typeName'])));
     });
 
 if ($isAgent) {
@@ -305,8 +316,10 @@ if ($isAgent) {
     $table->addColumn('priority', __m('Priority'))->translatable();
 }
 
-$table->addColumn('timestampModified', __m('Updated'))
-    ->format(Format::using('relativeTime', 'timestampModified'));
+$table->addColumn('lastUpdate', __m('Last Update'))
+    ->format(function ($ticket) {
+        return Format::relativeTime($ticket['lastUpdate']).'<br/>'.Format::small(Format::dateTimeReadable($ticket['lastUpdate']));
+    });
 
 $table->addActionColumn()
     ->addParam('gibbonServiceDeskTicketID')

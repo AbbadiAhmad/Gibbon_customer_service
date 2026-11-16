@@ -35,6 +35,26 @@ Every file a browser can request authorises itself. In order:
      always read together with its ticket (`CommentGateway::getCommentByTicket`). The edit process applies text and
      visibility separately, each only if its own permission covers the comment; changes by others, visibility changes
      and deletions write an `Internal Log` line.
+   * Family (`isFamilyMember`): only for ticket types with `shareWithFamily = 'Y'`; the viewer shares a family with the
+     requester **and has `childDataAccess = 'Y'`**. The same rule appears twice and must stay in step: in SQL for the
+     list scope (`TicketGateway::queryTickets`) and in `GuardianGateway::isCoAdult` for single tickets and
+     `selectCoAdultIDs` for notifications. `isRequesterSide` (requester or family) may comment, withdraw, reopen.
+   * Withdraw / reopen (`canWithdraw`, `canReopen`): requester side only; the ticket type must allow it (`allowWithdraw`, `allowReopen`, read with the ticket in `getTicketByID`); withdraw while Open / In Progress and only if
+     the workflow has a `withdrawn` stage; reopen for `REOPEN_DAYS` after `timestampClosed`. The confirmation page
+     and its process script check the same functions; failing says "not found".
+   * Delete (`canDelete`): the action *Delete Tickets* **and** `canView`. The retention script has no user: it only
+     selects what `selectExpiredTickets` returns (closed, type with retention, old enough).
+   * Move to another type (`move` action of `tickets_viewProcess.php`): `canManage` of the current ticket; the target
+     must exist and be active; afterwards `canView` is re-checked for the redirect.
+   * Teacher notices go to people who may not see the ticket: the text must contain no reason, no free text, no
+     internal data (`RequestFields::summary` builds it from children, classes and dates only) and is sent through the
+     notification centre only (`Notifier::notifyCentre`). Since 1.6.00 this is the script `TellTeachers`.
+   * Search: a filter rule inside `queryTickets`, so it only narrows what the person may see. It searches public
+     comments (`type IN ('Comment','Log')`) and never internal notes or internal log lines, otherwise a requester
+     could probe them.
+   * "Updated" mark: computed per person in `queryTickets` (4th argument = the ticket types the person manages); people
+     who do not manage a ticket are compared against `timestampModifiedPublic`, so internal activity is not revealed to
+     requesters even as a mark. Marking a ticket as seen on a GET (opening it) only changes the person's own state.
    * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
      give the same answer.
    * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query
@@ -54,6 +74,9 @@ Every file a browser can request authorises itself. In order:
      rules again (`canManage`, stage belongs to the ticket's type) and rebuilds the return address from cleaned
      criteria. The `movable` flag and the board itself (agents only) are conveniences. Saving the last view on a GET
      is accepted: it only changes the user's own display preference.
+   * filter audience: `isAgent()` (administrator, or member of a team with ticket types) decides which shared
+     filters are offered - `Agents` or `Requesters`; everybody who is not an agent is a requester, whatever their
+     Gibbon role. This is display only: the ticket query scope is what protects tickets.
    * filters: personal by default; only administrators may share; delete only own filters (shared: administrators).
    * team default assignee: must be a member of that team (else stored as empty); cleared when the member is removed.
    * admin forms: an id from the request is re-read and checked against its parent (field belongs to the type, stage
@@ -67,8 +90,22 @@ Every file a browser can request authorises itself. In order:
    `AutomationRegistry` when saved. Scripts run with the database rights of Gibbon: they must check their inputs
    (the ticket's stored answers) and verify their result.
 
-7. **Non-page files**: `src/` has `.htaccess` deny; templates and CSS hold no logic. A future CLI/cron script must
+7. **Non-page files** (`cli_*.php`: first statement is the `PHP_SAPI` check; `hook_*.php`: named by a hook in `manifest.php`; both checked by `tests/static.php`): `src/` has `.htaccess` deny; templates and CSS hold no logic. A future CLI/cron script must
    exit unless `PHP_SAPI === 'cli'` before loading anything; a dashboard hook must check the action itself.
+
+9. **Lessons from the audit (`docs/AUDIT.md`)** - check them for every new list, form and job:
+   * a list query limits sort columns and page size itself (the browser can post both);
+   * times and marks shown to a requester come from `timestampModifiedPublic` / `lastUpdate`, never from
+     `timestampModified`, or internal work shows through;
+   * anything a person can repeat freely needs a limit (20 self-service requests per hour);
+   * log lines hold no personal data (addresses are masked) and are rate-limited (one per kind per hour, one per
+     batch) - a log must not grow with every notification or every deleted ticket;
+   * ids from the address are turned into numbers at the top of the page (`intval(...) ?: ''`);
+   * folders that are not pages carry a `.htaccess` deny; a new top-level folder needs one too;
+   * what must disappear with a ticket is deleted in `TicketService::deleteTickets`; what can be orphaned by a
+     deleted person or ticket gets an entry in `TicketGateway::orphanChecks()` (the retention script runs them).
+   Prove a rule with a probe in `tests/live/security.js`: edit the hidden fields of a real form (`tamper()` sets
+   *every* input of that name - Gibbon forms can hold a field twice and the last one wins) and check the database.
 
 When adding an entry point, copy the guard block of a similar file and add the rule to `docs/ARCHITECTURE.md`
 section 3 if it is new. Verify with a second user in the live test (`tests/live/flow.js` logs in as another parent

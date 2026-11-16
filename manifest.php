@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.3.00';
+$version     = '1.8.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -56,7 +56,11 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketType` (
     `name` varchar(60) NOT NULL,
     `description` varchar(255) NOT NULL DEFAULT '',
     `roleCategories` varchar(60) NOT NULL DEFAULT 'Staff,Student,Parent,Other',
+    `shareWithFamily` enum('Y','N') NOT NULL DEFAULT 'N',
+    `allowWithdraw` enum('Y','N') NOT NULL DEFAULT 'Y',
+    `allowReopen` enum('Y','N') NOT NULL DEFAULT 'Y',
     `color` varchar(7) NOT NULL DEFAULT '',
+    `retentionDays` int(5) unsigned NULL,
     `active` enum('Y','N') NOT NULL DEFAULT 'Y',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
     PRIMARY KEY (`gibbonServiceDeskTicketTypeID`),
@@ -91,8 +95,9 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskStage` (
     `name` varchar(40) NOT NULL,
     `category` enum('Open','In Progress','Closed') NOT NULL DEFAULT 'Open',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
-    `automation` varchar(60) NULL,
+    `automation` varchar(255) NULL,
     `nextStage` varchar(40) NULL,
+    `withdrawn` enum('Y','N') NOT NULL DEFAULT 'N',
     PRIMARY KEY (`gibbonServiceDeskStageID`),
     KEY `gibbonServiceDeskTicketTypeID` (`gibbonServiceDeskTicketTypeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -106,15 +111,18 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicket` (
     `gibbonPersonIDAssignee` int(10) unsigned zerofill NULL,
     `subject` varchar(120) NOT NULL,
     `fields` text NULL,
+    `searchText` text NULL,
     `priority` enum('Low','Normal','High','Urgent') NOT NULL DEFAULT 'Normal',
     `timestampCreated` datetime NOT NULL,
     `timestampModified` datetime NOT NULL,
+    `timestampModifiedPublic` datetime NULL,
     `timestampClosed` datetime NULL,
     PRIMARY KEY (`gibbonServiceDeskTicketID`),
-    KEY `type` (`gibbonServiceDeskTicketTypeID`),
     KEY `stage` (`gibbonServiceDeskStageID`),
     KEY `requester` (`gibbonPersonIDRequester`),
-    KEY `assignee` (`gibbonPersonIDAssignee`)
+    KEY `assignee` (`gibbonPersonIDAssignee`),
+    KEY `listing` (`gibbonServiceDeskStageID`,`gibbonServiceDeskTicketTypeID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`),
+    KEY `listingType` (`gibbonServiceDeskTicketTypeID`,`gibbonServiceDeskStageID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // gibbonPersonID NULL = written by the system (workflow / automation).
@@ -147,16 +155,26 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketSubscriber` (
     PRIMARY KEY (`gibbonServiceDeskTicketID`,`gibbonPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-// gibbonPersonID NULL = shared filter made by an administrator; gibbonServiceDeskTeamID limits a shared filter to one team.
+// gibbonPersonID NULL = shared filter made by an administrator. A shared filter has an audience: Agents (administrators
+// and team members; gibbonServiceDeskTeamID then limits it to one team) or Requesters (everybody else).
 $moduleTables[] = "CREATE TABLE `gibbonServiceDeskFilter` (
     `gibbonServiceDeskFilterID` int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `gibbonPersonID` int(10) unsigned zerofill NULL,
     `gibbonServiceDeskTeamID` int(8) unsigned zerofill NULL,
+    `audience` enum('Agents','Requesters') NOT NULL DEFAULT 'Agents',
     `name` varchar(60) NOT NULL,
     `criteria` text NOT NULL,
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
     PRIMARY KEY (`gibbonServiceDeskFilterID`),
     KEY `gibbonPersonID` (`gibbonPersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+// When a person last opened a ticket: a ticket changed after that is shown to them as "Updated".
+$moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketSeen` (
+    `gibbonServiceDeskTicketID` int(10) unsigned zerofill NOT NULL,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `timestampSeen` datetime NOT NULL,
+    PRIMARY KEY (`gibbonServiceDeskTicketID`,`gibbonPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // How a person last looked at the ticket list (list or board); the page opens the same way next time.
@@ -173,12 +191,12 @@ $moduleTables[] = "INSERT INTO `gibbonServiceDeskTeam` (`gibbonServiceDeskTeamID
     (1, 'Administration', 'School office: attendance, enrolment, registration and general requests.'),
     (2, 'Management', 'School management: complaints.')";
 
-$moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketType` (`gibbonServiceDeskTicketTypeID`, `name`, `description`, `roleCategories`, `sequenceNumber`, `color`) VALUES
-    (1, 'Absence Report', 'Tell the school that your child will be (or was) absent.', 'Parent', 1, '#f59e0b'),
-    (2, 'Course Unenrolment', 'Ask to take your child out of one or more classes.', 'Parent', 2, '#3b82f6'),
-    (3, 'School De-registration', 'Ask to withdraw your child from the school.', 'Parent', 3, '#8b5cf6'),
-    (4, 'Complaint', 'Raise a complaint. The school will reply on the ticket.', 'Staff,Student,Parent,Other', 4, '#ef4444'),
-    (5, 'General Request', 'Anything else you need from the school office.', 'Staff,Student,Parent,Other', 5, '#10b981')";
+$moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketType` (`gibbonServiceDeskTicketTypeID`, `name`, `description`, `roleCategories`, `shareWithFamily`, `sequenceNumber`, `color`) VALUES
+    (1, 'Absence Report', 'Tell the school that your child will be (or was) absent.', 'Parent', 'Y', 1, '#f59e0b'),
+    (2, 'Course Unenrolment', 'Ask to take your child out of one or more classes.', 'Parent', 'Y', 2, '#3b82f6'),
+    (3, 'School De-registration', 'Ask to withdraw your child from the school.', 'Parent', 'Y', 3, '#8b5cf6'),
+    (4, 'Complaint', 'Raise a complaint. The school will reply on the ticket.', 'Staff,Student,Parent,Other', 'N', 4, '#ef4444'),
+    (5, 'General Request', 'Anything else you need from the school office.', 'Staff,Student,Parent,Other', 'N', 5, '#10b981')";
 
 $moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketTypeTeam` (`gibbonServiceDeskTicketTypeID`, `gibbonServiceDeskTeamID`) VALUES
     (1, 1), (2, 1), (3, 1), (4, 2), (5, 1)";
@@ -199,26 +217,34 @@ $moduleTables[] = "INSERT INTO `gibbonServiceDeskField` (`gibbonServiceDeskTicke
     (4, 'details', 'Complaint Details', '', 'Long Text', NULL, 'Y', 2),
     (5, 'details', 'Details', '', 'Long Text', NULL, 'Y', 1)";
 
-// The default workflow (type NULL) and its copy for every default type. The Absence Report gets an "Approved" stage whose
-// automation records the absence in Attendance and then moves the ticket to "Done".
-$serviceDeskWorkflow = [['New', 'Open'], ['In Progress', 'In Progress'], ['Done', 'Closed'], ['Rejected', 'Closed']];
+// The default workflow (type NULL) and its copy for every default type. Every workflow has a "Withdrawn" stage (flag
+// withdrawn): where a requester's "Withdraw this request" sends the ticket. `automation` lists the scripts of a stage,
+// comma separated. The Absence Report gets an "Approved" stage that records the absence in Attendance, tells the
+// teachers and then moves the ticket to "Done"; the Course Unenrolment gets an "Approved" stage that only tells the
+// teachers (the team updates enrolment and finance by hand).
+$serviceDeskWorkflow = [['New', 'Open'], ['In Progress', 'In Progress'], ['Done', 'Closed'], ['Rejected', 'Closed'], ['Withdrawn', 'Closed']];
 foreach ([null, 1, 2, 3, 4, 5] as $serviceDeskTypeID) {
     $rows = [];
     foreach ($serviceDeskWorkflow as $index => $stage) {
-        $rows[] = "(".($serviceDeskTypeID ?? 'NULL').", '{$stage[0]}', '{$stage[1]}', ".(($index + 1) * 10).", NULL, NULL)";
+        $rows[] = "(".($serviceDeskTypeID ?? 'NULL').", '{$stage[0]}', '{$stage[1]}', ".(($index + 1) * 10).", NULL, NULL, '".($stage[0] == 'Withdrawn' ? 'Y' : 'N')."')";
     }
     if ($serviceDeskTypeID === 1) {
-        $rows[] = "(1, 'Approved', 'In Progress', 25, 'RecordAbsence', 'Done')";
+        $rows[] = "(1, 'Approved', 'In Progress', 25, 'RecordAbsence,TellTeachers', 'Done', 'N')";
     }
-    $moduleTables[] = "INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `automation`, `nextStage`) VALUES ".implode(', ', $rows);
+    if ($serviceDeskTypeID === 2) {
+        $rows[] = "(2, 'Approved', 'In Progress', 25, 'TellTeachers', NULL, 'N')";
+    }
+    $moduleTables[] = "INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `automation`, `nextStage`, `withdrawn`) VALUES ".implode(', ', $rows);
 }
 
-$moduleTables[] = "INSERT INTO `gibbonServiceDeskFilter` (`gibbonPersonID`, `gibbonServiceDeskTeamID`, `name`, `criteria`, `sequenceNumber`) VALUES
-    (NULL, NULL, 'My Requests', '{\"requester\":\"me\"}', 1),
-    (NULL, NULL, 'Open Tickets', '{\"status\":[\"Open\",\"In Progress\"]}', 2),
-    (NULL, NULL, 'Assigned to Me', '{\"assignee\":\"me\",\"status\":[\"Open\",\"In Progress\"]}', 3),
-    (NULL, NULL, 'Unassigned', '{\"assignee\":\"none\",\"status\":[\"Open\",\"In Progress\"]}', 4),
-    (NULL, 1, 'Absence Intake', '{\"type\":[\"1\"],\"status\":[\"Open\"]}', 5)";
+$moduleTables[] = "INSERT INTO `gibbonServiceDeskFilter` (`gibbonPersonID`, `gibbonServiceDeskTeamID`, `audience`, `name`, `criteria`, `sequenceNumber`) VALUES
+    (NULL, NULL, 'Agents', 'My Requests', '{\"requester\":\"me\"}', 1),
+    (NULL, NULL, 'Agents', 'Open Tickets', '{\"status\":[\"Open\",\"In Progress\"]}', 2),
+    (NULL, NULL, 'Agents', 'Assigned to Me', '{\"assignee\":\"me\",\"status\":[\"Open\",\"In Progress\"]}', 3),
+    (NULL, NULL, 'Agents', 'Unassigned', '{\"assignee\":\"none\",\"status\":[\"Open\",\"In Progress\"]}', 4),
+    (NULL, 1, 'Agents', 'Absence Intake', '{\"type\":[\"1\"],\"status\":[\"Open\"]}', 5),
+    (NULL, NULL, 'Requesters', 'Open', '{\"status\":[\"Open\",\"In Progress\"]}', 1),
+    (NULL, NULL, 'Requesters', 'Closed', '{\"status\":[\"Closed\"]}', 2)";
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Actions
@@ -263,7 +289,7 @@ $actionRows[] = [
     'precedence'  => '0',
     'category'    => 'Requests',
     'description' => 'See your own requests and, for team members, the tickets of your teams.',
-    'URLList'     => 'tickets.php,tickets_filterProcess.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php',
+    'URLList'     => 'tickets.php,tickets_filterProcess.php,tickets_filter_delete.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php,tickets_requester.php,tickets_requesterProcess.php',
     'entryURL'    => 'tickets.php',
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',
@@ -302,6 +328,18 @@ foreach ($serviceDeskCommentActions as $serviceDeskActionName => $serviceDeskAct
         ];
     }
 }
+
+// Permanent removal of a ticket (data-protection requests). Holders can delete the tickets they can see.
+$actionRows[] = [
+    'name'        => 'Delete Tickets',
+    'precedence'  => '0',
+    'category'    => 'Requests',
+    'description' => 'Permanently delete a ticket, for example for a data-protection request. Tickets can also be deleted automatically after the retention time of their ticket type.',
+    'URLList'     => 'tickets_delete.php,tickets_deleteProcess.php',
+    'entryURL'    => 'tickets_delete.php',
+    'entrySidebar' => 'Y',
+    'menuShow'    => 'N',
+] + $serviceDeskAdminOnly;
 
 $actionRows[] = [
     'name'        => 'Notification Settings',
@@ -346,3 +384,11 @@ $actionRows[] = [
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',
 ] + $serviceDeskAdminOnly;
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Dashboard hooks. Gibbon runs a module on the home page only through a dashboard tab; the hook uses that to add the box
+// "My open tickets" to the sidebar and hides the tab again (see src/Service/DashboardWidget.php).
+// ---------------------------------------------------------------------------------------------------------------------
+foreach (['Parental Dashboard', 'Staff Dashboard', 'Student Dashboard'] as $serviceDeskHookType) {
+    $hooks[] = "INSERT INTO `gibbonHook` (`name`, `type`, `options`, `gibbonModuleID`) VALUES ('Service Desk', '".$serviceDeskHookType."', '".serialize(['sourceModuleName' => $name, 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => 'hook_dashboard.php'])."', (SELECT gibbonModuleID FROM gibbonModule WHERE name='".$name."'));";
+}

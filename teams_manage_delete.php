@@ -18,7 +18,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/teams_manage_d
     return;
 }
 
-$gibbonServiceDeskTeamID = $_GET['gibbonServiceDeskTeamID'] ?? '';
+$gibbonServiceDeskTeamID = intval($_GET['gibbonServiceDeskTeamID'] ?? 0) ?: '';
 
 if (!$container->get(TeamGateway::class)->exists($gibbonServiceDeskTeamID)) {
     $page->addError(__('The specified record cannot be found.'));

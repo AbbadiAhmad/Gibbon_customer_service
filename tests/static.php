@@ -44,6 +44,16 @@ foreach ($actionRows as $action) {
 foreach (glob($root.'/*.php') as $file) {
     $name = basename($file);
     if (in_array($name, ['manifest.php', 'version.php', 'CHANGEDB.php'])) continue;
+    // Command line scripts and dashboard hooks are not pages. A CLI script must stop unless run from the command line,
+    // before it loads anything; a hook file must be named by a hook in manifest.php.
+    if (strpos($name, 'cli_') === 0) {
+        if (!preg_match('/^<\?php.*?if \(PHP_SAPI !== .cli.\) \{\s*exit/s', file_get_contents($file))) { $fail++; echo "CLI SCRIPT WITHOUT A COMMAND LINE CHECK FIRST: $name\n"; }
+        continue;
+    }
+    if (strpos($name, 'hook_') === 0) {
+        if (strpos(file_get_contents($root.'/manifest.php'), $name) === false) { $fail++; echo "HOOK FILE NOT USED BY A HOOK IN manifest.php: $name\n"; }
+        continue;
+    }
     if (!in_array($name, $listed)) { $fail++; echo "NOT IN ANY ACTION URLList: $name\n"; }
 }
 foreach ($listed as $name) {

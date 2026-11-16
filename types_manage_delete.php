@@ -18,7 +18,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/types_manage_d
     return;
 }
 
-$gibbonServiceDeskTicketTypeID = $_GET['gibbonServiceDeskTicketTypeID'] ?? '';
+$gibbonServiceDeskTicketTypeID = intval($_GET['gibbonServiceDeskTicketTypeID'] ?? 0) ?: '';
 
 if (!$container->get(TicketTypeGateway::class)->exists($gibbonServiceDeskTicketTypeID)) {
     $page->addError(__('The specified record cannot be found.'));

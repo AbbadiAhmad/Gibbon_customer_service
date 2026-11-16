@@ -17,13 +17,13 @@ namespace Gibbon\Module\ServiceDesk\Automation;
  * To add one, create a class in src/Automation/Scripts/ (file name = class name) that implements this interface.
  * It then appears in the "Automation" list when editing a stage. No registration needed.
  *
- * How a script is run (see TicketService::changeStage):
+ * A stage can have several scripts. How they are run (see TicketService::changeStage):
  *   1. a database transaction is started and the ticket is moved into the stage,
- *   2. run() is called,
- *   3. success: the transaction is committed, the result message is written on the ticket as a comment, and the
+ *   2. run() of each script is called, in the order the scripts are listed on the stage,
+ *   3. all succeeded: the transaction is committed, the result messages are written on the ticket's history, and the
  *      ticket moves on to the stage's "next stage" if one is set,
- *   4. failure (AutomationResult::failure or any exception): everything is rolled back, the ticket stays where it
- *      was and the reason is written on the ticket as an internal note.
+ *   4. one failed (AutomationResult::failure or any exception): everything - including what earlier scripts of the
+ *      stage did - is rolled back, the ticket stays where it was and the reason is written as an internal note.
  *
  * Rules for run():
  *   - use $context->db() (or gateways from $context->container()) so the work is part of the transaction,

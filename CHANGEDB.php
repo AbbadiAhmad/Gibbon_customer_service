@@ -45,3 +45,80 @@ UPDATE `gibbonServiceDeskTicketType` SET color='#10b981' WHERE name='General Req
 CREATE TABLE `gibbonServiceDeskViewPreference` (`gibbonPersonID` int(10) unsigned zerofill NOT NULL, `ticketView` enum('List','Board') NOT NULL DEFAULT 'List', PRIMARY KEY (`gibbonPersonID`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
 UPDATE `gibbonAction` SET URLList='tickets.php,tickets_filterProcess.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php' WHERE name='Tickets' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');
 ";
+
+// v1.4.00 - audience of shared filters: existing ones are for agents (administrators, team members); requesters get Open / Closed
+++$count;
+$sql[$count][0] = '1.4.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskFilter` ADD `audience` enum('Agents','Requesters') NOT NULL DEFAULT 'Agents' AFTER `gibbonServiceDeskTeamID`;end
+INSERT INTO `gibbonServiceDeskFilter` (`gibbonPersonID`, `gibbonServiceDeskTeamID`, `audience`, `name`, `criteria`, `sequenceNumber`) VALUES (NULL, NULL, 'Requesters', 'Open', '{\\\"status\\\":[\\\"Open\\\",\\\"In Progress\\\"]}', 1), (NULL, NULL, 'Requesters', 'Closed', '{\\\"status\\\":[\\\"Closed\\\"]}', 2);
+";
+
+// v1.4.01 - confirmation page for deleting a saved filter
+++$count;
+$sql[$count][0] = '1.4.01';
+$sql[$count][1] = "
+UPDATE `gibbonAction` SET URLList='tickets.php,tickets_filterProcess.php,tickets_filter_delete.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php' WHERE name='Tickets' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');
+";
+
+// v1.5.00 - family sharing, withdrawn stage, teacher notices, retention, search text, dashboard hooks, action "Delete Tickets"
+++$count;
+$sql[$count][0] = '1.5.00';
+$serviceDeskHooks = [];
+foreach (['Parental Dashboard' => 'hook_dashboard_requests.php', 'Staff Dashboard' => 'hook_dashboard_staff.php'] as $serviceDeskHookType => $serviceDeskHookFile) {
+    $serviceDeskHooks[] = "INSERT INTO `gibbonHook` (`name`, `type`, `options`, `gibbonModuleID`) VALUES ('Service Desk', '".$serviceDeskHookType."', '".serialize(['sourceModuleName' => 'ServiceDesk', 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => $serviceDeskHookFile])."', (SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'))";
+}
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskTicketType` ADD `shareWithFamily` enum('Y','N') NOT NULL DEFAULT 'N' AFTER `roleCategories`, ADD `retentionDays` int(5) unsigned NULL AFTER `color`;end
+ALTER TABLE `gibbonServiceDeskStage` ADD `notifyTeachers` enum('Y','N') NOT NULL DEFAULT 'N' AFTER `nextStage`, ADD `withdrawn` enum('Y','N') NOT NULL DEFAULT 'N' AFTER `notifyTeachers`;end
+ALTER TABLE `gibbonServiceDeskTicket` ADD `searchText` text NULL AFTER `fields`;end
+UPDATE `gibbonServiceDeskTicketType` SET shareWithFamily='Y' WHERE name IN ('Absence Report', 'Course Unenrolment', 'School De-registration');end
+UPDATE `gibbonServiceDeskStage` SET withdrawn='Y' WHERE name='Withdrawn';end
+INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `withdrawn`) SELECT t.gibbonServiceDeskTicketTypeID, 'Withdrawn', 'Closed', 50, 'Y' FROM `gibbonServiceDeskTicketType` t WHERE NOT EXISTS (SELECT 1 FROM `gibbonServiceDeskStage` s WHERE s.gibbonServiceDeskTicketTypeID=t.gibbonServiceDeskTicketTypeID AND s.withdrawn='Y');end
+INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `withdrawn`) SELECT NULL, 'Withdrawn', 'Closed', 50, 'Y' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `gibbonServiceDeskStage` s WHERE s.gibbonServiceDeskTicketTypeID IS NULL AND s.withdrawn='Y');end
+INSERT INTO `gibbonServiceDeskStage` (`gibbonServiceDeskTicketTypeID`, `name`, `category`, `sequenceNumber`, `notifyTeachers`) SELECT t.gibbonServiceDeskTicketTypeID, 'Approved', 'In Progress', 25, 'Y' FROM `gibbonServiceDeskTicketType` t WHERE t.name='Course Unenrolment' AND NOT EXISTS (SELECT 1 FROM `gibbonServiceDeskStage` s WHERE s.gibbonServiceDeskTicketTypeID=t.gibbonServiceDeskTicketTypeID AND s.name='Approved');end
+UPDATE `gibbonServiceDeskStage` SET notifyTeachers='Y' WHERE name='Approved' AND gibbonServiceDeskTicketTypeID IN (SELECT gibbonServiceDeskTicketTypeID FROM `gibbonServiceDeskTicketType` WHERE name IN ('Absence Report', 'Course Unenrolment'));end
+UPDATE `gibbonAction` SET URLList='tickets.php,tickets_filterProcess.php,tickets_filter_delete.php,tickets_boardProcess.php,tickets_view.php,tickets_viewProcess.php,tickets_requester.php,tickets_requesterProcess.php' WHERE name='Tickets' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');end
+INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, `description`, `URLList`, `entryURL`, `entrySidebar`, `menuShow`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES ((SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'), 'Delete Tickets', 0, 'Requests', 'Permanently delete a ticket, for example for a data-protection request. Tickets can also be deleted automatically after the retention time of their ticket type.', 'tickets_delete.php,tickets_deleteProcess.php', 'tickets_delete.php', 'Y', 'N', 'Y', 'N', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
+INSERT INTO `gibbonPermission` (`gibbonRoleID`, `gibbonActionID`) SELECT gibbonRole.gibbonRoleID, gibbonAction.gibbonActionID FROM gibbonRole JOIN gibbonAction ON (gibbonAction.name='Delete Tickets') JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID AND gibbonModule.name='ServiceDesk') WHERE gibbonRole.name='Administrator';end
+".implode(";end\n", $serviceDeskHooks).";
+";
+
+// v1.6.00 - several automation scripts per stage; "tell the teachers" becomes the script TellTeachers; ticket type
+//           switches for withdraw / reopen by requesters
+++$count;
+$sql[$count][0] = '1.6.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskStage` MODIFY `automation` varchar(255) NULL;end
+UPDATE `gibbonServiceDeskStage` SET automation=CONCAT_WS(',', NULLIF(automation, ''), 'TellTeachers') WHERE notifyTeachers='Y';end
+ALTER TABLE `gibbonServiceDeskStage` DROP `notifyTeachers`;end
+ALTER TABLE `gibbonServiceDeskTicketType` ADD `allowWithdraw` enum('Y','N') NOT NULL DEFAULT 'Y' AFTER `shareWithFamily`, ADD `allowReopen` enum('Y','N') NOT NULL DEFAULT 'Y' AFTER `allowWithdraw`;
+";
+
+// v1.7.00 - sidebar box instead of dashboard tabs (one hook file, also for students); "Updated" mark (seen table, public
+//           modification time). Requesters and assignees start with their existing tickets marked as seen.
+++$count;
+$sql[$count][0] = '1.7.00';
+$serviceDeskHooks = [];
+foreach (['Parental Dashboard', 'Staff Dashboard', 'Student Dashboard'] as $serviceDeskHookType) {
+    $serviceDeskHooks[] = "INSERT INTO `gibbonHook` (`name`, `type`, `options`, `gibbonModuleID`) VALUES ('Service Desk', '".$serviceDeskHookType."', '".serialize(['sourceModuleName' => 'ServiceDesk', 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => 'hook_dashboard.php'])."', (SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk'))";
+}
+$sql[$count][1] = "
+CREATE TABLE `gibbonServiceDeskTicketSeen` (`gibbonServiceDeskTicketID` int(10) unsigned zerofill NOT NULL, `gibbonPersonID` int(10) unsigned zerofill NOT NULL, `timestampSeen` datetime NOT NULL, PRIMARY KEY (`gibbonServiceDeskTicketID`,`gibbonPersonID`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
+ALTER TABLE `gibbonServiceDeskTicket` ADD `timestampModifiedPublic` datetime NULL AFTER `timestampModified`;end
+UPDATE `gibbonServiceDeskTicket` SET timestampModifiedPublic=timestampModified;end
+INSERT IGNORE INTO `gibbonServiceDeskTicketSeen` (`gibbonServiceDeskTicketID`, `gibbonPersonID`, `timestampSeen`) SELECT gibbonServiceDeskTicketID, gibbonPersonIDRequester, NOW() FROM `gibbonServiceDeskTicket`;end
+INSERT IGNORE INTO `gibbonServiceDeskTicketSeen` (`gibbonServiceDeskTicketID`, `gibbonPersonID`, `timestampSeen`) SELECT gibbonServiceDeskTicketID, gibbonPersonIDAssignee, NOW() FROM `gibbonServiceDeskTicket` WHERE gibbonPersonIDAssignee IS NOT NULL;end
+DELETE FROM `gibbonHook` WHERE gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');end
+".implode(";end\n", $serviceDeskHooks).";
+";
+
+// v1.8.00 - speed with many tickets (docs/AUDIT.md): an index that holds everything a ticket list needs, so lists do
+//           not read the wide ticket rows; the search text of every ticket now also holds its public comments.
+++$count;
+$sql[$count][0] = '1.8.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskTicket` ADD KEY `listing` (`gibbonServiceDeskStageID`,`gibbonServiceDeskTicketTypeID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`);end
+ALTER TABLE `gibbonServiceDeskTicket` DROP KEY `type`, ADD KEY `listingType` (`gibbonServiceDeskTicketTypeID`,`gibbonServiceDeskStageID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`);end
+UPDATE `gibbonServiceDeskTicket` t SET t.searchText = LEFT(CONCAT(COALESCE(t.searchText, t.fields, ''), COALESCE((SELECT CONCAT('\\n', GROUP_CONCAT(c.comment ORDER BY c.gibbonServiceDeskTicketCommentID SEPARATOR '\\n')) FROM `gibbonServiceDeskTicketComment` c WHERE c.gibbonServiceDeskTicketID=t.gibbonServiceDeskTicketID AND c.type='Comment'), '')), 20000);
+";

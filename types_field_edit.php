@@ -21,8 +21,8 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/types_field_ed
 }
 
 // One page for add (no field id) and edit.
-$gibbonServiceDeskTicketTypeID = $_GET['gibbonServiceDeskTicketTypeID'] ?? '';
-$gibbonServiceDeskFieldID = $_GET['gibbonServiceDeskFieldID'] ?? '';
+$gibbonServiceDeskTicketTypeID = intval($_GET['gibbonServiceDeskTicketTypeID'] ?? 0) ?: '';
+$gibbonServiceDeskFieldID = intval($_GET['gibbonServiceDeskFieldID'] ?? 0) ?: '';
 
 $type = $container->get(TicketTypeGateway::class)->getByID($gibbonServiceDeskTicketTypeID);
 if (empty($type)) {

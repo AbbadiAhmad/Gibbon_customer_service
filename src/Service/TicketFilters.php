@@ -63,11 +63,7 @@ class TicketFilters
 
     public static function apply(QueryCriteria $criteria, array $values): QueryCriteria
     {
-        if (!empty($values['search'])) {
-            $criteria->searchBy(['gibbonServiceDeskTicket.subject', 'requester.surname', 'requester.preferredName'], $values['search']);
-        }
-
-        foreach (['type', 'status', 'stage', 'assignee', 'requester', 'priority'] as $name) {
+        foreach (['search', 'type', 'status', 'stage', 'assignee', 'requester', 'priority'] as $name) {
             if (!empty($values[$name])) {
                 $criteria->filterBy($name, is_array($values[$name]) ? implode(',', $values[$name]) : $values[$name]);
             }

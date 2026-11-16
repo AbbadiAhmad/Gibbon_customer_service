@@ -18,7 +18,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/workflow_stage
     return;
 }
 
-$gibbonServiceDeskStageID = $_GET['gibbonServiceDeskStageID'] ?? '';
+$gibbonServiceDeskStageID = intval($_GET['gibbonServiceDeskStageID'] ?? 0) ?: '';
 
 if (!$container->get(StageGateway::class)->exists($gibbonServiceDeskStageID)) {
     $page->addError(__('The specified record cannot be found.'));

@@ -31,11 +31,11 @@ Board view of the tickets: one column per workflow stage (one ticket type) or pe
             </div>
             <div class="serviceDesk-cards">
                 {% for card in column.cards %}
-                    <a class="serviceDesk-ticketCard {{ card.movable ? 'movable' }}" href="{{ ticketURL }}{{ card.id }}"
+                    <a class="serviceDesk-ticketCard {{ card.movable ? 'movable' }} {{ card.unread ? 'serviceDesk-unread' }}" href="{{ ticketURL }}{{ card.id }}"
                        style="border-left-color: {{ card.color }}"
                        {% if card.movable %}draggable="true" data-ticket="{{ card.id }}" data-stage="{{ column.id }}"{% endif %}>
                         <span class="serviceDesk-cardTop">
-                            <span class="serviceDesk-number">#{{ card.id }}</span>
+                            <span class="serviceDesk-number">#{{ card.id }}{% if card.unread %} <span class="serviceDesk-new">{{ __m('Updated') }}</span>{% endif %}</span>
                             {% if card.priority in ['High', 'Urgent'] %}
                                 <span class="serviceDesk-priority serviceDesk-priority-{{ card.priority }}">{{ __m(card.priority) }}</span>
                             {% endif %}

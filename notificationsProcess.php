@@ -11,6 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 use Gibbon\Data\Validator;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
+use Gibbon\Module\ServiceDesk\Service\Notifier;
 
 require_once '../../gibbon.php';
 
@@ -20,6 +21,13 @@ $URL = $session->get('absoluteURL').'/index.php?q=/modules/ServiceDesk/notificat
 
 if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/notifications.php') == false) {
     header("Location: {$URL}&return=error0");
+    exit;
+}
+
+// TEST: try both channels for the current user; the page shows the result.
+if (($_POST['action'] ?? '') == 'test') {
+    $session->set('serviceDeskNotificationTest', $container->get(Notifier::class)->sendTest($session->get('gibbonPersonID')));
+    header("Location: {$URL}");
     exit;
 }
 

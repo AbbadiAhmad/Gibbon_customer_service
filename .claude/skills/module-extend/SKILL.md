@@ -20,6 +20,17 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | A permission variant of an existing page | a grouped action `<Name>_<suffix>` in `manifest.php` + CHANGEDB, a `can...()` method in `TicketAccess` using `getHighestGroupedAction` (see `canCreateOnBehalf`) |
 | Something on the board | board section of `tickets.php` (columns, card data, limits), `templates/board.twig.html`, `js/board.js`, `tickets_boardProcess.php`; stage changes still go through `TicketService::changeStage()` |
 | A per-person display preference | `ViewPreferenceGateway` (one row per person) |
+| A default shared filter | `manifest.php` INSERT with `audience` (`Agents` / `Requesters`) and, for an upgrade, an INSERT in CHANGEDB |
+| A rule shared between SQL and PHP (e.g. "who sees a ticket") | write it once as a gateway method and once in the list scope, name both in the skill `gibbon-access-control`, and test both (list and single ticket) in `tests/live/` |
+| Something on the home page | `hook_dashboard.php` (one file for the three dashboard hooks) + `src/Service/DashboardWidget.php` (sidebar box, hides its tab); a new hook type needs the `$hooks[]` entry in `manifest.php` and an INSERT in CHANGEDB. Never edit Gibbon core |
+| Something that changes a ticket | go through `TicketService` so `timestampModified` / `timestampModifiedPublic` (the "Updated" mark) stay right: `writeHistory()` with a public type moves both, an internal type only the first |
+| A scheduled job | `cli_<name>.php` (CLI check first) + the service method it calls; document the cron line in `README.md` |
+| Something that must disappear with a ticket | `TicketService::deleteTicket` (comments, subscribers, notifications whose text starts with `#<id> `) - a new table that refers to a ticket must be added there |
+| Something that should happen when a ticket enters a stage | an automation script (`src/Automation/Scripts/`), not a new stage column: stages tick any number of scripts, they share the transaction. `TellTeachers.php` replaced a stage flag this way in 1.6.00 |
+| A switch for what requesters may do on a ticket type | a Y/N column on `gibbonServiceDeskTicketType` (manifest + CHANGEDB), selected in `TicketGateway::getTicketByID`, checked in `TicketAccess::can...()`, a toggle in `types_manage_edit.php` + its process |
+| A stage behaviour (flag) | a column on `gibbonServiceDeskStage` (manifest + CHANGEDB + copy in `StageGateway::copyDefaultWorkflow`), fields in `workflow_stage_edit.php` + its process, behaviour in `TicketService::changeStage` |
+| A new list of tickets, or a new filter or sort column | `TicketGateway::queryTickets` (step 1 conditions as id lists, the sort column in `SORTABLE`, columns step 1 needs in the covering indexes) - then `tests/perf/measure.js` |
+| A table that refers to a ticket or a person | delete it in `TicketService::deleteTickets` and add it to `TicketGateway::orphanChecks()` |
 | A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
 | A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |
 | A view with more than a few lines of HTML | `templates/<name>.twig.html` + classes in `css/module.css` |

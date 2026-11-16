@@ -76,12 +76,19 @@ $table->addColumn('name', __('Name'))->format(function ($stage) {
     return htmlspecialchars(__m($stage['name']));
 });
 $table->addColumn('category', __('Status'))->translatable();
+$table->addColumn('flags', __m('Special'))->notSortable()->format(function ($stage) {
+    return $stage['withdrawn'] == 'Y' ? Format::small(__m('receives withdrawn requests')) : '';
+});
 $table->addColumn('automation', __m('Automation on Entry'))->format(function ($stage) use ($automations) {
     if (empty($stage['automation'])) return '';
 
-    $output = isset($automations[$stage['automation']])
-        ? htmlspecialchars($automations[$stage['automation']])
-        : Format::tag(__m('Missing script: {script}', ['script' => $stage['automation']]), 'error');
+    $names = [];
+    foreach (array_filter(explode(',', $stage['automation'])) as $key) {
+        $names[] = isset($automations[$key])
+            ? htmlspecialchars($automations[$key])
+            : Format::tag(__m('Missing script: {script}', ['script' => $key]), 'error');
+    }
+    $output = implode('<br/>', $names);
 
     return $output.(!empty($stage['nextStage']) ? '<br/>'.Format::small(__m('then move to {stage}', ['stage' => htmlspecialchars(__m($stage['nextStage']))])) : '');
 });

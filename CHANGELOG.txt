@@ -1,6 +1,62 @@
 CHANGELOG
 =========
 
+v1.8.00
+-------
+Audit of speed, security and data retention (docs/AUDIT.md).
+- Lists, board, search and the home page box stay fast with hundreds of thousands of tickets (new index; the page is
+  found first, details are loaded for its tickets only).
+- Search looks in one text per ticket (answers + public comments); still never in internal notes.
+- The retention script works in batches, writes one log line per batch, and removes left-overs of deleted tickets and
+  people (--dry-run shows them). Deleting many tickets no longer reads Gibbon's notification table once per ticket.
+- Failed emails are logged at most once per hour, without addresses.
+- A requester sees the time of the last change they can read; internal activity no longer shows as "last update".
+- At most 20 self-service requests per person per hour.
+- Web access to the module's non-page folders is denied (Apache).
+
+v1.7.00
+-------
+- Home page: a box "My open requests" / "Open tickets for me" in the sidebar, below the Message Wall, for parents,
+  students and staff, with the two most recently updated open tickets. No box when there is no open ticket. It
+  replaces the "Service Desk" dashboard tabs.
+- Tickets that changed since you last opened them are marked "Updated" and shown in bold in the list, on the board
+  and in the sidebar box. Requesters are only alerted by changes they can read.
+- The list starts with updated tickets first; the "Last Update" column shows the date and time; click a column
+  heading to sort.
+
+v1.6.00
+-------
+- A stage can run several automation scripts (tick list). They share one transaction: if one fails, none takes effect.
+- "Tell the teachers" is now an automation script like the others (it was a separate stage switch); the upgrade
+  converts the stages that used the switch.
+- Ticket type switches "Requesters Can Withdraw" and "Requesters Can Reopen" (both on by default).
+
+v1.5.00
+-------
+- Requesters can withdraw a request (stage flagged "Withdrawn Stage") and reopen it for 30 days after it was closed.
+- The other adults of a family (with data access) see, comment on, withdraw and reopen the tickets of ticket types
+  set to "Share With Family" (default: absence, unenrolment, de-registration) and are told about public updates.
+- Dashboard tab "Service Desk": open requests for parents; unassigned and assigned tickets for team members and
+  administrators; own requests for other staff.
+- A stage can tell the teachers (form tutors, class teachers) - notification centre only, no email, no reason. Default:
+  the "Approved" stages of Absence Report and Course Unenrolment (new stage).
+- Move a ticket to another ticket type.
+- Delete tickets (new action "Delete Tickets"; confirmation page; log line) and "Retention (days)" per ticket type with
+  the script cli_deleteExpiredTickets.php for cron.
+- Search finds tickets by number, subject, details, children, classes, dates, requester, assignee and public comments.
+- Every default workflow gets a "Withdrawn" stage (added by the upgrade to existing ticket types too).
+
+v1.4.01
+-------
+Deleting a saved filter asks for confirmation. Notification Settings has "Send me a test notification", which tries
+both channels for the current user and reports what happened (including the mail server's error message).
+
+v1.4.00
+-------
+Shared filters have an audience: "Staff working on tickets" (administrators and team members, optionally one team)
+or "Requesters" (everybody else: parents, students, staff who are in no team). Requesters no longer see Assigned to
+Me, Unassigned, My Requests or Open Tickets; they get All, Open and Closed.
+
 v1.3.00
 -------
 Board view on the Tickets page for team members and administrators: a filter on one ticket type shows that type's

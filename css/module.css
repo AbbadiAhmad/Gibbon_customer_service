@@ -67,3 +67,26 @@
 .serviceDesk-priority { padding: 0 .4rem; border-radius: 999px; font-weight: 600; color: #fff; }
 .serviceDesk-priority-High { background: #f97316; }
 .serviceDesk-priority-Urgent { background: #dc2626; }
+.serviceDesk-filterOther { border-style: dashed; color: #6b7280; }
+.serviceDesk-filterDelete { text-align: right; font-size: .85rem; margin: 0 0 .5rem; }
+.serviceDesk-tools { text-align: right; font-size: .85rem; margin: 0 0 .8rem; }
+
+/* Dashboard widget */
+.serviceDesk-widget { margin-bottom: 1.2rem; }
+.serviceDesk-widget h4 { margin: 0 0 .5rem; }
+.serviceDesk-widget ul { list-style: none; margin: 0; padding: 0; }
+.serviceDesk-widget li { border-left: 4px solid #9ca3af; padding: .3rem .7rem; margin-bottom: .4rem; background: #f9fafb; border-radius: 0 .3rem .3rem 0; font-size: .9rem; }
+.serviceDesk-widgetEmpty { color: #6b7280; font-size: .9rem; }
+.serviceDesk-widgetLinks { font-size: .85rem; margin: .5rem 0 0; }
+
+/* "Updated" mark: the ticket changed since the person last opened it */
+.serviceDesk-new { display: inline-block; padding: 0 .4rem; margin-left: .3rem; border-radius: 999px; background: #dc2626; color: #fff; font-size: .68rem; font-weight: 600; vertical-align: middle; }
+tr.serviceDesk-unread td a, li.serviceDesk-unread > a, .serviceDesk-ticketCard.serviceDesk-unread .serviceDesk-cardSubject { font-weight: 700; }
+tr.serviceDesk-unread td:first-child { box-shadow: inset 3px 0 0 #dc2626; }
+
+/* Sidebar box on the home page */
+.serviceDesk-box ul { list-style: none; margin: 0; padding: 0; }
+.serviceDesk-box li { border-left: 4px solid #9ca3af; padding: .3rem .6rem; margin-bottom: .4rem; background: #f9fafb; border-radius: 0 .3rem .3rem 0; font-size: .85rem; line-height: 1.3; }
+.serviceDesk-boxTitle { margin: 0 0 .6rem; font-size: 1.125rem; font-weight: 600; text-transform: uppercase; color: #374151; }
+.serviceDesk-boxTitle .serviceDesk-count { font-size: .75rem; vertical-align: middle; background: #f3f4f6; }
+.serviceDesk-boxLinks { font-size: .8rem; margin: .4rem 0 0; }

@@ -163,6 +163,88 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * Domain = module name; files `i18n/<locale>/LC_MESSAGES/ServiceDesk.mo`. Template: `php tests/make-pot.php`.
 * Names stored in the database and shown to users (type names, labels, stage names) are also passed through `__m()`.
 
+## Lists that stay fast with many rows (**LIVE**, measured with 200 000 tickets - `docs/AUDIT.md`)
+* `runQuery()` uses `SQL_CALC_FOUND_ROWS` and so always evaluates the whole matching set; with joins to names and labels
+  that costs seconds. **Find the page first, then load details**: step 1 = `runQuery()` on a narrow query (the main
+  table + what filters and sorting need), step 2 = one `SELECT ... WHERE id IN (...)` with the joins for the 25 ids;
+  return `(new DataSet($rows))->setResultCount($page->getResultCount(), $page->getTotalCount())->setPagination(
+  $criteria->getPage(), $criteria->getPageSize())`. `DataTable::createPaginated` works with that unchanged.
+* Give step 1 a **covering index**: all columns it filters, sorts and selects, led by the column most filters use (here
+  the stage; a second one led by the type). Then it never reads the wide rows (JSON, text). Do not select big text
+  columns in lists.
+* Turn conditions on small tables into **id lists computed in PHP** (`stage IN (ids of open stages)`, ids of people
+  matching a search word, the family, the team's types) instead of joins, sub-selects, `FIND_IN_SET(col+0, ...)` or
+  `OR` across tables: each of those forces a full scan. Ids go through `intval` (`TicketGateway::ids`) before they are
+  written into `IN (...)`.
+* Join person tables in step 1 only when the list is sorted by a name (`$criteria->hasSort('requester.surname')`).
+* `LIKE '%word%'` cannot use an index: keep one search text per row (here answers + public comments, maintained by
+  `TicketService::refreshSearchText`) rather than searching child tables, and expect time to grow with the rows the
+  person may see.
+* **The browser can post its own criteria** to any page with a Gibbon table (`fromPOST()` takes `sortBy`, `pageSize`,
+  `page`, `filterBy`): Gibbon escapes the sort column but accepts any column of the query's tables, and any page size.
+  In the gateway keep only your own sort columns (`array_intersect_key($criteria->getSortBy(), ...)` +
+  `$criteria->fromArray(['sortBy' => ...])`) and clamp the page size. Posted `filterBy` only reaches your filter rules;
+  posted `searchBy` only columns in `$searchableColumns`.
+* Deleting or checking per row against a core table without a fitting index (`gibbonNotification` has only the person
+  index) is a full scan each time: batch it (`text REGEXP '^#(1|2|3) '` once per 500 tickets).
+* Measure with `tests/perf/seed.sql` + `tests/perf/measure.js` (page time, database time, rows read, slowest query)
+  before and after; `ANALYZE TABLE` after bulk loads or new indexes.
+* MariaDB's `seq_1_to_N` tables generate test rows fast; zero-filled ids put into text must be written `id+0`.
+
+## "Changed since I last looked" (unread marks)
+* One row per person per record with `timestampSeen` (`gibbonServiceDeskTicketSeen`), written when the record's page is
+  opened (and after the person's own actions that do not end on that page, e.g. a board move). In the list query LEFT JOIN
+  it for the current person and compute a column (`unread`) so it can be shown **and sorted by**
+  (`$criteria->sortBy('unread', 'DESC')->sortBy('timestampModified', 'DESC')->sortBy('table.id', 'DESC')` - `sortBy` can
+  be called several times; add the id as a tie-break, timestamps have one-second resolution).
+* Keep a second timestamp for "last change the requester can read" when some changes are internal, otherwise people are
+  alerted by things they cannot see.
+* On upgrade insert "seen now" rows for the people involved, or every old record lights up.
+* `DataTable::createPaginated` columns are sortable by clicking the heading out of the box (**LIVE**), also computed ones.
+
+## Lists stored as comma-separated text
+* `Stage.automation`, `TicketType.roleCategories`: store `implode(',', ...)` of **validated** keys in a fixed order
+  (`array_intersect($allKeysInOrder, $posted)`); read with `array_filter(explode(',', $value))`; edit with
+  `addCheckbox($name)->fromArray($options)` and give `loadAllValuesFrom()` the array, never the text (see the LIVE bug
+  above). Unknown keys read from the database are skipped, not fatal.
+* Dropping a column in CHANGEDB: migrate its meaning first (`UPDATE ... WHERE oldColumn='Y'`), then `ALTER TABLE ... DROP`,
+  as separate `;end` statements in that order (1.6.00 is the example).
+
+## Dashboard hooks, CLI scripts, plain gateways
+* **Dashboard hook** (**LIVE**): `$hooks[]` in `manifest.php` / an INSERT in CHANGEDB:
+  `INSERT INTO gibbonHook (name, type, options, gibbonModuleID) VALUES ('Service Desk', 'Parental Dashboard' | 'Staff Dashboard',
+  serialize(['sourceModuleName' => 'ServiceDesk', 'sourceModuleAction' => 'Tickets', 'sourceModuleInclude' => 'hook_x.php']), (SELECT
+  gibbonModuleID ...))`. In CHANGEDB build the serialized string in PHP (`serialize()` inside the file; the double quotes in it
+  are fine inside a single-quoted SQL string). Gibbon `include`s the file from inside the dashboard class and uses
+  its **return value** as the tab content; the tab label is the hook name. Roles holding the named action get the tab.
+  The file runs in a method scope: `global $container, $session, $page;`. **The dashboard is not a page of the module, so
+  the module's classes are not autoloadable yet** (error "Alias ... is not being managed by the container"): call
+  `$container->get(\Gibbon\Services\ModuleLoader::class)->registerModuleNamespace('ServiceDesk');` first. Add the module
+  stylesheet with `$page->stylesheets->add(...)`. A tab for which Gibbon has no icon still renders.
+* **A box in the home page sidebar without touching core** (**LIVE**, v31): inside a dashboard hook set
+  `$session->set('sidebarExtra', $html)` and `$session->set('sidebarExtraPosition', 'bottom')` (below the Message Wall
+  and the other sidebar boxes; `'top'` is the default). `index.php` moves that session value into the sidebar after the
+  dashboard is built. Do **not** also call `$page->addSidebarExtra()`: with position `bottom` the template prints every
+  entry, including Gibbon's own empty one, and an empty second box appears.
+* **A hook always produces a tab** (the tab template prints every tab, also an empty one; parents get it once per
+  child, and the include file has the child's `$gibbonPersonID` in scope). To have no tab, return a marker plus an
+  inline script that removes its own `[role=tabpanel]` and the `[role=tab]` button with the same index
+  (`DashboardWidget::hook`); keep a harmless fallback (a link) for a Gibbon whose markup differs. Guard work that must
+  happen once per page with a static flag: the hook runs once per child for parents.
+* A parent, staff and student hook can share one include file; a Student Dashboard hook exists too.
+* **CLI script** (`cli_*.php`, **LIVE**): first statement `if (PHP_SAPI !== 'cli') { exit(...); }`, then `require_once
+  __DIR__.'/../../gibbon.php';` (works from the shell with the module copied under `modules/`), then
+  `$container->get(...)`. `$argv` for options. It needs no action in `manifest.php`; `tests/static.php` checks the
+  first statement. Files named `cli_*` / `hook_*` are exempt from the "every root file is in an action" rule.
+* A gateway without a table: `class XGateway extends Gibbon\Domain\Gateway` and use `$this->db()` (see `GuardianGateway`).
+* Data kept as JSON on a row (ticket answers) cannot be searched reliably through the JSON: keep a plain-text copy
+  (`searchText`) and, for rows from before the column existed, fall back with `COALESCE(searchText, fields)`.
+* Several `where()` calls on one query are ANDed; bind every value with a unique placeholder name (`:searchA0`, `:searchA1`,
+  ...) when the same condition is repeated per word.
+* `addcslashes($word, '%_\\')` makes LIKE wildcards plain characters (MySQL's default escape is the backslash).
+* `DataSet::getResultCount()` and `toArray()` give a short list together with the total (`pageSize(5)` on the criteria).
+* `DELETE t FROM t JOIN other ... WHERE ...` (multi-table delete) works through `$this->db()->delete()`.
+
 ## Notifications
 * Gibbon's `NotificationSender::addNotification()->sendNotifications()` writes the notification centre entry and
   emails it only if the person's global `receiveNotificationEmails` is on. For per-channel control (this module) use
@@ -177,7 +259,11 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * **LIVE**: email is sent only with a sender: `organisationEmail` (empty in the demo data) and the SMTP settings are
   read from the *session*, i.e. at login. Create the `Mailer` lazily (`global $container; $container->get(Mailer::
   class)`) and write all centre entries before sending any email.
-* "Notifications do not work" checklist: (1) the actor is never notified - test with two users; (2) is the
+* **LIVE**: `Mailer::Send()` returns false and sets `$mail->ErrorInfo` on failure - it does not throw. Check the
+  return value. `Notifier::sendTest()` (button on Notification Settings) reports both channels to the user.
+* Messages for the next page after a redirect: `$session->set('key', $data)` in the process script, read and
+  `$session->forget('key')` on the page.
+* "Notifications do not work" checklist: (0) ask the user to press *Send Me a Test Notification*; (1) the actor is never notified - test with two users; (2) is the
   recipient a follower of the ticket or in a team of its type (empty teams -> administrators)? (3) the person's
   policy rows (`gibbonServiceDeskNotificationPreference`, `gibbonServiceDeskTicketSubscriber`); (4) rows in
   `gibbonNotification`; (5) PHP error log / `gibbonLog` title "Service Desk".
