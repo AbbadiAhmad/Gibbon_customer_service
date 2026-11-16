@@ -142,7 +142,7 @@ team-only result line (`AutomationResult::success($message, true)`). A stage can
 ## Translating
 
 All module text goes through Gibbon's module translation domain (`__m()`). `i18n/ServiceDesk.pot` is the template
-(rebuild with `php tests/make-pot.php`); put translations in `i18n/<locale>/LC_MESSAGES/ServiceDesk.mo`.
+(rebuild with `php tests/make-pot.php`); put translations in `i18n/<locale>/LC_MESSAGES/ServiceDesk.po` and compile with `msgfmt ServiceDesk.po -o ServiceDesk.mo` (Gibbon reads the `.mo`; commit both). German (`de_DE`) and Arabic (`ar_SA`) are included. After adding text: `php tests/make-pot.php`, `msgmerge -U` each `.po`, translate the new entries, recompile. The default ticket types, fields, stages and filters created by `manifest.php` are listed by hand in `tests/make-pot.php` (`$seedStrings`); keep both in step.
 
 ## Server notes
 

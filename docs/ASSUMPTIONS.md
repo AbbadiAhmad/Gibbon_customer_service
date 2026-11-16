@@ -27,7 +27,7 @@ Things taken as true without asking. If one is wrong, tell me and the affected p
 | B9 | Changing the default workflow affects only ticket types created afterwards (it is *copied*, as requested). | `StageGateway::copyDefaultWorkflow()` |
 | B10 | Closed tickets can still be commented on; a comment does not reopen them (the team moves them back if needed). | `tickets_viewProcess.php` |
 | B11 | A person's notification choice is copied to a ticket the moment they become involved (raise it, are assigned, comment). Changing the general setting later does not change existing tickets unless "Apply to my current tickets" is chosen. | `SubscriberGateway` |
-| B12 | The module ships English text only, with a translation template (`i18n/ServiceDesk.pot`). | `i18n/` |
+| B12 | The module's own text is English. It ships a translation template (`i18n/ServiceDesk.pot`) and German (`de_DE`) and Arabic (`ar_SA`) translations, written by the assistant and **not yet reviewed by a native speaker** (formal address in German, Modern Standard Arabic). A language shows only when it is installed and chosen in Gibbon (System Admin > Language Settings); Gibbon turns the page right-to-left for Arabic itself. | `i18n/` |
 | B13 | Parents are the only audience for the family sharing; the parents of a *student* requester do not see the student's tickets. | `GuardianGateway` |
 | B14 | The "teachers" of a child are the tutors of the child's form group (tutor 1-3) and users with role *Teacher* in the child's classes; assistants are not told. | `TeacherFinder` |
 | B15 | A teacher notice links to the notification list because teachers cannot open tickets they are not part of. | `TicketService::notifyTeachers` |
