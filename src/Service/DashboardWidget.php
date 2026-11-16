@@ -95,7 +95,7 @@ class DashboardWidget
 
         $rows = array_merge($mineRows, $freeRows);
         usort($rows, function ($a, $b) {
-            return [$b['unread'], $b['timestampModified'], $b['gibbonServiceDeskTicketID']] <=> [$a['unread'], $a['timestampModified'], $a['gibbonServiceDeskTicketID']];
+            return [$b['unread'], $b['lastUpdate'], $b['gibbonServiceDeskTicketID']] <=> [$a['unread'], $a['lastUpdate'], $a['gibbonServiceDeskTicketID']];
         });
 
         return [$mine + $free, array_slice($rows, 0, self::LIMIT)];
@@ -103,11 +103,8 @@ class DashboardWidget
 
     protected function query($gibbonPersonID, array $filters): array
     {
-        $criteria = $this->ticketGateway->newQueryCriteria(false)
-            ->sortBy('unread', 'DESC')
-            ->sortBy('timestampModified', 'DESC')
-            ->sortBy('gibbonServiceDeskTicket.gibbonServiceDeskTicketID', 'DESC')
-            ->pageSize(self::LIMIT);
+        // No order given: the gateway lists tickets with news first, then the latest update.
+        $criteria = $this->ticketGateway->newQueryCriteria(false)->pageSize(self::LIMIT);
         $criteria = TicketFilters::apply($criteria, ['status' => ['Open', 'In Progress']] + $filters);
         $tickets = $this->ticketGateway->queryTickets($criteria, $gibbonPersonID, $this->access->isAdmin(), $this->access->getTeamTypeIDs());
 
@@ -135,7 +132,7 @@ class DashboardWidget
             $output .= '<li class="'.(!empty($ticket['unread']) ? 'serviceDesk-unread' : '').'" style="border-left-color:'.$color.'">'
                 .Format::link($url.'/tickets_view.php&gibbonServiceDeskTicketID='.intval($ticket['gibbonServiceDeskTicketID']), '#'.intval($ticket['gibbonServiceDeskTicketID']).' '.htmlspecialchars($ticket['subject']))
                 .(!empty($ticket['unread']) ? ' <span class="serviceDesk-new">'.__m('Updated').'</span>' : '')
-                .'<br/>'.Format::small(htmlspecialchars(__m($ticket['stageName'])).' &middot; '.Format::relativeTime($ticket['timestampModified'], false))
+                .'<br/>'.Format::small(htmlspecialchars(__m($ticket['stageName'])).' &middot; '.Format::relativeTime($ticket['lastUpdate'], false))
                 .'</li>';
         }
         $output .= '</ul>';

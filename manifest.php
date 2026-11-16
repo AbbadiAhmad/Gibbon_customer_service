@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.7.00';
+$version     = '1.8.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -118,10 +118,11 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicket` (
     `timestampModifiedPublic` datetime NULL,
     `timestampClosed` datetime NULL,
     PRIMARY KEY (`gibbonServiceDeskTicketID`),
-    KEY `type` (`gibbonServiceDeskTicketTypeID`),
     KEY `stage` (`gibbonServiceDeskStageID`),
     KEY `requester` (`gibbonPersonIDRequester`),
-    KEY `assignee` (`gibbonPersonIDAssignee`)
+    KEY `assignee` (`gibbonPersonIDAssignee`),
+    KEY `listing` (`gibbonServiceDeskStageID`,`gibbonServiceDeskTicketTypeID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`),
+    KEY `listingType` (`gibbonServiceDeskTicketTypeID`,`gibbonServiceDeskStageID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // gibbonPersonID NULL = written by the system (workflow / automation).

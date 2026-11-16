@@ -23,7 +23,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/tickets_delete
 $page->breadcrumbs->add(__m('Tickets'), 'tickets.php');
 
 // The permission is not enough: the person must also be able to see the ticket. Otherwise "not found".
-$gibbonServiceDeskTicketID = $_GET['gibbonServiceDeskTicketID'] ?? '';
+$gibbonServiceDeskTicketID = intval($_GET['gibbonServiceDeskTicketID'] ?? 0) ?: '';
 $ticket = $container->get(TicketGateway::class)->getTicketByID($gibbonServiceDeskTicketID);
 
 if (empty($ticket) || !$container->get(TicketAccess::class)->canDelete($ticket)) {

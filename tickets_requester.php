@@ -19,7 +19,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/tickets_reques
     return;
 }
 
-$gibbonServiceDeskTicketID = $_GET['gibbonServiceDeskTicketID'] ?? '';
+$gibbonServiceDeskTicketID = intval($_GET['gibbonServiceDeskTicketID'] ?? 0) ?: '';
 $action = $_GET['action'] ?? '';
 $access = $container->get(TicketAccess::class);
 

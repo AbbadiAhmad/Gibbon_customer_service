@@ -163,6 +163,34 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * Domain = module name; files `i18n/<locale>/LC_MESSAGES/ServiceDesk.mo`. Template: `php tests/make-pot.php`.
 * Names stored in the database and shown to users (type names, labels, stage names) are also passed through `__m()`.
 
+## Lists that stay fast with many rows (**LIVE**, measured with 200 000 tickets - `docs/AUDIT.md`)
+* `runQuery()` uses `SQL_CALC_FOUND_ROWS` and so always evaluates the whole matching set; with joins to names and labels
+  that costs seconds. **Find the page first, then load details**: step 1 = `runQuery()` on a narrow query (the main
+  table + what filters and sorting need), step 2 = one `SELECT ... WHERE id IN (...)` with the joins for the 25 ids;
+  return `(new DataSet($rows))->setResultCount($page->getResultCount(), $page->getTotalCount())->setPagination(
+  $criteria->getPage(), $criteria->getPageSize())`. `DataTable::createPaginated` works with that unchanged.
+* Give step 1 a **covering index**: all columns it filters, sorts and selects, led by the column most filters use (here
+  the stage; a second one led by the type). Then it never reads the wide rows (JSON, text). Do not select big text
+  columns in lists.
+* Turn conditions on small tables into **id lists computed in PHP** (`stage IN (ids of open stages)`, ids of people
+  matching a search word, the family, the team's types) instead of joins, sub-selects, `FIND_IN_SET(col+0, ...)` or
+  `OR` across tables: each of those forces a full scan. Ids go through `intval` (`TicketGateway::ids`) before they are
+  written into `IN (...)`.
+* Join person tables in step 1 only when the list is sorted by a name (`$criteria->hasSort('requester.surname')`).
+* `LIKE '%word%'` cannot use an index: keep one search text per row (here answers + public comments, maintained by
+  `TicketService::refreshSearchText`) rather than searching child tables, and expect time to grow with the rows the
+  person may see.
+* **The browser can post its own criteria** to any page with a Gibbon table (`fromPOST()` takes `sortBy`, `pageSize`,
+  `page`, `filterBy`): Gibbon escapes the sort column but accepts any column of the query's tables, and any page size.
+  In the gateway keep only your own sort columns (`array_intersect_key($criteria->getSortBy(), ...)` +
+  `$criteria->fromArray(['sortBy' => ...])`) and clamp the page size. Posted `filterBy` only reaches your filter rules;
+  posted `searchBy` only columns in `$searchableColumns`.
+* Deleting or checking per row against a core table without a fitting index (`gibbonNotification` has only the person
+  index) is a full scan each time: batch it (`text REGEXP '^#(1|2|3) '` once per 500 tickets).
+* Measure with `tests/perf/seed.sql` + `tests/perf/measure.js` (page time, database time, rows read, slowest query)
+  before and after; `ANALYZE TABLE` after bulk loads or new indexes.
+* MariaDB's `seq_1_to_N` tables generate test rows fast; zero-filled ids put into text must be written `id+0`.
+
 ## "Changed since I last looked" (unread marks)
 * One row per person per record with `timestampSeen` (`gibbonServiceDeskTicketSeen`), written when the record's page is
   opened (and after the person's own actions that do not end on that page, e.g. a board move). In the list query LEFT JOIN

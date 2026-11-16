@@ -36,6 +36,11 @@ class Notifier
     protected $teamGateway;
     protected $guardianGateway;
 
+    /**
+     * Kinds of failure already logged during this request.
+     */
+    protected static $logged = [];
+
     public function __construct(Session $session, Connection $db, NotificationGateway $notificationGateway, SubscriberGateway $subscriberGateway, TeamGateway $teamGateway, GuardianGateway $guardianGateway)
     {
         $this->session = $session;
@@ -221,21 +226,36 @@ class Notifier
     }
 
     /**
-     * Failures never break the user's request, but they must be findable: System Admin > System Check / View Logs
-     * (gibbonLog, title "Service Desk"), and the PHP error log.
+     * Failures never break the user's request, but they must be findable: the PHP error log, and Gibbon's log
+     * (System Admin > View Logs, title "Service Desk").
+     *
+     * A broken mail server would otherwise fill Gibbon's log with one line per recipient: the same kind of failure is
+     * written at most once per request and once per hour. Email addresses are removed from the message - the log
+     * should say what is wrong, not hold personal data.
      */
     protected function logFailure(string $what, \Throwable $e)
     {
-        error_log('ServiceDesk: '.$what.': '.$e->getMessage());
+        $message = preg_replace('/[^\s<>"\':;,]+@[^\s<>"\':;,]+/', '[address]', $e->getMessage());
+        error_log('ServiceDesk: '.$what.': '.$message);
+
+        if (isset(self::$logged[$what])) return;
+        self::$logged[$what] = true;
 
         try {
             global $container;
+
+            $recent = $this->db->selectOne(
+                "SELECT COUNT(*) FROM gibbonLog WHERE title='Service Desk' AND timestamp > :since AND serialisedArray LIKE :what",
+                ['since' => date('Y-m-d H:i:s', time() - 3600), 'what' => '%'.$what.'%']
+            );
+            if ($recent > 0) return;
+
             $container->get(LogGateway::class)->addLog(
                 $this->session->get('gibbonSchoolYearID'),
                 'ServiceDesk',
                 $this->session->get('gibbonPersonID'),
                 'Service Desk',
-                ['problem' => $what, 'message' => $e->getMessage()]
+                ['problem' => $what, 'message' => $message, 'note' => 'Further failures of this kind are not logged for an hour.']
             );
         } catch (\Throwable $ignored) {
         }

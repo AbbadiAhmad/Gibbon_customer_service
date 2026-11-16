@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+v1.8.00
+-------
+Audit of speed, security and data retention (docs/AUDIT.md).
+- Lists, board, search and the home page box stay fast with hundreds of thousands of tickets (new index; the page is
+  found first, details are loaded for its tickets only).
+- Search looks in one text per ticket (answers + public comments); still never in internal notes.
+- The retention script works in batches, writes one log line per batch, and removes left-overs of deleted tickets and
+  people (--dry-run shows them). Deleting many tickets no longer reads Gibbon's notification table once per ticket.
+- Failed emails are logged at most once per hour, without addresses.
+- A requester sees the time of the last change they can read; internal activity no longer shows as "last update".
+- At most 20 self-service requests per person per hour.
+- Web access to the module's non-page folders is denied (Apache).
+
 v1.7.00
 -------
 - Home page: a box "My open requests" / "Open tickets for me" in the sidebar, below the Message Wall, for parents,

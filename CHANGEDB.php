@@ -112,3 +112,13 @@ INSERT IGNORE INTO `gibbonServiceDeskTicketSeen` (`gibbonServiceDeskTicketID`, `
 DELETE FROM `gibbonHook` WHERE gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');end
 ".implode(";end\n", $serviceDeskHooks).";
 ";
+
+// v1.8.00 - speed with many tickets (docs/AUDIT.md): an index that holds everything a ticket list needs, so lists do
+//           not read the wide ticket rows; the search text of every ticket now also holds its public comments.
+++$count;
+$sql[$count][0] = '1.8.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskTicket` ADD KEY `listing` (`gibbonServiceDeskStageID`,`gibbonServiceDeskTicketTypeID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`);end
+ALTER TABLE `gibbonServiceDeskTicket` DROP KEY `type`, ADD KEY `listingType` (`gibbonServiceDeskTicketTypeID`,`gibbonServiceDeskStageID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`);end
+UPDATE `gibbonServiceDeskTicket` t SET t.searchText = LEFT(CONCAT(COALESCE(t.searchText, t.fields, ''), COALESCE((SELECT CONCAT('\\n', GROUP_CONCAT(c.comment ORDER BY c.gibbonServiceDeskTicketCommentID SEPARATOR '\\n')) FROM `gibbonServiceDeskTicketComment` c WHERE c.gibbonServiceDeskTicketID=t.gibbonServiceDeskTicketID AND c.type='Comment'), '')), 20000);
+";

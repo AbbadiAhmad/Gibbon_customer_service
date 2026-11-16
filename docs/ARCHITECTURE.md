@@ -73,7 +73,8 @@ Gibbon actions decide which pages a role may open (`manifest.php`). On top of th
 | Holder of *Change Comment Visibility_my / _all* | role holds that action **and** works on the ticket | switch own / any comment between public and internal |
 | Holder of *New Request_onBehalf* | role holds that action | see every active service; send a request for any active user. Gives no access to tickets by itself |
 
-Enforced in three places: the list query (`TicketGateway::queryTickets` adds the scope to the SQL), the ticket page
+Enforced in three places: the list query (`TicketGateway::queryTickets` adds the scope to the SQL, accepts only its
+own sort columns and at most 500 tickets per page), the ticket page
 and the process script (`canView` / `canManage`; "not found" and "not allowed" answer the same). Internal notes are
 filtered in the query (`CommentGateway`), not in the template. Process scripts re-check everything the form limited:
 the type is requestable by the role, students are the user's own children, the stage belongs to the ticket's type, the
@@ -211,6 +212,7 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   "Service Desk" tab is hidden and the other dashboard tabs still work; the "Updated" mark for new tickets, a
   parent's comment, a team answer, not for internal notes (requester) nor own changes nor board moves; sorting by
   clicking headings. **No Gibbon core file is changed.**
+* 1.8.00: speed with 200 000 tickets, 46 forged-request probes and retention at scale - see `docs/AUDIT.md`.
 * **Not tested**: the retention script from a real cron; drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
   and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

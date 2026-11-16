@@ -18,7 +18,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/types_field_de
     return;
 }
 
-$gibbonServiceDeskFieldID = $_GET['gibbonServiceDeskFieldID'] ?? '';
+$gibbonServiceDeskFieldID = intval($_GET['gibbonServiceDeskFieldID'] ?? 0) ?: '';
 
 if (!$container->get(FieldGateway::class)->exists($gibbonServiceDeskFieldID)) {
     $page->addError(__('The specified record cannot be found.'));

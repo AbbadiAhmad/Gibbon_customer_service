@@ -178,7 +178,7 @@ if ($view == 'Board') {
     $boardMaxCards = 300;
 
     // TICKETS: same criteria and same access rules as the list, without paging; closed tickets only while recent.
-    $criteria = $ticketGateway->newQueryCriteria(false)->sortBy('unread', 'DESC')->sortBy('timestampModified', 'DESC')->sortBy('gibbonServiceDeskTicket.gibbonServiceDeskTicketID', 'DESC')->pageSize($boardMaxCards);
+    $criteria = $ticketGateway->newQueryCriteria(false)->pageSize($boardMaxCards);
     $criteria = TicketFilters::apply($criteria, $values)
         ->filterBy('closedSince', date('Y-m-d', strtotime("-{$boardClosedDays} days")));
 
@@ -218,7 +218,7 @@ if ($view == 'Board') {
             'requester' => Format::name('', $ticket['requesterPreferredName'], $ticket['requesterSurname'], 'Student', false),
             'assignee'  => !empty($ticket['gibbonPersonIDAssignee']) ? Format::name('', $ticket['assigneePreferredName'], $ticket['assigneeSurname'], 'Student', false) : '',
             'priority'  => $ticket['priority'],
-            'updated'   => $ticket['timestampModified'],
+            'updated'   => $ticket['lastUpdate'],
             'unread'    => !empty($ticket['unread']),
             // Only tickets the person works on can be moved (their own requests of other teams cannot).
             'movable'   => !empty($singleType) && $access->canManage($ticket),
@@ -253,8 +253,9 @@ if ($view == 'Board') {
 }
 
 // QUERY
-// Default order: tickets with news first, then the most recently updated. Clicking a column heading sorts by it.
-$criteria = $ticketGateway->newQueryCriteria(true)->sortBy('unread', 'DESC')->sortBy('timestampModified', 'DESC')->sortBy('gibbonServiceDeskTicket.gibbonServiceDeskTicketID', 'DESC');
+// Without a chosen order the gateway lists tickets with news first, then the most recently updated. Clicking a
+// column heading sorts by that column.
+$criteria = $ticketGateway->newQueryCriteria(true);
 $criteria = TicketFilters::apply($criteria, $values)->fromPOST();
 
 $tickets = $ticketGateway->queryTickets($criteria, $gibbonPersonID, $isAdmin, $access->getTeamTypeIDs());
@@ -275,6 +276,7 @@ $table->modifyRows(function ($ticket, $row) {
 });
 
 $table->addColumn('gibbonServiceDeskTicketID', '#')
+    ->sortable(['gibbonServiceDeskTicket.gibbonServiceDeskTicketID'])
     ->width('6%')
     ->format(function ($ticket) {
         return intval($ticket['gibbonServiceDeskTicketID']);
@@ -314,9 +316,9 @@ if ($isAgent) {
     $table->addColumn('priority', __m('Priority'))->translatable();
 }
 
-$table->addColumn('timestampModified', __m('Last Update'))
+$table->addColumn('lastUpdate', __m('Last Update'))
     ->format(function ($ticket) {
-        return Format::relativeTime($ticket['timestampModified']).'<br/>'.Format::small(Format::dateTimeReadable($ticket['timestampModified']));
+        return Format::relativeTime($ticket['lastUpdate']).'<br/>'.Format::small(Format::dateTimeReadable($ticket['lastUpdate']));
     });
 
 $table->addActionColumn()

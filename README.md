@@ -11,6 +11,7 @@ Inspired by the functions of [GibbonEdu/module-helpdesk](https://github.com/Gibb
 |---|---|
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Questions that came up and the answers chosen - **several are open for you to confirm** |
 | [`docs/ASSUMPTIONS.md`](docs/ASSUMPTIONS.md) | What was assumed about the school, Gibbon and the wanted behaviour |
+| [`docs/AUDIT.md`](docs/AUDIT.md) | Speed with 200 000 tickets, security probes, what retention removes and leaves - measured, with findings and fixes |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Use cases -> where they are built, data model, access rules, automation interface, file map, **missing use cases**, test status |
 | [`.claude/skills/`](.claude/skills) and [`CLAUDE.md`](CLAUDE.md) | Rules and verified knowledge for changing the code later |
 
@@ -82,7 +83,9 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
   Text, Long Text, Date, Select, Yes/No, Students, Classes).
 * *Delete Tickets* (permission, default Administrator): delete a ticket for good from its page (data protection). Set a
   **retention** in days on a ticket type and schedule the script that deletes expired closed tickets, e.g. every night:
-  `php <gibbon>/modules/ServiceDesk/cli_deleteExpiredTickets.php` (`--dry-run` shows what it would delete).
+  `php <gibbon>/modules/ServiceDesk/cli_deleteExpiredTickets.php` (`--dry-run` shows what it would delete; it works in
+  batches and also removes left-overs of deleted tickets and people). **No retention is set by default**: without it
+  nothing is ever deleted.
 * *Manage Workflows*: the default workflow (copied to every new ticket type) and the workflow of each type: stages
   (flag *Withdrawn Stage*; automations are a tick list - e.g. *Record absence in Attendance* and *Tell the teachers* on
   the same stage - and run together: if one fails, none takes effect),
@@ -141,7 +144,16 @@ team-only result line (`AutomationResult::success($message, true)`). A stage can
 All module text goes through Gibbon's module translation domain (`__m()`). `i18n/ServiceDesk.pot` is the template
 (rebuild with `php tests/make-pot.php`); put translations in `i18n/<locale>/LC_MESSAGES/ServiceDesk.mo`.
 
+## Server notes
+
+* Keep PHP's `display_errors` off in production (as for Gibbon itself).
+* The folders `src`, `templates`, `tests`, `docs`, `i18n` and `.claude` need no web access: on Apache the included
+  `.htaccess` files deny it; on nginx add a rule, or leave `tests`, `docs` and `.claude` off the server.
+* A person can send 20 requests per hour for themselves; a page of the ticket list holds at most 500 tickets.
+
 ## Tests
 
 * `php tests/static.php` - syntax, known-bad patterns, every page listed in an action, versions in step.
-* `tests/live/` - builds a real Gibbon with demo data and drives the module in a browser (see `tests/live/setup.sh`).
+* `tests/live/` - builds a real Gibbon with demo data and drives the module in a browser (see `tests/live/setup.sh`);
+  `tests/live/security.js` are the forged-request probes.
+* `tests/perf/` - 200 000 tickets and a timing of every page (`seed.sql`, `measure.js`).

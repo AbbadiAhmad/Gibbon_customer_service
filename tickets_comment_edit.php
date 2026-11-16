@@ -21,8 +21,8 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/tickets_commen
     return;
 }
 
-$gibbonServiceDeskTicketID = $_GET['gibbonServiceDeskTicketID'] ?? '';
-$gibbonServiceDeskTicketCommentID = $_GET['gibbonServiceDeskTicketCommentID'] ?? '';
+$gibbonServiceDeskTicketID = intval($_GET['gibbonServiceDeskTicketID'] ?? 0) ?: '';
+$gibbonServiceDeskTicketCommentID = intval($_GET['gibbonServiceDeskTicketCommentID'] ?? 0) ?: '';
 $access = $container->get(TicketAccess::class);
 
 // The ticket must be visible to the user, the comment must belong to it, and one of the two comment permissions

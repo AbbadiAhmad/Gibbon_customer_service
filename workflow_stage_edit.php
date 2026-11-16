@@ -23,8 +23,8 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/workflow_stage
 }
 
 // One page for add (no stage id) and edit. No ticket type = the default workflow.
-$gibbonServiceDeskTicketTypeID = $_GET['gibbonServiceDeskTicketTypeID'] ?? '';
-$gibbonServiceDeskStageID = $_GET['gibbonServiceDeskStageID'] ?? '';
+$gibbonServiceDeskTicketTypeID = intval($_GET['gibbonServiceDeskTicketTypeID'] ?? 0) ?: '';
+$gibbonServiceDeskStageID = intval($_GET['gibbonServiceDeskStageID'] ?? 0) ?: '';
 $stageGateway = $container->get(StageGateway::class);
 
 if (!empty($gibbonServiceDeskTicketTypeID) && !$container->get(TicketTypeGateway::class)->exists($gibbonServiceDeskTicketTypeID)) {

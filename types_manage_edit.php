@@ -23,7 +23,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/types_manage_e
 }
 
 // One page for add (no id) and edit.
-$gibbonServiceDeskTicketTypeID = $_GET['gibbonServiceDeskTicketTypeID'] ?? '';
+$gibbonServiceDeskTicketTypeID = intval($_GET['gibbonServiceDeskTicketTypeID'] ?? 0) ?: '';
 $ticketTypeGateway = $container->get(TicketTypeGateway::class);
 
 $page->breadcrumbs

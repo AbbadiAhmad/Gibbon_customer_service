@@ -93,6 +93,20 @@ Every file a browser can request authorises itself. In order:
 7. **Non-page files** (`cli_*.php`: first statement is the `PHP_SAPI` check; `hook_*.php`: named by a hook in `manifest.php`; both checked by `tests/static.php`): `src/` has `.htaccess` deny; templates and CSS hold no logic. A future CLI/cron script must
    exit unless `PHP_SAPI === 'cli'` before loading anything; a dashboard hook must check the action itself.
 
+9. **Lessons from the audit (`docs/AUDIT.md`)** - check them for every new list, form and job:
+   * a list query limits sort columns and page size itself (the browser can post both);
+   * times and marks shown to a requester come from `timestampModifiedPublic` / `lastUpdate`, never from
+     `timestampModified`, or internal work shows through;
+   * anything a person can repeat freely needs a limit (20 self-service requests per hour);
+   * log lines hold no personal data (addresses are masked) and are rate-limited (one per kind per hour, one per
+     batch) - a log must not grow with every notification or every deleted ticket;
+   * ids from the address are turned into numbers at the top of the page (`intval(...) ?: ''`);
+   * folders that are not pages carry a `.htaccess` deny; a new top-level folder needs one too;
+   * what must disappear with a ticket is deleted in `TicketService::deleteTickets`; what can be orphaned by a
+     deleted person or ticket gets an entry in `TicketGateway::orphanChecks()` (the retention script runs them).
+   Prove a rule with a probe in `tests/live/security.js`: edit the hidden fields of a real form (`tamper()` sets
+   *every* input of that name - Gibbon forms can hold a field twice and the last one wins) and check the database.
+
 When adding an entry point, copy the guard block of a similar file and add the rule to `docs/ARCHITECTURE.md`
 section 3 if it is new. Verify with a second user in the live test (`tests/live/flow.js` logs in as another parent
 and expects to be refused).

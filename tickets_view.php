@@ -31,7 +31,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/tickets_view.p
 $page->breadcrumbs->add(__m('Tickets'), 'tickets.php');
 $page->stylesheets->add('serviceDesk', 'modules/ServiceDesk/css/module.css');
 
-$gibbonServiceDeskTicketID = $_GET['gibbonServiceDeskTicketID'] ?? '';
+$gibbonServiceDeskTicketID = intval($_GET['gibbonServiceDeskTicketID'] ?? 0) ?: '';
 $gibbonPersonID = $session->get('gibbonPersonID');
 $access = $container->get(TicketAccess::class);
 

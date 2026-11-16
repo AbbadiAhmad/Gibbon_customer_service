@@ -63,6 +63,7 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `widgets.js` | home page sidebar box: parent with two children (one box, below the Message Wall, tab hidden, other tabs work), no box without open tickets, team member, teacher, student |
 | `updated.js` | the "Updated" mark (new ticket, parent comment, team answer, internal note, own changes, board move, closed) and sorting by clicking headings |
 | `options.js` | several automation scripts on one stage (both succeed; one fails -> nothing happens), stage form keeps ticks, ticket type switches for withdraw / reopen |
+| `security.js` | 46 forged-request probes: script injection, other people's tickets, doing a team's job, permissions, form token, SQL fragments, direct file requests, what a requester learns about internal work, flooding |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |
@@ -81,6 +82,18 @@ and the rows of `gibbonNotification`, `gibbonServiceDeskTicketSubscriber`.
 * Look at a screenshot before saying a page looks right; use a tall viewport rather than `fullPage` (sticky submit
   rows look misplaced in stitched full-page screenshots).
 * Write test files with the editor tool, not a shell heredoc, when they contain arrow functions and template strings.
+
+## Speed and scale (`tests/perf/`)
+* `mariadb ... gibbon < tests/perf/seed.sql` adds 200 000 tickets with history, followers, seen rows and
+  notifications in about 15 seconds (after `setup.sh`, `install.js`, `flow.js`).
+* `node tests/perf/measure.js [label]` loads 23 pages as administrator, team member and parent and prints page time,
+  database time, number of queries, rows read and the slowest query (from MariaDB's slow log set to log everything);
+  results are also saved to `/tmp/servicedesk-perf-<label>.json`. Run it before and after a change.
+* The retention script at scale: set `retentionDays` on a type, then
+  `php <core>/modules/ServiceDesk/cli_deleteExpiredTickets.php --dry-run` and without; compare table counts.
+* The functional scripts must run on a fresh site, not on the seeded one (they assume small numbers).
+* The module limits a person to 20 requests per hour; `lib.js` `login()` makes the test user's earlier requests two
+  hours old so that a sequence of scripts does not hit the limit.
 
 ## What a live run does not prove
 Delivery through a real mail provider (only a local SMTP sink is used), other Gibbon versions, other languages, production data volumes. Say so.

@@ -79,13 +79,21 @@ if (!$valid) {
     exit;
 }
 
+// A person's own requests are limited per hour (a script or a stuck browser must not flood the teams). Requests made
+// on behalf of somebody else by staff with that permission are not limited.
+$ticketService = $container->get(TicketService::class);
+if (intval($requester['gibbonPersonID']) === intval($actorID) && $ticketService->countRecentRequests($actorID) >= TicketService::MAX_REQUESTS_PER_HOUR) {
+    header("Location: {$URLBase}&return=error20");
+    exit;
+}
+
 $subject = trim($_POST['subject'] ?? '');
 if ($subject === '') {
     $names = RequestFields::firstPeopleText($answers);
     $subject = $type['name'].($names !== '' ? ': '.$names : '');
 }
 
-$gibbonServiceDeskTicketID = $container->get(TicketService::class)->create($type, $requester['gibbonPersonID'], $session->get('gibbonSchoolYearID'), $subject, $answers, $actorID);
+$gibbonServiceDeskTicketID = $ticketService->create($type, $requester['gibbonPersonID'], $session->get('gibbonSchoolYearID'), $subject, $answers, $actorID);
 
 if (empty($gibbonServiceDeskTicketID)) {
     header("Location: {$URL}&return=error2");

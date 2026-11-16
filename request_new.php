@@ -25,6 +25,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/request_new.ph
 }
 
 $page->stylesheets->add('serviceDesk', 'modules/ServiceDesk/css/module.css');
+$page->return->addReturns(['error20' => __m('You have sent many requests in the last hour. Please wait a while before sending another one, or contact the school office.')]);
 
 $ticketTypeGateway = $container->get(TicketTypeGateway::class);
 $people = $container->get(People::class);

@@ -874,6 +874,10 @@ msgstr ""
 msgid "You can reopen it for {days} days."
 msgstr ""
 
+#: request_new.php
+msgid "You have sent many requests in the last hour. Please wait a while before sending another one, or contact the school office."
+msgstr ""
+
 #: workflow_manage.php
 msgid "Your request failed because a workflow needs at least one stage."
 msgstr ""

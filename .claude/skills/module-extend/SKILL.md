@@ -29,6 +29,8 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | Something that should happen when a ticket enters a stage | an automation script (`src/Automation/Scripts/`), not a new stage column: stages tick any number of scripts, they share the transaction. `TellTeachers.php` replaced a stage flag this way in 1.6.00 |
 | A switch for what requesters may do on a ticket type | a Y/N column on `gibbonServiceDeskTicketType` (manifest + CHANGEDB), selected in `TicketGateway::getTicketByID`, checked in `TicketAccess::can...()`, a toggle in `types_manage_edit.php` + its process |
 | A stage behaviour (flag) | a column on `gibbonServiceDeskStage` (manifest + CHANGEDB + copy in `StageGateway::copyDefaultWorkflow`), fields in `workflow_stage_edit.php` + its process, behaviour in `TicketService::changeStage` |
+| A new list of tickets, or a new filter or sort column | `TicketGateway::queryTickets` (step 1 conditions as id lists, the sort column in `SORTABLE`, columns step 1 needs in the covering indexes) - then `tests/perf/measure.js` |
+| A table that refers to a ticket or a person | delete it in `TicketService::deleteTickets` and add it to `TicketGateway::orphanChecks()` |
 | A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
 | A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |
 | A view with more than a few lines of HTML | `templates/<name>.twig.html` + classes in `css/module.css` |

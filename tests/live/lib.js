@@ -1,6 +1,9 @@
 const { chromium } = require('playwright');
 const BASE = process.env.GIBBON_URL || 'http://127.0.0.1:8088';
 async function login(browser, username, password = 'Test1234!') {
+  // The module allows 20 self-service requests per person per hour; the test scripts together send more. Make the
+  // requests already there two hours old (only the creation time, nothing a test looks at).
+  try { sql("update gibbonServiceDeskTicket set timestampCreated=date_sub(timestampCreated, interval 2 hour) where timestampCreated > date_sub(now(), interval 1 hour) and gibbonPersonIDRequester in (select gibbonPersonID from gibbonPerson where username='" + String(username).replace(/[^0-9A-Za-z]/g, '') + "')"); } catch (e) { /* module not installed yet */ }
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 2200 } });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('PAGEERROR', e.message));

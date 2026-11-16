@@ -36,6 +36,14 @@ class TicketService
 
     public const PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'];
 
+    public const SEARCH_TEXT_BYTES = 60000;
+
+    /**
+     * A person can send this many requests for themselves per hour; more is refused (protection against a script or a
+     * stuck browser flooding the teams with tickets and notifications). Requests made on behalf of others do not count.
+     */
+    public const MAX_REQUESTS_PER_HOUR = 20;
+
     protected $db;
     protected $ticketGateway;
     protected $stageGateway;
@@ -255,6 +263,29 @@ class TicketService
         return true;
     }
 
+    /**
+     * Rebuilds the text the search looks in: the answers of the request form and the public comments. Called whenever
+     * a public comment is added, changed, hidden, shown or deleted. Internal notes and log lines are left out.
+     */
+    public function refreshSearchText($gibbonServiceDeskTicketID)
+    {
+        $ticket = $this->ticketGateway->getByID($gibbonServiceDeskTicketID, ['gibbonServiceDeskTicketID', 'fields']);
+        if (empty($ticket)) return;
+
+        $comments = $this->db->select(
+            "SELECT comment FROM gibbonServiceDeskTicketComment WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID AND type='Comment' ORDER BY gibbonServiceDeskTicketCommentID",
+            ['gibbonServiceDeskTicketID' => $gibbonServiceDeskTicketID]
+        )->fetchAll(\PDO::FETCH_COLUMN);
+
+        $text = RequestFields::searchText(RequestFields::decode($ticket['fields']));
+        if (!empty($comments)) {
+            $text .= "\n".implode("\n", $comments);
+        }
+
+        // The column is a TEXT (65 535 bytes): keep well below, cutting on a character boundary.
+        $this->ticketGateway->update($gibbonServiceDeskTicketID, ['searchText' => mb_strcut($text, 0, self::SEARCH_TEXT_BYTES, 'UTF-8')]);
+    }
+
     protected function writeHistory(array $ticket, $gibbonPersonID, string $text, string $type)
     {
         $now = date('Y-m-d H:i:s');
@@ -269,6 +300,10 @@ class TicketService
         $this->ticketGateway->update($ticket['gibbonServiceDeskTicketID'], in_array($type, ['Comment', 'Log'], true)
             ? ['timestampModified' => $now, 'timestampModifiedPublic' => $now]
             : ['timestampModified' => $now]);
+
+        if ($type == 'Comment') {
+            $this->refreshSearchText($ticket['gibbonServiceDeskTicketID']);
+        }
     }
 
     /**
@@ -279,6 +314,7 @@ class TicketService
         if ($text === $comment['comment']) return;
 
         $this->commentGateway->update($comment['gibbonServiceDeskTicketCommentID'], ['comment' => $text, 'timestampEdited' => date('Y-m-d H:i:s')]);
+        $this->refreshSearchText($ticket['gibbonServiceDeskTicketID']);
 
         // Editing someone else's comment leaves a trace for the team.
         if (intval($comment['gibbonPersonID']) !== intval($actorID)) {
@@ -295,6 +331,7 @@ class TicketService
         if (!in_array($type, ['Comment', 'Internal Note'], true) || $type == $comment['type']) return;
 
         $this->commentGateway->update($comment['gibbonServiceDeskTicketCommentID'], ['type' => $type]);
+        $this->refreshSearchText($ticket['gibbonServiceDeskTicketID']);
 
         $this->writeHistory($ticket, $actorID, $type == 'Comment'
             ? __m('Made a comment of {date} visible to the requester.', ['date' => Format::dateTimeReadable($comment['timestamp'])])
@@ -311,6 +348,7 @@ class TicketService
     public function deleteComment(array $ticket, array $comment, $actorID): bool
     {
         if (!$this->commentGateway->delete($comment['gibbonServiceDeskTicketCommentID'])) return false;
+        $this->refreshSearchText($ticket['gibbonServiceDeskTicketID']);
 
         $this->writeHistory($ticket, $actorID, __m('Deleted a comment of {date}.', ['date' => Format::dateTimeReadable($comment['timestamp'])]), 'Internal Log');
 
@@ -389,42 +427,77 @@ class TicketService
     }
 
     /**
-     * Permanently deletes a ticket with its comments, notification settings and the notifications written about it.
-     * What the workflow changed elsewhere in Gibbon (attendance, enrolment) is not undone. A line in Gibbon's log
-     * records that, when and by whom - not what the ticket said.
+     * Permanently deletes a ticket with its comments, notification settings, "seen" marks and the notifications written
+     * about it. What the workflow changed elsewhere in Gibbon (attendance, enrolment) is not undone. A line in Gibbon's
+     * log records that, when and by whom - not what the ticket said.
      *
      * @param mixed $actorID The person who deleted it; empty for the automatic retention script.
      */
     public function deleteTicket(array $ticket, $actorID = null): bool
     {
-        $data = ['gibbonServiceDeskTicketID' => $ticket['gibbonServiceDeskTicketID']];
+        return $this->deleteTickets([$ticket], $actorID) == 1;
+    }
+
+    /**
+     * Deletes several tickets at once (the retention script works in batches). Everything that belongs to the tickets
+     * goes in the same transaction, with one statement per table, and one log line is written for the whole batch -
+     * so neither the run time nor the log grows with every single ticket.
+     *
+     * @param array $tickets Rows with gibbonServiceDeskTicketID (and typeName, gibbonSchoolYearID for the log).
+     * @return int Number of tickets deleted (0 when the batch failed and was rolled back).
+     */
+    public function deleteTickets(array $tickets, $actorID = null): int
+    {
+        $ids = array_values(array_filter(array_map('intval', array_column($tickets, 'gibbonServiceDeskTicketID'))));
+        if (empty($ids)) return 0;
+        $list = implode(',', $ids);
 
         $this->db->beginTransaction();
-        $this->db->delete("DELETE FROM gibbonServiceDeskTicketComment WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
-        $this->db->delete("DELETE FROM gibbonServiceDeskTicketSubscriber WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
-        $this->db->delete("DELETE FROM gibbonServiceDeskTicketSeen WHERE gibbonServiceDeskTicketID=:gibbonServiceDeskTicketID", $data);
-        $this->db->delete("DELETE gibbonNotification FROM gibbonNotification JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonNotification.gibbonModuleID) WHERE gibbonModule.name='ServiceDesk' AND gibbonNotification.text LIKE :prefix", ['prefix' => '#'.intval($ticket['gibbonServiceDeskTicketID']).' %']);
-        $deleted = $this->ticketGateway->delete($ticket['gibbonServiceDeskTicketID']);
+        $this->db->delete("DELETE FROM gibbonServiceDeskTicketComment WHERE gibbonServiceDeskTicketID IN ({$list})");
+        $this->db->delete("DELETE FROM gibbonServiceDeskTicketSubscriber WHERE gibbonServiceDeskTicketID IN ({$list})");
+        $this->db->delete("DELETE FROM gibbonServiceDeskTicketSeen WHERE gibbonServiceDeskTicketID IN ({$list})");
+        // Every notification of this module starts with "#<ticket number> ". Gibbon's notification table has no index
+        // for this, so it is read once per batch, not once per ticket.
+        $this->db->delete(
+            "DELETE gibbonNotification FROM gibbonNotification JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonNotification.gibbonModuleID) WHERE gibbonModule.name='ServiceDesk' AND gibbonNotification.text REGEXP :pattern",
+            ['pattern' => '^#('.implode('|', $ids).') ']
+        );
+        $deleted = $this->db->delete("DELETE FROM gibbonServiceDeskTicket WHERE gibbonServiceDeskTicketID IN ({$list})");
 
-        if (!$deleted) {
+        $remaining = (int) $this->db->selectOne("SELECT COUNT(*) FROM gibbonServiceDeskTicket WHERE gibbonServiceDeskTicketID IN ({$list})");
+        if ($remaining > 0) {
             $this->db->rollBack();
-            return false;
+            return 0;
         }
         $this->db->commit();
 
         try {
             global $container;
-            $gibbonSchoolYearID = $ticket['gibbonSchoolYearID'] ?: $this->db->selectOne("SELECT gibbonSchoolYearID FROM gibbonSchoolYear WHERE status='Current'");
-            $container->get(LogGateway::class)->addLog($gibbonSchoolYearID, 'ServiceDesk', $actorID ?: null, 'Service Desk', [
-                'event'  => empty($actorID) ? 'Ticket deleted after its retention time' : 'Ticket deleted',
-                'ticket' => intval($ticket['gibbonServiceDeskTicketID']),
-                'type'   => $ticket['typeName'] ?? '',
-            ], empty($actorID) ? '127.0.0.1' : null);
+            $gibbonSchoolYearID = ($tickets[0]['gibbonSchoolYearID'] ?? null) ?: $this->db->selectOne("SELECT gibbonSchoolYearID FROM gibbonSchoolYear WHERE status='Current'");
+            $details = ['event' => empty($actorID) ? 'Tickets deleted after their retention time' : 'Ticket deleted', 'count' => count($ids)];
+            if (count($ids) == 1) {
+                $details['ticket'] = $ids[0];
+                $details['type'] = $tickets[0]['typeName'] ?? '';
+            } else {
+                $details['tickets'] = min($ids).' - '.max($ids);
+            }
+            $container->get(LogGateway::class)->addLog($gibbonSchoolYearID, 'ServiceDesk', $actorID ?: null, 'Service Desk', $details, empty($actorID) ? '127.0.0.1' : null);
         } catch (\Throwable $e) {
-            error_log('ServiceDesk: could not log a deleted ticket: '.$e->getMessage());
+            error_log('ServiceDesk: could not log deleted tickets: '.$e->getMessage());
         }
 
-        return true;
+        return count($ids);
+    }
+
+    /**
+     * How many requests the person sent for themselves in the last hour (for the limit on self-service requests).
+     */
+    public function countRecentRequests($gibbonPersonID): int
+    {
+        return (int) $this->db->selectOne(
+            "SELECT COUNT(*) FROM gibbonServiceDeskTicket WHERE gibbonPersonIDRequester=:gibbonPersonID AND timestampCreated > :since",
+            ['gibbonPersonID' => $gibbonPersonID, 'since' => date('Y-m-d H:i:s', time() - 3600)]
+        );
     }
 
     protected function personName($gibbonPersonID): string

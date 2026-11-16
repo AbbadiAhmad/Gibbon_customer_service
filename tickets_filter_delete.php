@@ -24,7 +24,7 @@ $page->breadcrumbs
     ->add(__m('Delete Filter'));
 
 // People delete their own filters; shared filters belong to the administrators. Anything else is "not found".
-$gibbonServiceDeskFilterID = $_GET['gibbonServiceDeskFilterID'] ?? '';
+$gibbonServiceDeskFilterID = intval($_GET['gibbonServiceDeskFilterID'] ?? 0) ?: '';
 $filter = $container->get(FilterGateway::class)->getByID($gibbonServiceDeskFilterID);
 $own = !empty($filter) && intval($filter['gibbonPersonID']) === intval($session->get('gibbonPersonID'));
 $shared = !empty($filter) && empty($filter['gibbonPersonID']);
