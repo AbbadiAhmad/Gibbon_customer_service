@@ -136,6 +136,7 @@ src/Automation/                             interface, context, result, registry
 templates/*.twig.html                       catalog, saved-filter bar, ticket view
 css/module.css                              module classes (serviceDesk-*)
 i18n/ServiceDesk.pot                        translation template
+i18n/de_DE, i18n/ar_SA                     German and Arabic (.po source + compiled .mo)
 tests/                                      static.php, make-pot.php, live/ (real Gibbon + browser)
 ```
 

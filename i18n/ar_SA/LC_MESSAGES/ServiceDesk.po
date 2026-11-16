@@ -1,0 +1,1113 @@
+# Service Desk module for Gibbon - Arabic translation.
+msgid ""
+msgstr ""
+"Project-Id-Version: ServiceDesk\n"
+"Language: ar_SA\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "A class enrolment could not be updated."
+msgstr "تعذّر تحديث تسجيل في أحد الصفوف."
+
+#: src/Service/Notifier.php
+msgid "A notification was added to your notification centre (the bell at the top of the page)."
+msgstr "أُضيف إشعار إلى مركز الإشعارات لديك (الجرس أعلى الصفحة)."
+
+#: types_manage.php
+msgid "A ticket type is a service people can request. It has its own request form, the teams that handle it, and its own workflow."
+msgstr "نوع التذكرة هو خدمة يمكن للأشخاص طلبها. له نموذج طلب خاص به، والفرق التي تتولى معالجته، ومسار عمل خاص به."
+
+#: manifest.php
+msgid "Absence Intake"
+msgstr "استلام الغياب"
+
+#: manifest.php
+msgid "Absence Report"
+msgstr "بلاغ غياب"
+
+#: manifest.php
+msgid "Absence Type"
+msgstr "نوع الغياب"
+
+#: tickets_view.php
+msgid "Add Comment"
+msgstr "إضافة تعليق"
+
+#: types_field_edit.php
+msgid "Add Field"
+msgstr "إضافة حقل"
+
+#: teams_manage_edit.php
+msgid "Add Members"
+msgstr "إضافة أعضاء"
+
+#: workflow_stage_edit.php
+msgid "Add Stage"
+msgstr "إضافة مرحلة"
+
+#: teams_manage_edit.php
+msgid "Add Team"
+msgstr "إضافة فريق"
+
+#: types_manage_edit.php
+msgid "Add Ticket Type"
+msgstr "إضافة نوع تذكرة"
+
+#: manifest.php
+msgid "Administration"
+msgstr "الإدارة"
+
+#: teams_manage_edit.php
+msgid "After saving you can add the members of the team."
+msgstr "بعد الحفظ يمكنك إضافة أعضاء الفريق."
+
+#: types_manage_edit.php
+msgid "After saving you can build the request form. The new type starts with a copy of the default workflow."
+msgstr "بعد الحفظ يمكنك إنشاء نموذج الطلب. يبدأ النوع الجديد بنسخة من مسار العمل الافتراضي."
+
+#: templates/filters.twig.html
+msgid "All"
+msgstr "الكل"
+
+#: src/Service/DashboardWidget.php
+msgid "All {count} open tickets"
+msgstr "جميع التذاكر المفتوحة ({count})"
+
+#: notifications.php
+msgid "Also change the tickets you already follow."
+msgstr "غيّر أيضًا التذاكر التي تتابعها بالفعل."
+
+#: src/Service/Notifier.php
+msgid "An email was sent to {email}."
+msgstr "أُرسل بريد إلكتروني إلى {email}."
+
+#: manifest.php
+msgid "Anything else you need from the school office."
+msgstr "أي شيء آخر تحتاجه من مكتب المدرسة."
+
+#: notifications.php
+msgid "Apply to My Current Tickets"
+msgstr "تطبيق على تذاكري الحالية"
+
+#: manifest.php
+msgid "Approved"
+msgstr "موافَق عليها"
+
+#: manifest.php
+msgid "Ask to take your child out of one or more classes."
+msgstr "اطلب إخراج طفلك من صف واحد أو أكثر."
+
+#: manifest.php
+msgid "Ask to withdraw your child from the school."
+msgstr "اطلب سحب طفلك من المدرسة."
+
+#: manifest.php
+msgid "Assigned to Me"
+msgstr "المُسندة إليّ"
+
+#: src/Service/TicketService.php
+msgid "Assigned to {name}."
+msgstr "أُسندت إلى {name}."
+
+#: tickets.php tickets_view.php templates/ticket.twig.html
+msgid "Assignee"
+msgstr "المكلَّف"
+
+#: workflow_stage_edit.php
+msgid "Automation"
+msgstr "الأتمتة"
+
+#: src/Service/TicketService.php
+msgid "Automation \"{automation}\" failed, the ticket was not moved to {stage}: {reason}"
+msgstr "فشلت الأتمتة «{automation}»، ولم تُنقل التذكرة إلى {stage}: {reason}"
+
+#: workflow_manage.php workflow_stage_edit.php
+msgid "Automation on Entry"
+msgstr "الأتمتة عند الدخول"
+
+#: workflow_stage_edit.php
+msgid "Available Automation Scripts"
+msgstr "نصوص الأتمتة المتاحة"
+
+#: tickets.php
+msgid "Available To"
+msgstr "متاح لـ"
+
+#: templates/filters.twig.html
+msgid "Board"
+msgstr "اللوحة"
+
+#: manifest.php
+msgid "Children"
+msgstr "الأبناء"
+
+#: manifest.php
+msgid "Children Concerned"
+msgstr "الأبناء المعنيون"
+
+#: manifest.php
+msgid "Classes"
+msgstr "الصفوف"
+
+#: types_field_edit.php
+msgid "Classes (the classes of those students)"
+msgstr "الصفوف (صفوف هؤلاء الطلاب)"
+
+#: manifest.php
+msgid "Closed"
+msgstr "مغلقة"
+
+#: templates/board.twig.html
+msgid "Closed tickets are shown for {days} days."
+msgstr "تُعرض التذاكر المغلقة لمدة {days} يومًا."
+
+#: types_manage_edit.php
+msgid "Closed tickets of this type are deleted this many days after they were closed, by the scheduled script cli_deleteExpiredTickets.php (see the README). Empty keeps them for ever."
+msgstr "تُحذف التذاكر المغلقة من هذا النوع بعد هذا العدد من الأيام من إغلاقها بواسطة النص المجدول cli_deleteExpiredTickets.php (راجع README). اتركه فارغًا للاحتفاظ بها دائمًا."
+
+#: types_manage_edit.php
+msgid "Colour"
+msgstr "اللون"
+
+#: types_field_edit.php
+msgid "Comma separated."
+msgstr "مفصولة بفواصل."
+
+#: tickets_comment_edit.php
+msgid "Comment"
+msgstr "تعليق"
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Comment (visible to the requester)"
+msgstr "تعليق (ظاهر لمقدّم الطلب)"
+
+#: manifest.php
+msgid "Complaint"
+msgstr "شكوى"
+
+#: manifest.php
+msgid "Complaint Details"
+msgstr "تفاصيل الشكوى"
+
+#: manifest.php
+msgid "Course Unenrolment"
+msgstr "إلغاء التسجيل من مقرر"
+
+#: templates/ticket.twig.html
+msgid "Created"
+msgstr "تاريخ الإنشاء"
+
+#: src/Service/TicketService.php
+msgid "Created by {creator} on behalf of {name}."
+msgstr "أنشأه {creator} نيابةً عن {name}."
+
+#: templates/filters.twig.html
+msgid "Custom"
+msgstr "مخصص"
+
+#: types_field_edit.php
+msgid "Date"
+msgstr "التاريخ"
+
+#: teams_manage.php teams_manage_edit.php
+msgid "Default Assignee"
+msgstr "المكلَّف الافتراضي"
+
+#: workflow_manage.php
+msgid "Default Workflow"
+msgstr "مسار العمل الافتراضي"
+
+#: workflow_manage.php
+msgid "Default workflow (copied to new ticket types)"
+msgstr "مسار العمل الافتراضي (يُنسخ إلى أنواع التذاكر الجديدة)"
+
+#: tickets_comment_delete.php
+msgid "Delete Comment"
+msgstr "حذف التعليق"
+
+#: tickets_filter_delete.php
+msgid "Delete Filter"
+msgstr "حذف المرشّح"
+
+#: tickets_delete.php
+msgid "Delete Ticket"
+msgstr "حذف التذكرة"
+
+#: tickets.php
+msgid "Delete filter \"{name}\""
+msgstr "حذف المرشّح «{name}»"
+
+#: tickets_view.php
+msgid "Delete this ticket"
+msgstr "حذف هذه التذكرة"
+
+#: src/Service/TicketService.php
+msgid "Deleted a comment of {date}."
+msgstr "حُذف تعليق بتاريخ {date}."
+
+#: manifest.php
+msgid "Details"
+msgstr "التفاصيل"
+
+#: manifest.php
+msgid "Done"
+msgstr "منجزة"
+
+#: templates/board.twig.html
+msgid "Drag a ticket to another column to move it to that stage."
+msgstr "اسحب التذكرة إلى عمود آخر لنقلها إلى تلك المرحلة."
+
+#: tickets_comment_edit.php
+msgid "Edit Comment"
+msgstr "تعديل التعليق"
+
+#: types_field_edit.php
+msgid "Edit Field"
+msgstr "تعديل الحقل"
+
+#: workflow_stage_edit.php
+msgid "Edit Stage"
+msgstr "تعديل المرحلة"
+
+#: teams_manage_edit.php
+msgid "Edit Team"
+msgstr "تعديل الفريق"
+
+#: types_manage_edit.php
+msgid "Edit Ticket Type"
+msgstr "تعديل نوع التذكرة"
+
+#: src/Service/TicketService.php
+msgid "Edited a comment of {date}."
+msgstr "عُدّل تعليق بتاريخ {date}."
+
+#: manifest.php
+msgid "Education"
+msgstr "تعليمي"
+
+#: manifest.php
+msgid "Effective From"
+msgstr "ساري اعتبارًا من"
+
+#: workflow_manage.php
+msgid "Every new ticket type gets a copy of these stages. Changing them here does not change existing ticket types."
+msgstr "يحصل كل نوع تذكرة جديد على نسخة من هذه المراحل. تغييرها هنا لا يغيّر أنواع التذاكر الموجودة."
+
+#: manifest.php
+msgid "Family"
+msgstr "عائلي"
+
+#: types_field_edit.php types_manage_edit.php
+msgid "Field Name"
+msgstr "اسم الحقل"
+
+#: tickets.php
+msgid "Filter tickets"
+msgstr "تصفية التذاكر"
+
+#: manifest.php
+msgid "First Day of Absence"
+msgstr "أول يوم غياب"
+
+#: tickets_view.php
+msgid "For a request filed under the wrong service. The teams of the new type take over; the stage of the same name is kept, otherwise the ticket starts in the first stage. The assignee stays only if they are in a team of the new type."
+msgstr "لطلب قُدّم ضمن خدمة خاطئة. تتولى فرق النوع الجديد الأمر؛ تُحفظ المرحلة التي تحمل الاسم نفسه، وإلا تبدأ التذكرة في المرحلة الأولى. يبقى المكلَّف فقط إذا كان ضمن فريق من النوع الجديد."
+
+#: manifest.php
+msgid "General Request"
+msgstr "طلب عام"
+
+#: templates/ticket.twig.html
+msgid "History"
+msgstr "السجل"
+
+#: notifications.php
+msgid "How do you want to be told about updates on your tickets? Your choice is copied to every new ticket you are involved in; you can still change it on a single ticket."
+msgstr "كيف تريد أن يتم إعلامك بالتحديثات على تذاكرك؟ يُنسخ اختيارك إلى كل تذكرة جديدة تشارك فيها؛ ويمكنك تغييره لاحقًا على تذكرة بعينها."
+
+#: manifest.php
+msgid "In Progress"
+msgstr "قيد المعالجة"
+
+#: templates/ticket.twig.html
+msgid "Internal"
+msgstr "داخلي"
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Internal note"
+msgstr "ملاحظة داخلية"
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Internal notes are only seen by the team."
+msgstr "الملاحظات الداخلية يراها الفريق فقط."
+
+#: tickets.php
+msgid "Keep these criteria under a name."
+msgstr "احفظ هذه المعايير تحت اسم."
+
+#: types_field_edit.php types_manage_edit.php
+msgid "Label"
+msgstr "التسمية"
+
+#: manifest.php
+msgid "Last Day at School"
+msgstr "آخر يوم في المدرسة"
+
+#: manifest.php
+msgid "Last Day of Absence"
+msgstr "آخر يوم غياب"
+
+#: tickets.php
+msgid "Last Update"
+msgstr "آخر تحديث"
+
+#: manifest.php
+msgid "Leave empty for a single day."
+msgstr "اتركه فارغًا ليوم واحد."
+
+#: request_new.php
+msgid "Leave empty to send a request for yourself. The person chosen becomes the requester of the ticket."
+msgstr "اتركه فارغًا لإرسال طلب لنفسك. يصبح الشخص المختار مقدّم طلب التذكرة."
+
+#: types_field_edit.php
+msgid "Letters and digits, unique in this type. Automation scripts read the answer by this name (for example: students, dateStart, dateEnd, reason, classes). Leave empty to derive it from the label."
+msgstr "أحرف وأرقام، فريدة ضمن هذا النوع. تقرأ نصوص الأتمتة الإجابة بهذا الاسم (مثل: students، dateStart، dateEnd، reason، classes). اتركه فارغًا لاشتقاقه من التسمية."
+
+#: templates/filters.twig.html
+msgid "List"
+msgstr "قائمة"
+
+#: types_field_edit.php
+msgid "Long Text"
+msgstr "نص طويل"
+
+#: src/Service/TicketService.php
+msgid "Made a comment of {date} internal."
+msgstr "جُعل تعليق بتاريخ {date} داخليًا."
+
+#: src/Service/TicketService.php
+msgid "Made a comment of {date} visible to the requester."
+msgstr "جُعل تعليق بتاريخ {date} ظاهرًا لمقدّم الطلب."
+
+#: teams_manage.php teams_manage_edit.php
+msgid "Manage Teams"
+msgstr "إدارة الفرق"
+
+#: tickets_view.php
+msgid "Manage Ticket"
+msgstr "إدارة التذكرة"
+
+#: types_field_edit.php types_manage.php types_manage_edit.php
+msgid "Manage Ticket Types"
+msgstr "إدارة أنواع التذاكر"
+
+#: workflow_manage.php workflow_stage_edit.php
+msgid "Manage Workflows"
+msgstr "إدارة مسارات العمل"
+
+#: manifest.php
+msgid "Management"
+msgstr "إدارة المدرسة"
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "Marks the students absent for each school day of the period. Reads the fields: students, dateStart, dateEnd (optional), reason (optional)."
+msgstr "يسجّل الطلاب غائبين في كل يوم دراسي من الفترة. يقرأ الحقول: students وdateStart وdateEnd (اختياري) وreason (اختياري)."
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "Marks the students as left in the chosen classes. Reads the fields: classes, dateEffective (optional, default today). Finance is not changed."
+msgstr "يسجّل الطلاب كمنسحبين من الصفوف المختارة. يقرأ الحقول: classes وdateEffective (اختياري، الافتراضي اليوم). لا تتغير الشؤون المالية."
+
+#: types_manage_edit.php
+msgid "Marks the tickets of this type in the list and on the board."
+msgstr "يميّز تذاكر هذا النوع في القائمة وعلى اللوحة."
+
+#: tickets.php
+msgid "Me"
+msgstr "أنا"
+
+#: manifest.php
+msgid "Medical"
+msgstr "طبي"
+
+#: teams_manage.php teams_manage_edit.php
+msgid "Members"
+msgstr "الأعضاء"
+
+#: teams_manage_edit.php
+msgid "Members of an inactive team no longer see its tickets."
+msgstr "لا يرى أعضاء الفريق غير النشط تذاكره بعد الآن."
+
+#: tickets_view.php
+msgid "Members of the teams that handle this ticket type."
+msgstr "أعضاء الفرق التي تتولى هذا النوع من التذاكر."
+
+#: workflow_manage.php
+msgid "Missing script: {script}"
+msgstr "النص مفقود: {script}"
+
+#: tickets_view.php
+msgid "Move Ticket"
+msgstr "نقل التذكرة"
+
+#: tickets_view.php
+msgid "Move to Another Ticket Type"
+msgstr "نقل إلى نوع تذكرة آخر"
+
+#: src/Service/TicketService.php
+msgid "Moved from {from} to {to}."
+msgstr "نُقلت من {from} إلى {to}."
+
+#: src/Service/TicketService.php
+msgid "Moved to {stage}."
+msgstr "نُقلت إلى {stage}."
+
+#: tickets_view.php
+msgid "My Notifications for this Ticket"
+msgstr "إشعاراتي لهذه التذكرة"
+
+#: manifest.php
+msgid "My Requests"
+msgstr "طلباتي"
+
+#: templates/filters.twig.html
+msgid "My filter"
+msgstr "مرشّحي"
+
+#: src/Service/DashboardWidget.php
+msgid "My open requests"
+msgstr "طلباتي المفتوحة"
+
+#: manifest.php
+msgid "New"
+msgstr "جديدة"
+
+#: request_new.php tickets.php src/Service/DashboardWidget.php templates/board.twig.html
+msgid "New Request"
+msgstr "طلب جديد"
+
+#: src/Service/TicketService.php
+msgid "New comment"
+msgstr "تعليق جديد"
+
+#: src/Service/TicketService.php
+msgid "New internal note"
+msgstr "ملاحظة داخلية جديدة"
+
+#: teams_manage_edit.php
+msgid "New tickets of this team's ticket types are assigned to this member straight away. Leave empty and tickets start unassigned."
+msgstr "تُسند تذاكر أنواع هذا الفريق الجديدة إلى هذا العضو مباشرة. اتركه فارغًا لتبدأ التذاكر دون إسناد."
+
+#: workflow_stage_edit.php
+msgid "New tickets start in the stage with the lowest number."
+msgstr "تبدأ التذاكر الجديدة في المرحلة ذات الرقم الأدنى."
+
+#: src/Service/TicketService.php
+msgid "New {type} request from {name}."
+msgstr "طلب جديد من نوع {type} من {name}."
+
+#: src/Service/Notifier.php
+msgid "No email was sent: the school has no sender address. Set the organisation email in System Admin > System Settings."
+msgstr "لم يُرسل بريد إلكتروني: ليس للمدرسة عنوان مرسِل. اضبط بريد المؤسسة في إدارة النظام > إعدادات النظام."
+
+#: src/Service/Notifier.php
+msgid "No email was sent: your user account has no email address."
+msgstr "لم يُرسل بريد إلكتروني: ليس لحساب المستخدم الخاص بك عنوان بريد إلكتروني."
+
+#: src/Automation/Scripts/TellTeachers.php
+msgid "No teachers were found to tell."
+msgstr "لم يُعثر على معلمين لإبلاغهم."
+
+#: types_manage.php
+msgid "No team"
+msgstr "بلا فريق"
+
+#: teams_manage_edit.php
+msgid "Nobody (tickets start unassigned)"
+msgstr "لا أحد (تبدأ التذاكر دون إسناد)"
+
+#: tickets.php
+msgid "Nobody (unassigned)"
+msgstr "لا أحد (غير مُسندة)"
+
+#: templates/board.twig.html
+msgid "Not all tickets fit on the board: narrow the filter."
+msgstr "لا تتسع اللوحة لجميع التذاكر: ضيّق المرشّح."
+
+#: tickets_requester.php
+msgid "Note"
+msgstr "ملاحظة"
+
+#: templates/ticket.twig.html
+msgid "Nothing has happened on this ticket yet."
+msgstr "لم يحدث شيء على هذه التذكرة بعد."
+
+#: notifications.php tickets_view.php
+msgid "Notification Centre"
+msgstr "مركز الإشعارات"
+
+#: notifications.php
+msgid "Notification Settings"
+msgstr "إعدادات الإشعارات"
+
+#: src/Automation/Scripts/TellTeachers.php
+msgid "Notifies the form tutors and class teachers of the children (notification centre only, never email; without the reason). Reads the fields of type Students (all class teachers) and Classes (the teachers of those classes)."
+msgstr "يُبلغ مربّي الصفوف ومعلمي الفصول للأطفال (في مركز الإشعارات فقط، وليس بالبريد الإلكتروني أبدًا؛ دون ذكر السبب). يقرأ الحقول من نوع Students (جميع معلمي الفصول) وClasses (معلمو تلك الصفوف)."
+
+#: request_new.php
+msgid "On Behalf Of"
+msgstr "نيابةً عن"
+
+#: manifest.php
+msgid "Only if the complaint is about one of your children."
+msgstr "فقط إذا كانت الشكوى تخص أحد أبنائك."
+
+#: tickets.php
+msgid "Only me"
+msgstr "أنا فقط"
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "Only {found} of {expected} absences could be recorded."
+msgstr "لم يمكن تسجيل سوى {found} من أصل {expected} غيابات."
+
+#: manifest.php
+msgid "Open"
+msgstr "مفتوحة"
+
+#: manifest.php
+msgid "Open Tickets"
+msgstr "التذاكر المفتوحة"
+
+#: src/Service/DashboardWidget.php
+msgid "Open the Service Desk"
+msgstr "فتح مكتب الخدمة"
+
+#: src/Service/DashboardWidget.php
+msgid "Open tickets for me"
+msgstr "التذاكر المفتوحة لي"
+
+#: types_field_edit.php
+msgid "Optional help text under the label."
+msgstr "نص مساعدة اختياري أسفل التسمية."
+
+#: request_new.php
+msgid "Optional: a short title for your request."
+msgstr "اختياري: عنوان قصير لطلبك."
+
+#: tickets_requester.php
+msgid "Optional: tell the team why. It is added as a comment."
+msgstr "اختياري: أخبر الفريق بالسبب. يُضاف كتعليق."
+
+#: types_field_edit.php
+msgid "Options"
+msgstr "الخيارات"
+
+#: types_field_edit.php types_manage.php types_manage_edit.php workflow_manage.php workflow_stage_edit.php
+msgid "Order"
+msgstr "الترتيب"
+
+#: manifest.php
+msgid "Other"
+msgstr "أخرى"
+
+#: templates/board.twig.html
+msgid "Overview by status. Choose a filter with a single ticket type to see its workflow stages and move tickets."
+msgstr "نظرة عامة حسب الحالة. اختر مرشّحًا بنوع تذكرة واحد لعرض مراحل مسار عمله ونقل التذاكر."
+
+#: types_manage_edit.php
+msgid "Position in the list of services."
+msgstr "الموضع في قائمة الخدمات."
+
+#: tickets.php tickets_view.php templates/ticket.twig.html
+msgid "Priority"
+msgstr "الأولوية"
+
+#: src/Service/TicketService.php
+msgid "Priority set to {priority}."
+msgstr "ضُبطت الأولوية على {priority}."
+
+#: manifest.php
+msgid "Raise a complaint. The school will reply on the ticket."
+msgstr "قدّم شكوى. سترد المدرسة على التذكرة."
+
+#: manifest.php
+msgid "Reason"
+msgstr "السبب"
+
+#: manifest.php
+msgid "Reason for leaving and anything the office should know."
+msgstr "سبب المغادرة وأي شيء ينبغي أن يعرفه المكتب."
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "Record absence in Attendance"
+msgstr "تسجيل الغياب في الحضور"
+
+#: manifest.php
+msgid "Rejected"
+msgstr "مرفوضة"
+
+#: teams_manage_edit.php
+msgid "Remove"
+msgstr "إزالة"
+
+#: tickets_requester.php
+msgid "Reopen Request"
+msgstr "إعادة فتح الطلب"
+
+#: tickets_view.php
+msgid "Reopen this request"
+msgstr "إعادة فتح هذا الطلب"
+
+#: types_manage_edit.php
+msgid "Request Form"
+msgstr "نموذج الطلب"
+
+#: types_manage.php types_manage_edit.php
+msgid "Requested By"
+msgstr "مقدَّم من"
+
+#: tickets.php templates/ticket.twig.html
+msgid "Requester"
+msgstr "مقدّم الطلب"
+
+#: tickets.php
+msgid "Requesters (parents, students and staff who are in no team)"
+msgstr "مقدّمو الطلبات (أولياء الأمور والطلاب والموظفون غير المنتمين إلى فريق)"
+
+#: types_manage_edit.php
+msgid "Requesters Can Reopen"
+msgstr "يمكن لمقدّمي الطلبات إعادة الفتح"
+
+#: types_manage_edit.php
+msgid "Requesters Can Withdraw"
+msgstr "يمكن لمقدّمي الطلبات السحب"
+
+#: types_field_edit.php types_manage_edit.php
+msgid "Required"
+msgstr "مطلوب"
+
+#: types_manage.php
+msgid "Retention"
+msgstr "الاحتفاظ"
+
+#: types_manage_edit.php
+msgid "Retention (days)"
+msgstr "مدة الاحتفاظ (أيام)"
+
+#: tickets.php
+msgid "Save Filter"
+msgstr "حفظ المرشّح"
+
+#: tickets.php
+msgid "Save as Filter"
+msgstr "حفظ كمرشّح"
+
+#: manifest.php
+msgid "School De-registration"
+msgstr "إلغاء التسجيل من المدرسة"
+
+#: manifest.php
+msgid "School management: complaints."
+msgstr "إدارة المدرسة: الشكاوى."
+
+#: manifest.php
+msgid "School office: attendance, enrolment, registration and general requests."
+msgstr "مكتب المدرسة: الحضور والتسجيل والقيد والطلبات العامة."
+
+#: workflow_stage_edit.php
+msgid "Scripts that run when a ticket enters this stage. Tick as many as you need: they run together, and if one fails nothing is changed - the ticket stays in the stage it came from and the reason is written on the ticket as an internal note."
+msgstr "نصوص تعمل عند دخول تذكرة هذه المرحلة. حدّد ما تحتاج إليه: تعمل معًا، وإذا فشل أحدها لا يتغير شيء - تبقى التذكرة في المرحلة التي جاءت منها ويُكتب السبب على التذكرة كملاحظة داخلية."
+
+#: types_field_edit.php
+msgid "Select (choose one option)"
+msgstr "اختيار (خيار واحد)"
+
+#: notifications.php
+msgid "Send Me a Test Notification"
+msgstr "أرسل لي إشعارًا تجريبيًا"
+
+#: request_new.php
+msgid "Send Request"
+msgstr "إرسال الطلب"
+
+#: notifications.php
+msgid "Sends a test notification to you through both channels, whatever you chose above, and tells you whether each one worked. Remember: you are never notified about your own comments and changes, only about those of other people."
+msgstr "يرسل إليك إشعارًا تجريبيًا عبر القناتين، مهما كان اختيارك أعلاه، ويخبرك إن كانت كل قناة تعمل. تذكّر: لا يتم إشعارك أبدًا بتعليقاتك وتغييراتك أنت، بل بتعليقات وتغييرات الآخرين فقط."
+
+#: src/Service/Notifier.php templates/ticket.twig.html
+msgid "Service Desk"
+msgstr "مكتب الخدمة"
+
+#: src/Service/Notifier.php
+msgid "Service Desk test notification ({time})."
+msgstr "إشعار تجريبي من مكتب الخدمة ({time})."
+
+#: types_manage_edit.php
+msgid "Share With Family"
+msgstr "مشاركة مع الأسرة"
+
+#: templates/filters.twig.html
+msgid "Shared filter"
+msgstr "مرشّح مشترك"
+
+#: templates/filters.twig.html
+msgid "Shared with requesters"
+msgstr "مشترك مع مقدّمي الطلبات"
+
+#: templates/filters.twig.html
+msgid "Shared with team {team}"
+msgstr "مشترك مع الفريق {team}"
+
+#: types_manage_edit.php
+msgid "Shown to people choosing a service."
+msgstr "يظهر للأشخاص الذين يختارون خدمة."
+
+#: workflow_manage.php
+msgid "Special"
+msgstr "خاص"
+
+#: tickets.php
+msgid "Staff working on tickets (administrators and team members)"
+msgstr "الموظفون العاملون على التذاكر (المسؤولون وأعضاء الفرق)"
+
+#: tickets.php tickets_view.php templates/ticket.twig.html
+msgid "Stage"
+msgstr "المرحلة"
+
+#: tickets_view.php
+msgid "Stages marked * run an automation when the ticket enters them."
+msgstr "المراحل المعلّمة بـ * تشغّل أتمتة عند دخول التذكرة إليها."
+
+#: workflow_stage_edit.php
+msgid "Stay in this stage"
+msgstr "البقاء في هذه المرحلة"
+
+#: src/Service/RequestFields.php
+msgid "Student and class"
+msgstr "الطالب والصف"
+
+#: types_field_edit.php
+msgid "Students (parents choose among their children)"
+msgstr "الطلاب (يختار أولياء الأمور من بين أبنائهم)"
+
+#: request_new.php tickets.php
+msgid "Subject"
+msgstr "الموضوع"
+
+#: tickets.php
+msgid "Team: {team}"
+msgstr "الفريق: {team}"
+
+#: types_manage.php types_manage_edit.php
+msgid "Teams"
+msgstr "الفرق"
+
+#: manifest.php
+msgid "Tell the school that your child will be (or was) absent."
+msgstr "أبلغ المدرسة بأن طفلك سيتغيّب (أو تغيّب)."
+
+#: src/Automation/Scripts/TellTeachers.php
+msgid "Tell the teachers"
+msgstr "إبلاغ المعلمين"
+
+#: notifications.php
+msgid "Test"
+msgstr "اختبار"
+
+#: types_field_edit.php
+msgid "Text"
+msgstr "نص"
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The absence period is longer than {days} days: record it by hand."
+msgstr "فترة الغياب أطول من {days} يومًا: سجّلها يدويًا."
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The absence period is missing or invalid."
+msgstr "فترة الغياب مفقودة أو غير صالحة."
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The absence was recorded in Attendance: {students} student(s), {days} school day(s), {period}."
+msgstr "سُجّل الغياب في الحضور: {students} طالب/طلاب، {days} يوم/أيام دراسية، {period}."
+
+#: src/Service/TicketService.php
+msgid "The assignee is not in a team of the new ticket type: the ticket is unassigned."
+msgstr "المكلَّف ليس ضمن فريق من نوع التذكرة الجديد: التذكرة غير مُسندة."
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The attendance code \"Absent\" does not exist or is not active."
+msgstr "رمز الحضور «Absent» غير موجود أو غير نشط."
+
+#: tickets.php
+msgid "The audience of a shared filter. A filter never shows a person more tickets than they may see."
+msgstr "جمهور المرشّح المشترك. لا يعرض المرشّح لأي شخص تذاكر أكثر مما يحق له رؤيته."
+
+#: notifications.php
+msgid "The bell at the top of the page."
+msgstr "الجرس أعلى الصفحة."
+
+#: manifest.php
+msgid "The classes your child should leave."
+msgstr "الصفوف التي يجب أن يغادرها طفلك."
+
+#: src/Service/Notifier.php
+msgid "The email to {email} could not be sent: {error}"
+msgstr "تعذّر إرسال البريد الإلكتروني إلى {email}: {error}"
+
+#: teams_manage.php
+msgid "The members of a team see and process the tickets of the ticket types given to the team (see Manage Ticket Types)."
+msgstr "يرى أعضاء الفريق تذاكر أنواع التذاكر المسندة إلى الفريق ويعالجونها (راجع إدارة أنواع التذاكر)."
+
+#: src/Service/Notifier.php
+msgid "The notification could not be stored. Is the module installed under the name ServiceDesk?"
+msgstr "تعذّر حفظ الإشعار. هل الوحدة مثبّتة باسم ServiceDesk؟"
+
+#: types_manage_edit.php
+msgid "The other adults of the requester's family (with data access) also see these tickets, comment on them, withdraw and reopen them. Leave off for private matters such as complaints."
+msgstr "يرى البالغون الآخرون في أسرة مقدّم الطلب (ممن لديهم صلاحية الوصول إلى البيانات) هذه التذاكر أيضًا، ويعلّقون عليها ويسحبونها ويعيدون فتحها. أبقِه معطّلًا للأمور الخاصة مثل الشكاوى."
+
+#: types_field_edit.php
+msgid "The question as people see it."
+msgstr "السؤال كما يراه الأشخاص."
+
+#: types_manage_edit.php
+msgid "The questions people answer when they send this request. A subject line is always offered. The field name is what automation scripts use to read the answer."
+msgstr "الأسئلة التي يجيب عنها الأشخاص عند إرسال هذا الطلب. يُعرض حقل الموضوع دائمًا. اسم الحقل هو ما تستخدمه نصوص الأتمتة لقراءة الإجابة."
+
+#: tickets_requester.php
+msgid "The request goes back to the start of its workflow and the team is told."
+msgstr "يعود الطلب إلى بداية مسار عمله ويُبلَّغ الفريق."
+
+#: tickets_requester.php
+msgid "The request is closed as withdrawn and the team is told."
+msgstr "يُغلق الطلب كمسحوب ويُبلَّغ الفريق."
+
+#: types_manage_edit.php
+msgid "The requester can reopen the request themselves for {days} days after it was closed. Off: they send a new request."
+msgstr "يمكن لمقدّم الطلب إعادة فتحه بنفسه لمدة {days} يومًا بعد إغلاقه. إذا عُطّل: يرسل طلبًا جديدًا."
+
+#: types_manage_edit.php
+msgid "The requester can withdraw the request themselves while it is open or in progress (it moves to the workflow's withdrawn stage). Off: only the team can close it. What an automation already did, such as a recorded absence, is not undone by withdrawing."
+msgstr "يمكن لمقدّم الطلب سحبه بنفسه ما دام مفتوحًا أو قيد المعالجة (ينتقل إلى مرحلة «مسحوب» في مسار العمل). إذا عُطّل: الفريق وحده يستطيع إغلاقه. ما نفّذته الأتمتة بالفعل، مثل غياب مسجَّل، لا يُلغى بالسحب."
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The school is closed on every day of the absence period."
+msgstr "المدرسة مغلقة في كل يوم من فترة الغياب."
+
+#: workflow_manage.php
+msgid "The stages of this ticket type. New tickets start in the first stage; team members move them between stages."
+msgstr "مراحل نوع التذكرة هذا. تبدأ التذاكر الجديدة في المرحلة الأولى؛ وينقلها أعضاء الفريق بين المراحل."
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "The students were unenrolled from {count} class(es)."
+msgstr "أُلغي تسجيل الطلاب من {count} صف/صفوف."
+
+#: types_manage_edit.php
+msgid "The teams whose members see and process these tickets."
+msgstr "الفرق التي يرى أعضاؤها هذه التذاكر ويعالجونها."
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "The ticket has no classes that can be processed automatically."
+msgstr "لا تحتوي التذكرة على صفوف يمكن معالجتها تلقائيًا."
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The ticket has no students."
+msgstr "لا تحتوي التذكرة على طلاب."
+
+#: src/Service/TicketService.php
+msgid "The ticket is no longer assigned."
+msgstr "لم تعد التذكرة مُسندة."
+
+#: tickets_delete.php
+msgid "The ticket, its comments, its notification settings and the notifications written about it are deleted for good. This cannot be undone. Changes the workflow made elsewhere in Gibbon (attendance, enrolment) stay as they are. A line in the system log records that the ticket was deleted, and by whom - not what it said."
+msgstr "تُحذف التذكرة وتعليقاتها وإعدادات إشعاراتها والإشعارات المكتوبة عنها حذفًا نهائيًا. لا يمكن التراجع عن ذلك. التغييرات التي أجراها مسار العمل في أماكن أخرى من Gibbon (الحضور، التسجيل) تبقى كما هي. يسجّل سطر في سجل النظام أن التذكرة حُذفت ومن حذفها - وليس محتواها."
+
+#: workflow_stage_edit.php
+msgid "Then Move To"
+msgstr "ثم النقل إلى"
+
+#: src/Service/RequestFields.php
+msgid "There are no classes to choose from."
+msgstr "لا توجد صفوف للاختيار منها."
+
+#: templates/catalog.twig.html
+msgid "There are no services available to you at the moment."
+msgstr "لا توجد خدمات متاحة لك في الوقت الحالي."
+
+#: src/Service/RequestFields.php
+msgid "There are no students linked to your account."
+msgstr "لا يوجد طلاب مرتبطون بحسابك."
+
+#: tickets_filter_delete.php
+msgid "This is a shared filter: it will disappear for everyone who uses it."
+msgstr "هذا مرشّح مشترك: سيختفي لدى كل من يستخدمه."
+
+#: tickets_view.php
+msgid "This only changes this ticket. Your general choice is in Notification Settings."
+msgstr "هذا يغيّر هذه التذكرة فقط. اختيارك العام موجود في إعدادات الإشعارات."
+
+#: tickets.php
+msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
+msgstr "تشغّل هذه المرحلة أتمتة عند دخول التذكرة إليها. هل تريد نقل التذكرة؟"
+
+#: tickets.php tickets_view.php templates/ticket.twig.html
+msgid "Ticket Type"
+msgstr "نوع التذكرة"
+
+#: teams_manage.php
+msgid "Ticket Types"
+msgstr "أنواع التذاكر"
+
+#: tickets.php
+msgid "Ticket number, subject, details, children, classes, dates, requester, assignee and comments. Several words must all be found."
+msgstr "رقم التذكرة والموضوع والتفاصيل والأطفال والصفوف والتواريخ ومقدّم الطلب والمكلَّف والتعليقات. يجب العثور على جميع الكلمات عند إدخال عدة كلمات."
+
+#: tickets.php tickets_comment_delete.php tickets_comment_edit.php tickets_delete.php tickets_filter_delete.php tickets_requester.php tickets_view.php src/Service/DashboardWidget.php
+msgid "Tickets"
+msgstr "التذاكر"
+
+#: tickets.php
+msgid "Tickets marked \"Updated\" have changed since you last opened them."
+msgstr "التذاكر المعلّمة بـ «محدَّثة» تغيّرت منذ آخر مرة فتحتها."
+
+#: tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html manifest.php
+msgid "Unassigned"
+msgstr "غير مُسندة"
+
+#: src/Automation/Scripts/UnenrolFromClasses.php
+msgid "Unenrol from classes"
+msgstr "إلغاء التسجيل من الصفوف"
+
+#: workflow_stage_edit.php
+msgid "Unique in this workflow."
+msgstr "فريد ضمن مسار العمل هذا."
+
+#: tickets_view.php
+msgid "Update Ticket"
+msgstr "تحديث التذكرة"
+
+#: tickets.php src/Service/DashboardWidget.php templates/board.twig.html
+msgid "Updated"
+msgstr "محدَّثة"
+
+#: tickets_comment_edit.php tickets_view.php
+msgid "Visibility"
+msgstr "الظهور"
+
+#: templates/catalog.twig.html
+msgid "What do you need?"
+msgstr "ماذا تحتاج؟"
+
+#: workflow_stage_edit.php
+msgid "What the stage means for filters and lists: waiting, being worked on, or finished."
+msgstr "ما تعنيه المرحلة للمرشّحات والقوائم: في الانتظار، أو قيد العمل، أو منتهية."
+
+#: workflow_stage_edit.php
+msgid "Where the ticket goes when the automation succeeded. Empty: it stays in this stage. Only used when an automation is ticked."
+msgstr "المكان الذي تنتقل إليه التذكرة عند نجاح الأتمتة. فارغ: تبقى في هذه المرحلة. يُستخدم فقط عند تحديد أتمتة."
+
+#: workflow_stage_edit.php
+msgid "Where tickets go when the requester withdraws the request. One per workflow; it should have the status Closed."
+msgstr "المكان الذي تنتقل إليه التذاكر عندما يسحب مقدّم الطلب طلبه. واحدة لكل مسار عمل؛ ويجب أن تكون حالتها «مغلقة»."
+
+#: types_manage_edit.php
+msgid "Who can send this kind of request."
+msgstr "من يستطيع إرسال هذا النوع من الطلبات."
+
+#: tickets_requester.php
+msgid "Withdraw Request"
+msgstr "سحب الطلب"
+
+#: tickets_view.php
+msgid "Withdraw this request"
+msgstr "سحب هذا الطلب"
+
+#: manifest.php
+msgid "Withdrawn"
+msgstr "مسحوبة"
+
+#: workflow_stage_edit.php
+msgid "Withdrawn Stage"
+msgstr "مرحلة المسحوبة"
+
+#: types_manage.php types_manage_edit.php workflow_manage.php
+msgid "Workflow"
+msgstr "مسار العمل"
+
+#: workflow_manage.php
+msgid "Workflow: {type}"
+msgstr "مسار العمل: {type}"
+
+#: types_field_edit.php
+msgid "Yes/No"
+msgstr "نعم/لا"
+
+#: request_new.php
+msgid "You are creating a request on behalf of {name}."
+msgstr "أنت تنشئ طلبًا نيابةً عن {name}."
+
+#: tickets_view.php
+msgid "You are not following this ticket. Choose a channel to be told about its updates."
+msgstr "أنت لا تتابع هذه التذكرة. اختر قناة لإعلامك بتحديثاتها."
+
+#: tickets_requester.php
+msgid "You can reopen it for {days} days."
+msgstr "يمكنك إعادة فتحه خلال {days} يومًا."
+
+#: request_new.php
+msgid "You have sent many requests in the last hour. Please wait a while before sending another one, or contact the school office."
+msgstr "لقد أرسلت طلبات كثيرة خلال الساعة الماضية. يُرجى الانتظار قليلًا قبل إرسال طلب آخر، أو التواصل مع مكتب المدرسة."
+
+#: workflow_manage.php
+msgid "Your request failed because a workflow needs at least one stage."
+msgstr "فشل طلبك لأن مسار العمل يحتاج إلى مرحلة واحدة على الأقل."
+
+#: types_manage.php
+msgid "Your request failed because this ticket type has tickets. Make it inactive instead."
+msgstr "فشل طلبك لأن هذا النوع من التذاكر يحتوي على تذاكر. اجعله غير نشط بدلًا من ذلك."
+
+#: workflow_manage.php
+msgid "Your request failed because tickets are in this stage. Move them to another stage first."
+msgstr "فشل طلبك لأن هناك تذاكر في هذه المرحلة. انقلها إلى مرحلة أخرى أولًا."
+
+#: src/Service/RequestFields.php
+msgid "classes"
+msgstr "الصفوف"
+
+#: templates/ticket.twig.html
+msgid "edited"
+msgstr "معدّل"
+
+#: workflow_manage.php
+msgid "receives withdrawn requests"
+msgstr "تستقبل الطلبات المسحوبة"
+
+#: templates/filters.twig.html
+msgid "requesters"
+msgstr "مقدّمو الطلبات"
+
+#: workflow_manage.php
+msgid "then move to {stage}"
+msgstr "ثم النقل إلى {stage}"
+
+#: src/Automation/Scripts/TellTeachers.php
+msgid "{count} teacher(s) were told (notification centre only)."
+msgstr "أُبلغ {count} معلم/معلمين (في مركز الإشعارات فقط)."
+
+#: types_manage.php
+msgid "{days} days"
+msgstr "{days} يومًا"
+
+#: src/Service/TicketService.php
+msgid "{name} reopened the request."
+msgstr "أعاد {name} فتح الطلب."
+
+#: src/Service/TicketService.php
+msgid "{name} withdrew the request."
+msgstr "سحب {name} الطلب."
+
+#: src/Automation/Scripts/TellTeachers.php
+msgid "{type} approved: {details}."
+msgstr "تمت الموافقة على {type}: {details}."
+

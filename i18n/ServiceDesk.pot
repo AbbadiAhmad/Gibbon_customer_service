@@ -18,6 +18,18 @@ msgstr ""
 msgid "A ticket type is a service people can request. It has its own request form, the teams that handle it, and its own workflow."
 msgstr ""
 
+#: manifest.php
+msgid "Absence Intake"
+msgstr ""
+
+#: manifest.php
+msgid "Absence Report"
+msgstr ""
+
+#: manifest.php
+msgid "Absence Type"
+msgstr ""
+
 #: tickets_view.php
 msgid "Add Comment"
 msgstr ""
@@ -40,6 +52,10 @@ msgstr ""
 
 #: types_manage_edit.php
 msgid "Add Ticket Type"
+msgstr ""
+
+#: manifest.php
+msgid "Administration"
 msgstr ""
 
 #: teams_manage_edit.php
@@ -66,8 +82,28 @@ msgstr ""
 msgid "An email was sent to {email}."
 msgstr ""
 
+#: manifest.php
+msgid "Anything else you need from the school office."
+msgstr ""
+
 #: notifications.php
 msgid "Apply to My Current Tickets"
+msgstr ""
+
+#: manifest.php
+msgid "Approved"
+msgstr ""
+
+#: manifest.php
+msgid "Ask to take your child out of one or more classes."
+msgstr ""
+
+#: manifest.php
+msgid "Ask to withdraw your child from the school."
+msgstr ""
+
+#: manifest.php
+msgid "Assigned to Me"
 msgstr ""
 
 #: src/Service/TicketService.php
@@ -102,8 +138,24 @@ msgstr ""
 msgid "Board"
 msgstr ""
 
+#: manifest.php
+msgid "Children"
+msgstr ""
+
+#: manifest.php
+msgid "Children Concerned"
+msgstr ""
+
+#: manifest.php
+msgid "Classes"
+msgstr ""
+
 #: types_field_edit.php
 msgid "Classes (the classes of those students)"
+msgstr ""
+
+#: manifest.php
+msgid "Closed"
 msgstr ""
 
 #: templates/board.twig.html
@@ -128,6 +180,18 @@ msgstr ""
 
 #: tickets_comment_edit.php tickets_view.php
 msgid "Comment (visible to the requester)"
+msgstr ""
+
+#: manifest.php
+msgid "Complaint"
+msgstr ""
+
+#: manifest.php
+msgid "Complaint Details"
+msgstr ""
+
+#: manifest.php
+msgid "Course Unenrolment"
 msgstr ""
 
 #: templates/ticket.twig.html
@@ -182,6 +246,14 @@ msgstr ""
 msgid "Deleted a comment of {date}."
 msgstr ""
 
+#: manifest.php
+msgid "Details"
+msgstr ""
+
+#: manifest.php
+msgid "Done"
+msgstr ""
+
 #: templates/board.twig.html
 msgid "Drag a ticket to another column to move it to that stage."
 msgstr ""
@@ -210,8 +282,20 @@ msgstr ""
 msgid "Edited a comment of {date}."
 msgstr ""
 
+#: manifest.php
+msgid "Education"
+msgstr ""
+
+#: manifest.php
+msgid "Effective From"
+msgstr ""
+
 #: workflow_manage.php
 msgid "Every new ticket type gets a copy of these stages. Changing them here does not change existing ticket types."
+msgstr ""
+
+#: manifest.php
+msgid "Family"
 msgstr ""
 
 #: types_field_edit.php types_manage_edit.php
@@ -222,8 +306,16 @@ msgstr ""
 msgid "Filter tickets"
 msgstr ""
 
+#: manifest.php
+msgid "First Day of Absence"
+msgstr ""
+
 #: tickets_view.php
 msgid "For a request filed under the wrong service. The teams of the new type take over; the stage of the same name is kept, otherwise the ticket starts in the first stage. The assignee stays only if they are in a team of the new type."
+msgstr ""
+
+#: manifest.php
+msgid "General Request"
 msgstr ""
 
 #: templates/ticket.twig.html
@@ -232,6 +324,10 @@ msgstr ""
 
 #: notifications.php
 msgid "How do you want to be told about updates on your tickets? Your choice is copied to every new ticket you are involved in; you can still change it on a single ticket."
+msgstr ""
+
+#: manifest.php
+msgid "In Progress"
 msgstr ""
 
 #: templates/ticket.twig.html
@@ -254,8 +350,20 @@ msgstr ""
 msgid "Label"
 msgstr ""
 
+#: manifest.php
+msgid "Last Day at School"
+msgstr ""
+
+#: manifest.php
+msgid "Last Day of Absence"
+msgstr ""
+
 #: tickets.php
 msgid "Last Update"
+msgstr ""
+
+#: manifest.php
+msgid "Leave empty for a single day."
 msgstr ""
 
 #: request_new.php
@@ -298,6 +406,10 @@ msgstr ""
 msgid "Manage Workflows"
 msgstr ""
 
+#: manifest.php
+msgid "Management"
+msgstr ""
+
 #: src/Automation/Scripts/RecordAbsence.php
 msgid "Marks the students absent for each school day of the period. Reads the fields: students, dateStart, dateEnd (optional), reason (optional)."
 msgstr ""
@@ -312,6 +424,10 @@ msgstr ""
 
 #: tickets.php
 msgid "Me"
+msgstr ""
+
+#: manifest.php
+msgid "Medical"
 msgstr ""
 
 #: teams_manage.php teams_manage_edit.php
@@ -350,12 +466,20 @@ msgstr ""
 msgid "My Notifications for this Ticket"
 msgstr ""
 
+#: manifest.php
+msgid "My Requests"
+msgstr ""
+
 #: templates/filters.twig.html
 msgid "My filter"
 msgstr ""
 
 #: src/Service/DashboardWidget.php
 msgid "My open requests"
+msgstr ""
+
+#: manifest.php
+msgid "New"
 msgstr ""
 
 #: request_new.php tickets.php src/Service/DashboardWidget.php templates/board.twig.html
@@ -434,12 +558,24 @@ msgstr ""
 msgid "On Behalf Of"
 msgstr ""
 
+#: manifest.php
+msgid "Only if the complaint is about one of your children."
+msgstr ""
+
 #: tickets.php
 msgid "Only me"
 msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
 msgid "Only {found} of {expected} absences could be recorded."
+msgstr ""
+
+#: manifest.php
+msgid "Open"
+msgstr ""
+
+#: manifest.php
+msgid "Open Tickets"
 msgstr ""
 
 #: src/Service/DashboardWidget.php
@@ -470,6 +606,10 @@ msgstr ""
 msgid "Order"
 msgstr ""
 
+#: manifest.php
+msgid "Other"
+msgstr ""
+
 #: templates/board.twig.html
 msgid "Overview by status. Choose a filter with a single ticket type to see its workflow stages and move tickets."
 msgstr ""
@@ -486,8 +626,24 @@ msgstr ""
 msgid "Priority set to {priority}."
 msgstr ""
 
+#: manifest.php
+msgid "Raise a complaint. The school will reply on the ticket."
+msgstr ""
+
+#: manifest.php
+msgid "Reason"
+msgstr ""
+
+#: manifest.php
+msgid "Reason for leaving and anything the office should know."
+msgstr ""
+
 #: src/Automation/Scripts/RecordAbsence.php
 msgid "Record absence in Attendance"
+msgstr ""
+
+#: manifest.php
+msgid "Rejected"
 msgstr ""
 
 #: teams_manage_edit.php
@@ -544,6 +700,18 @@ msgstr ""
 
 #: tickets.php
 msgid "Save as Filter"
+msgstr ""
+
+#: manifest.php
+msgid "School De-registration"
+msgstr ""
+
+#: manifest.php
+msgid "School management: complaints."
+msgstr ""
+
+#: manifest.php
+msgid "School office: attendance, enrolment, registration and general requests."
 msgstr ""
 
 #: workflow_stage_edit.php
@@ -634,6 +802,10 @@ msgstr ""
 msgid "Teams"
 msgstr ""
 
+#: manifest.php
+msgid "Tell the school that your child will be (or was) absent."
+msgstr ""
+
 #: src/Automation/Scripts/TellTeachers.php
 msgid "Tell the teachers"
 msgstr ""
@@ -672,6 +844,10 @@ msgstr ""
 
 #: notifications.php
 msgid "The bell at the top of the page."
+msgstr ""
+
+#: manifest.php
+msgid "The classes your child should leave."
 msgstr ""
 
 #: src/Service/Notifier.php
@@ -794,7 +970,7 @@ msgstr ""
 msgid "Tickets marked \"Updated\" have changed since you last opened them."
 msgstr ""
 
-#: tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html
+#: tickets.php tickets_view.php templates/board.twig.html templates/ticket.twig.html manifest.php
 msgid "Unassigned"
 msgstr ""
 
@@ -844,6 +1020,10 @@ msgstr ""
 
 #: tickets_view.php
 msgid "Withdraw this request"
+msgstr ""
+
+#: manifest.php
+msgid "Withdrawn"
 msgstr ""
 
 #: workflow_stage_edit.php
