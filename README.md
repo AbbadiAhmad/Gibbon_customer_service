@@ -135,9 +135,33 @@ class MyScript implements AutomationScript
 }
 ```
 
+### Settings of a script
+
+A script that needs configuring (which attendance code to write, which class to use...) implements `HasSettings` as
+well and declares what it offers; the stage form shows it under the script, the values are checked, stored with the
+stage and given back through `$context->setting('name')`. No other code is needed.
+
+```php
+class RecordAbsence implements AutomationScript, HasSettings
+{
+    public function getSettings(): array
+    {
+        return ['attendanceCode' => [
+            'label' => __m('Attendance code'), 'type' => 'select', 'required' => false,
+            'options' => fn() => $this->absenceCodes(),     // a function: the list is read from the database each time
+        ]];
+    }
+    // run(): $context->setting('attendanceCode')
+}
+```
+Types: `select`, `text`, `number` (min, max), `yesno`; plus `required`, `default`, `description`. A stored value that
+is no longer valid stops the stage instead of falling back to something else. Example in `tests/live/fixtures/`.
+
 The full contract is in `src/Automation/AutomationScript.php`; `RecordAbsence.php` is the worked example and
 `TellTeachers.php` shows a script that uses the module's services (`$context->container()->get(...)`) and returns a
-team-only result line (`AutomationResult::success($message, true)`). A stage can tick several scripts.
+team-only result line (`AutomationResult::success($message, true)`). A stage can tick several scripts. *Record absence in Attendance* has a setting for the attendance code (an excused or
+unexcused variant of Absent): to let the team choose when approving, make two approval stages with different codes.
+The parent's absence reason comes from School Admin > Attendance Settings.
 
 ## Translating
 

@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+v1.9.00
+-------
+- Settings of automation scripts, configured on the stage that uses them. A script declares its settings (interface
+  HasSettings); the stage form, the checking, the storage, the copy of workflows and the workflow list are generic.
+- "Record absence in Attendance" has the setting "Attendance code": choose a variant of Absent, for example an excused
+  one, from School Admin > Manage Attendance Codes. Empty keeps the code named "Absent" (as before).
+- A different whole-day attendance record on a day to record is now a clear failure naming the student and the date,
+  instead of a second record.
+- Request form field type "Attendance Reason": the reasons come from School Admin > Attendance Settings (without
+  "Pending"). The default absence form uses it (label "Reason for Absence").
+- Translations (German, Arabic) for the new text.
+
 v1.8.00
 -------
 Audit of speed, security and data retention (docs/AUDIT.md).

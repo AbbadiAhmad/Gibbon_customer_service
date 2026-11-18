@@ -15,6 +15,7 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
 use Gibbon\Module\ServiceDesk\Automation\AutomationRegistry;
+use Gibbon\Module\ServiceDesk\Automation\AutomationSettings;
 
 if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/workflow_manage.php') == false) {
     // Access denied
@@ -57,7 +58,9 @@ $row = $form->addRow();
 echo $form->getOutput();
 
 // STAGES
-$automations = $container->get(AutomationRegistry::class)->options();
+$registry = $container->get(AutomationRegistry::class);
+$automations = $registry->options();
+$automationSettings = $container->get(AutomationSettings::class);
 $stages = $container->get(StageGateway::class)->selectStagesByType($gibbonServiceDeskTicketTypeID)->toDataSet();
 
 $table = DataTable::create('stages');
@@ -79,13 +82,14 @@ $table->addColumn('category', __('Status'))->translatable();
 $table->addColumn('flags', __m('Special'))->notSortable()->format(function ($stage) {
     return $stage['withdrawn'] == 'Y' ? Format::small(__m('receives withdrawn requests')) : '';
 });
-$table->addColumn('automation', __m('Automation on Entry'))->format(function ($stage) use ($automations) {
+$table->addColumn('automation', __m('Automation on Entry'))->format(function ($stage) use ($automations, $registry, $automationSettings) {
     if (empty($stage['automation'])) return '';
 
     $names = [];
     foreach (array_filter(explode(',', $stage['automation'])) as $key) {
+        $choices = isset($automations[$key]) ? $automationSettings->describe($registry->get($key), $key, $stage['automationSettings'] ?? '') : '';
         $names[] = isset($automations[$key])
-            ? htmlspecialchars($automations[$key])
+            ? htmlspecialchars($automations[$key]).($choices !== '' ? '<br/>'.Format::small(htmlspecialchars($choices)) : '')
             : Format::tag(__m('Missing script: {script}', ['script' => $key]), 'error');
     }
     $output = implode('<br/>', $names);

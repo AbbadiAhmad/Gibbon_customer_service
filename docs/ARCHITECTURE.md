@@ -28,6 +28,8 @@
 | Move a ticket to another type (1.5.00) | "Move to Another Ticket Type" form on the ticket | `TicketService::changeType` |
 | Delete tickets; retention per type (1.5.00) | Action *Delete Tickets* + confirmation page; *Retention (days)* on the type + cron script | `tickets_delete.php` (+Process), `cli_deleteExpiredTickets.php`, `TicketService::deleteTicket` |
 | Search in title, description, assignee, reporter, children (1.5.00) | The search field of the filter form | `TicketGateway` filter rule *search*, `Ticket.searchText`, `RequestFields::searchText` |
+| Settings of an automation, chosen on the stage (e.g. the attendance code of "Record absence"; excused / unexcused) (1.9.00) | Rows under the ticked script on the stage form, built from the script's own declaration | `HasSettings`, `AutomationSettings`, `Stage.automationSettings`, `AutomationContext::setting()`, `RecordAbsence` |
+| The parent's absence reason comes from School Admin (1.9.00) | Request form field type *Attendance Reason* | `RequestFields`, `People::getAttendanceReasons` |
 | User saves filters (type, status, assignee) | Filter form on the ticket list + *Save as Filter* | `tickets.php`, `tickets_filterProcess.php`, `TicketFilters` |
 | Admin creates default filters, e.g. absence tickets for a team | Administrators save a filter for an audience - staff working on tickets, one team, or requesters (1.4.00) | same, `FilterGateway::selectFiltersByPerson` |
 
@@ -91,7 +93,10 @@ assignee is in a team of the type, the team/type/stage ids in admin forms match 
    or internal when the script says so),
 4. if the stage has `nextStage`: repeat for that stage (at most 5 chained stages).
 
-Scripts: `src/Automation/Scripts/*.php`, discovered by `AutomationRegistry` (no registration). Contract and rules in
+Scripts: `src/Automation/Scripts/*.php`, discovered by `AutomationRegistry` (no registration) and created through
+Gibbon's container, so a script may ask for services in its constructor. A script with settings also implements
+`HasSettings`; before each run `AutomationSettings::resolve()` checks the stored values again and a value that is no
+longer valid stops the stage (nothing is changed). Contract and rules in
 `AutomationScript.php`. A stage whose script file was removed shows "Missing script" and behaves as a plain stage.
 
 ## 5. Notifications
@@ -132,7 +137,7 @@ src/Service/DashboardWidget.php             the sidebar box on the home page
 src/Domain/SeenGateway.php                  when a person last opened a ticket ("Updated" mark)
 src/Domain/GuardianGateway.php              the other adults of a family
 src/Service/Notifier.php, TicketFilters.php notifications; filter criteria
-src/Automation/                             interface, context, result, registry, Scripts/
+src/Automation/                             interface, settings (HasSettings, AutomationSettings), context, result, registry, Scripts/
 templates/*.twig.html                       catalog, saved-filter bar, ticket view
 css/module.css                              module classes (serviceDesk-*)
 i18n/ServiceDesk.pot                        translation template
@@ -214,6 +219,13 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   parent's comment, a team answer, not for internal notes (requester) nor own changes nor board moves; sorting by
   clicking headings. **No Gibbon core file is changed.**
 * 1.8.00: speed with 200 000 tickets, 46 forged-request probes and retention at scale - see `docs/AUDIT.md`.
+* 1.9.00 (`settings.js`, 43 checks; upgrade 1.8.00 -> 1.9.00): the code dropdown offers only valid codes, is hidden unless the
+  script is ticked, the choice is stored by id and shown in the workflow list; excused code recorded with reason;
+  default "Absent" without a setting; a different record of the day is a clear failure; a deactivated code stops the stage
+  safely (reactivated: works); a renamed code keeps working; 9 forged values refused; settings of unticked or unknown
+  scripts ignored; copy with a new ticket type; reasons from School Admin (new reason offered at once, "Pending" and
+  forged reasons refused); a test-only script with a select, text, number and yes/no setting works with no other code,
+  and all its bad values are refused.
 * **Not tested**: the retention script from a real cron; drag and drop on touch screens (HTML drag and drop is a mouse feature; on a phone open the ticket
   and use Manage Ticket); delivery through a real mail provider (TLS, authentication, spam filtering); Gibbon versions below v31;
   students as requesters; uninstall; other languages; very large data.

@@ -22,6 +22,7 @@ use Gibbon\Module\ServiceDesk\Domain\CommentGateway;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
 use Gibbon\Module\ServiceDesk\Automation\AutomationContext;
 use Gibbon\Module\ServiceDesk\Automation\AutomationRegistry;
+use Gibbon\Module\ServiceDesk\Automation\AutomationSettings;
 
 /**
  * Everything that changes a ticket goes through here, so the history, the notifications and the workflow automation
@@ -51,10 +52,11 @@ class TicketService
     protected $subscriberGateway;
     protected $notifier;
     protected $automations;
+    protected $automationSettings;
     protected $teamGateway;
     protected $ticketTypeGateway;
 
-    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, TeamGateway $teamGateway, TicketTypeGateway $ticketTypeGateway)
+    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, AutomationSettings $automationSettings, TeamGateway $teamGateway, TicketTypeGateway $ticketTypeGateway)
     {
         $this->db = $db;
         $this->ticketGateway = $ticketGateway;
@@ -63,6 +65,7 @@ class TicketService
         $this->subscriberGateway = $subscriberGateway;
         $this->notifier = $notifier;
         $this->automations = $automations;
+        $this->automationSettings = $automationSettings;
         $this->teamGateway = $teamGateway;
         $this->ticketTypeGateway = $ticketTypeGateway;
     }
@@ -202,7 +205,7 @@ class TicketService
         $scripts = [];
         foreach (array_filter(array_map('trim', explode(',', (string) ($stage['automation'] ?? '')))) as $key) {
             if ($script = $this->automations->get($key)) {
-                $scripts[] = $script;
+                $scripts[$key] = $script;
             }
         }
         $results = [];
@@ -218,8 +221,10 @@ class TicketService
             ]);
 
             // All scripts share the transaction: if one fails, what the others did is undone as well.
-            foreach ($scripts as $running) {
-                $result = $running->run(new AutomationContext($ticket, $stage, $actorID, $this->db));
+            foreach ($scripts as $key => $running) {
+                // The settings are checked again here: a value that is no longer valid stops the stage (and rolls it back).
+                $settings = $this->automationSettings->resolve($running, $key, $stage['automationSettings'] ?? '');
+                $result = $running->run(new AutomationContext($ticket, $stage, $actorID, $this->db, $settings));
                 if (!$result->isSuccess()) {
                     throw new \RuntimeException($result->getMessage());
                 }

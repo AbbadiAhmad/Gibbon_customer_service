@@ -14,6 +14,7 @@ use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
 use Gibbon\Module\ServiceDesk\Service\TicketFilters;
 use Gibbon\Module\ServiceDesk\Automation\AutomationRegistry;
+use Gibbon\Module\ServiceDesk\Automation\AutomationSettings;
 
 require_once '../../gibbon.php';
 
@@ -63,6 +64,14 @@ foreach ($stageGateway->selectStagesByType($gibbonServiceDeskTicketTypeID)->fetc
     }
 }
 
+// The settings of the ticked scripts, checked against what each script declares (HasSettings). Anything else that was
+// posted - settings of scripts that are not ticked, unknown names - is ignored.
+list($automationSettings, $settingErrors) = $container->get(AutomationSettings::class)->collect(array_filter(explode(',', $automation)), $_POST);
+if (!empty($settingErrors)) {
+    header("Location: {$URL}&return=error21");
+    exit;
+}
+
 if ($name === '' || !in_array($category, TicketFilters::STATUSES, true)
     || !empty($unknownScripts)
     || (!empty($nextStage) && !in_array($nextStage, $siblings, true))) {
@@ -81,6 +90,7 @@ $data = [
     'category'       => $category,
     'sequenceNumber' => intval($_POST['sequenceNumber'] ?? 0),
     'automation'     => !empty($automation) ? $automation : null,
+    'automationSettings' => !empty($automationSettings) ? json_encode($automationSettings) : null,
     'withdrawn'      => ($_POST['withdrawn'] ?? 'N') == 'Y' && $category == 'Closed' ? 'Y' : 'N',
     'nextStage'      => !empty($automation) && !empty($nextStage) ? $nextStage : null,
 ];

@@ -23,7 +23,7 @@ use Gibbon\Services\Format;
  */
 class RequestFields
 {
-    public const TYPES = ['Text', 'Long Text', 'Date', 'Select', 'Yes/No', 'Students', 'Classes'];
+    public const TYPES = ['Text', 'Long Text', 'Date', 'Select', 'Attendance Reason', 'Yes/No', 'Students', 'Classes'];
 
     protected $people;
 
@@ -69,6 +69,11 @@ class RequestFields
 
                 case 'Select':
                     $row->addSelect($name)->fromArray(self::parseOptions($field['options']))->placeholder()->required($required);
+                    break;
+
+                case 'Attendance Reason':
+                    // The reasons of School Admin > Attendance Settings, read now, so a change there shows at once.
+                    $row->addSelect($name)->fromArray(array_map('__m', $this->people->getAttendanceReasons()))->placeholder()->required($required);
                     break;
 
                 case 'Yes/No':
@@ -128,6 +133,10 @@ class RequestFields
 
                 case 'Select':
                     $value = is_string($raw) && array_key_exists($raw, self::parseOptions($field['options'])) ? $raw : '';
+                    break;
+
+                case 'Attendance Reason':
+                    $value = is_string($raw) && array_key_exists($raw, $this->people->getAttendanceReasons()) ? $raw : '';
                     break;
 
                 case 'Yes/No':

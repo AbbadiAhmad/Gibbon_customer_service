@@ -122,3 +122,14 @@ ALTER TABLE `gibbonServiceDeskTicket` ADD KEY `listing` (`gibbonServiceDeskStage
 ALTER TABLE `gibbonServiceDeskTicket` DROP KEY `type`, ADD KEY `listingType` (`gibbonServiceDeskTicketTypeID`,`gibbonServiceDeskStageID`,`gibbonPersonIDRequester`,`gibbonPersonIDAssignee`,`timestampModified`,`timestampModifiedPublic`,`timestampClosed`,`priority`);end
 UPDATE `gibbonServiceDeskTicket` t SET t.searchText = LEFT(CONCAT(COALESCE(t.searchText, t.fields, ''), COALESCE((SELECT CONCAT('\\n', GROUP_CONCAT(c.comment ORDER BY c.gibbonServiceDeskTicketCommentID SEPARATOR '\\n')) FROM `gibbonServiceDeskTicketComment` c WHERE c.gibbonServiceDeskTicketID=t.gibbonServiceDeskTicketID AND c.type='Comment'), '')), 20000);
 ";
+
+// v1.9.00 - settings of automation scripts (stored with the stage); a request form field type "Attendance Reason"
+//           whose options come from School Admin > Attendance Settings
+++$count;
+$sql[$count][0] = '1.9.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskStage` ADD `automationSettings` text NULL AFTER `automation`;end
+ALTER TABLE `gibbonServiceDeskField` MODIFY `type` enum('Text','Long Text','Date','Select','Attendance Reason','Yes/No','Students','Classes') NOT NULL DEFAULT 'Text';end
+UPDATE `gibbonServiceDeskField` f JOIN `gibbonServiceDeskTicketType` t ON (t.gibbonServiceDeskTicketTypeID=f.gibbonServiceDeskTicketTypeID) SET f.type='Attendance Reason', f.options=NULL, f.description='The reasons are set by the school (School Admin > Attendance Settings).' WHERE t.name='Absence Report' AND f.name='reason' AND f.type='Select' AND f.options='Medical,Family,Education,Other';end
+UPDATE `gibbonServiceDeskField` f JOIN `gibbonServiceDeskTicketType` t ON (t.gibbonServiceDeskTicketTypeID=f.gibbonServiceDeskTicketTypeID) SET f.label='Reason for Absence' WHERE t.name='Absence Report' AND f.name='reason' AND f.label='Absence Type';
+";

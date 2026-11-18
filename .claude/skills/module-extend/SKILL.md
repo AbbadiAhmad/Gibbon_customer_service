@@ -15,6 +15,7 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | A rule or multi-step change to a ticket | `src/Service/TicketService.php` (history + notification + automation happen there; process scripts call it) |
 | Who may see/do something | `src/Service/TicketAccess.php` |
 | A request-form field type | `RequestFields`: `TYPES`, `addToForm()`, `collect()` (validate!), `describe()`; the `type` enum of `gibbonServiceDeskField` (manifest + CHANGEDB); the type list in `types_field_edit.php` |
+| A setting of an automation script (a code to write, a class to use, a number) | `getSettings()` in the script (`HasSettings`) and `$context->setting('name')` in `run()` - nothing else; copy `RecordAbsence`. Select options that come from the database must be a function, not an array |
 | An automation script | new class in `src/Automation/Scripts/` implementing `AutomationScript` - nothing else (copy `RecordAbsence.php`) |
 | A filter criterion | `TicketFilters::clean()` + `apply()`, a rule in `TicketGateway::queryTickets()`, a row in the form of `tickets.php` |
 | A permission variant of an existing page | a grouped action `<Name>_<suffix>` in `manifest.php` + CHANGEDB, a `can...()` method in `TicketAccess` using `getHighestGroupedAction` (see `canCreateOnBehalf`) |

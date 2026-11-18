@@ -202,6 +202,22 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * On upgrade insert "seen now" rows for the people involved, or every old record lights up.
 * `DataTable::createPaginated` columns are sortable by clicking the heading out of the box (**LIVE**), also computed ones.
 
+## Settings that belong to a configured thing (**LIVE**, 1.9.00)
+* Declare, do not code per case: the thing (a script) returns definitions, one generic class renders, checks, stores and
+  describes them. Add a type there once and every script gets it (`AutomationSettings`).
+* Store as one JSON text column on the owner (`Stage.automationSettings`: `{"Script": {"name": value}}`); keep only names
+  the definition has; carry the column wherever the owner is copied (`copyDefaultWorkflow`).
+* Rows shown only when something is ticked: `$form->toggleVisibilityByClass($class)->onCheckbox('group')->when('Value')`
+  (the rows' inputs are disabled while hidden, so they are not posted); with `addCheckbox('group')` the checkbox name is
+  `group[]`, `onCheckbox` matches by the prefix. Flat input names `setting_<Script>_<name>`.
+* Check twice: when saving (against the definition; refuse the whole save) and when using (a stored select value that is
+  no longer offered must **fail**, never fall back - the fallback could be the wrong business value).
+* Reference external records by id (`gibbonAttendanceCodeID`), show names: renaming in the other module then changes
+  nothing. Option lists from other modules' tables are read on every render and check, never cached.
+* Gibbon's number input blanks a value that is not a number: to test the server's check, switch the input to text first.
+* Objects created by the module's own registry can use constructor injection if they are created with
+  `$container->get($class)`, not `new`.
+
 ## Lists stored as comma-separated text
 * `Stage.automation`, `TicketType.roleCategories`: store `implode(',', ...)` of **validated** keys in a fixed order
   (`array_intersect($allKeysInOrder, $posted)`); read with `array_filter(explode(',', $value))`; edit with

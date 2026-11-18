@@ -190,4 +190,22 @@ class People
 
         return $people;
     }
+
+    /**
+     * The absence reasons of School Admin > Attendance Settings, as reason => reason, in the order of the setting.
+     * "Pending" is a state of Gibbon's own absence page, not a reason a parent can give, and is left out.
+     */
+    public function getAttendanceReasons(): array
+    {
+        $setting = (string) $this->db->selectOne("SELECT value FROM gibbonSetting WHERE scope='Attendance' AND name='attendanceReasons'");
+
+        $reasons = [];
+        foreach (array_map('trim', explode(',', $setting)) as $reason) {
+            if ($reason !== '' && strcasecmp($reason, 'Pending') !== 0) {
+                $reasons[$reason] = $reason;
+            }
+        }
+
+        return $reasons;
+    }
 }

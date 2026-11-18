@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.8.00';
+$version     = '1.9.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -80,7 +80,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskField` (
     `name` varchar(40) NOT NULL,
     `label` varchar(90) NOT NULL,
     `description` varchar(255) NOT NULL DEFAULT '',
-    `type` enum('Text','Long Text','Date','Select','Yes/No','Students','Classes') NOT NULL DEFAULT 'Text',
+    `type` enum('Text','Long Text','Date','Select','Attendance Reason','Yes/No','Students','Classes') NOT NULL DEFAULT 'Text',
     `options` text NULL,
     `required` enum('Y','N') NOT NULL DEFAULT 'N',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
@@ -96,6 +96,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskStage` (
     `category` enum('Open','In Progress','Closed') NOT NULL DEFAULT 'Open',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
     `automation` varchar(255) NULL,
+    `automationSettings` text NULL,
     `nextStage` varchar(40) NULL,
     `withdrawn` enum('Y','N') NOT NULL DEFAULT 'N',
     PRIMARY KEY (`gibbonServiceDeskStageID`),
@@ -203,7 +204,7 @@ $moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketTypeTeam` (`gibbonService
 
 $moduleTables[] = "INSERT INTO `gibbonServiceDeskField` (`gibbonServiceDeskTicketTypeID`, `name`, `label`, `description`, `type`, `options`, `required`, `sequenceNumber`) VALUES
     (1, 'students', 'Children', '', 'Students', NULL, 'Y', 1),
-    (1, 'reason', 'Absence Type', '', 'Select', 'Medical,Family,Education,Other', 'Y', 2),
+    (1, 'reason', 'Reason for Absence', 'The reasons are set by the school (School Admin > Attendance Settings).', 'Attendance Reason', NULL, 'Y', 2),
     (1, 'dateStart', 'First Day of Absence', '', 'Date', NULL, 'Y', 3),
     (1, 'dateEnd', 'Last Day of Absence', 'Leave empty for a single day.', 'Date', NULL, 'N', 4),
     (1, 'details', 'Details', '', 'Long Text', NULL, 'N', 5),

@@ -55,6 +55,9 @@ Every file a browser can request authorises itself. In order:
    * "Updated" mark: computed per person in `queryTickets` (4th argument = the ticket types the person manages); people
      who do not manage a ticket are compared against `timestampModifiedPublic`, so internal activity is not revealed to
      requesters even as a mark. Marking a ticket as seen on a GET (opening it) only changes the person's own state.
+   * Automation settings: only the holders of *Manage Workflows* save them; the process script accepts a setting only for a
+     script that is ticked, that exists, and only the names and values its definition allows (`AutomationSettings::collect`),
+     and refuses the whole save otherwise (`error21`). The values are checked again before every run (`resolve`).
    * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
      give the same answer.
    * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query
