@@ -58,6 +58,10 @@ msgstr ""
 msgid "Administration"
 msgstr ""
 
+#: types_manage.php types_manage_edit.php
+msgid "Administrators"
+msgstr ""
+
 #: teams_manage_edit.php
 msgid "After saving you can add the members of the team."
 msgstr ""
@@ -506,6 +510,10 @@ msgstr ""
 msgid "New Tickets Reach"
 msgstr ""
 
+#: types_manage_edit.php
+msgid "New Tickets Without Default Assignee"
+msgstr ""
+
 #: src/Service/TicketService.php
 msgid "New comment"
 msgstr ""
@@ -548,6 +556,10 @@ msgstr ""
 
 #: types_manage.php
 msgid "No team"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Nobody"
 msgstr ""
 
 #: teams_manage_edit.php
@@ -1006,6 +1018,10 @@ msgstr ""
 msgid "The ticket, its comments, its notification settings and the notifications written about it are deleted for good. This cannot be undone. Changes the workflow made elsewhere in Gibbon (attendance, enrolment) stay as they are. A line in the system log records that the ticket was deleted, and by whom - not what it said."
 msgstr ""
 
+#: types_manage.php types_manage_edit.php
+msgid "The whole responsible team"
+msgstr ""
+
 #: workflow_stage_edit.php
 msgid "Then Move To"
 msgstr ""
@@ -1112,6 +1128,10 @@ msgstr ""
 
 #: types_manage_edit.php
 msgid "Who can send this kind of request."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Who is told about a new ticket when no default assignee takes it: the whole responsible team, the administrators, or nobody. With a default assignee only that person is told. Staff listed under Notified Staff are told in addition."
 msgstr ""
 
 #: tickets_requester.php

@@ -31,7 +31,7 @@ $page->breadcrumbs
     ->add(__m('Manage Ticket Types'), 'types_manage.php')
     ->add(empty($gibbonServiceDeskTicketTypeID) ? __m('Add Ticket Type') : __m('Edit Ticket Type'));
 
-$values = ['roleCategories' => 'Staff,Student,Parent,Other', 'shareWithFamily' => 'N', 'allowWithdraw' => 'Y', 'allowReopen' => 'Y', 'retentionDays' => '', 'active' => 'Y', 'sequenceNumber' => 0];
+$values = ['newTicketRecipients' => 'Nobody', 'roleCategories' => 'Staff,Student,Parent,Other', 'shareWithFamily' => 'N', 'allowWithdraw' => 'Y', 'allowReopen' => 'Y', 'retentionDays' => '', 'active' => 'Y', 'sequenceNumber' => 0];
 $teamIDs = [];
 if (!empty($gibbonServiceDeskTicketTypeID)) {
     $values = $ticketTypeGateway->getByID($gibbonServiceDeskTicketTypeID);
@@ -75,6 +75,10 @@ $row = $form->addRow();
 $row = $form->addRow();
     $row->addLabel('allowReopen', __m('Requesters Can Reopen'))->description(__m('The requester can reopen the request themselves for {days} days after it was closed. Off: they send a new request.', ['days' => \Gibbon\Module\ServiceDesk\Service\TicketAccess::REOPEN_DAYS]));
     $row->addYesNo('allowReopen')->required();
+
+$row = $form->addRow();
+    $row->addLabel('newTicketRecipients', __m('New Tickets Without Default Assignee'))->description(__m('Who is told about a new ticket when no default assignee takes it: the whole responsible team, the administrators, or nobody. With a default assignee only that person is told. Staff listed under Notified Staff are told in addition.'));
+    $row->addSelect('newTicketRecipients')->fromArray(['Nobody' => __m('Nobody'), 'Team' => __m('The whole responsible team'), 'Administrators' => __m('Administrators')])->required();
 
 $row = $form->addRow();
     $row->addLabel('color', __m('Colour'))->description(__m('Marks the tickets of this type in the list and on the board.'));

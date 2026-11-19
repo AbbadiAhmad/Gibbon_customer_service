@@ -1,6 +1,21 @@
 CHANGELOG
 =========
 
+v1.11.00
+-------
+- Ticket type setting "New Tickets Without Default Assignee": tell the whole responsible team, the administrators, or
+  nobody (default). With a default assignee only that person is told.
+
+v1.10.00
+-------
+Notifications are opt-in for staff.
+- Administrators and team members are no longer told about tickets just because they exist or because they once
+  commented. They are told when a ticket is assigned to them, when they follow it, or when they (or an administrator)
+  set a notification for a ticket type.
+- Notification Settings has a section for staff: per ticket type, "new tickets" and "updates", each by notification
+  centre and/or email. Manage Ticket Types has "Notified Staff".
+- Upgrade: followers other than the requester, the assignee and the family adults are removed.
+
 v1.9.00
 -------
 - Settings of automation scripts, configured on the stage that uses them. A script declares its settings (interface

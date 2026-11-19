@@ -110,6 +110,7 @@ longer valid stops the stage (nothing is changed). Contract and rules in
 | Requester, and the other adults of a shared type | every public event (their own policy, copied to the ticket) |
 | Assignee (also a team's default assignee) | every event on the ticket, by their general policy |
 | Anyone with a row in `gibbonServiceDeskTicketSubscriber` | by that row: the per-ticket choice always wins (also to mute) |
+| Everyone named by the type's *New Tickets Without Default Assignee* (`newTicketRecipients`: Nobody (default) / Team / Administrators) | a new (or moved-in) ticket that has no assignee |
 | Staff with a row in `gibbonServiceDeskTypeNotification` for the ticket's type | new tickets / updates, notification centre / email, as switched on in the row |
 
 *Staff* = members of the teams of the type and the Service Desk administrators; a type setting of someone who left

@@ -66,6 +66,10 @@ msgstr "إضافة نوع تذكرة"
 msgid "Administration"
 msgstr "الإدارة"
 
+#: types_manage.php types_manage_edit.php
+msgid "Administrators"
+msgstr "المسؤولون"
+
 #: teams_manage_edit.php
 msgid "After saving you can add the members of the team."
 msgstr "بعد الحفظ يمكنك إضافة أعضاء الفريق."
@@ -560,6 +564,10 @@ msgstr "طلب جديد"
 msgid "New Tickets Reach"
 msgstr "تصل التذاكر الجديدة إلى"
 
+#: types_manage_edit.php
+msgid "New Tickets Without Default Assignee"
+msgstr "التذاكر الجديدة بدون مسؤول افتراضي"
+
 #: src/Service/TicketService.php
 msgid "New comment"
 msgstr "تعليق جديد"
@@ -612,6 +620,10 @@ msgstr "لم يُعثر على معلمين لإبلاغهم."
 #: types_manage.php
 msgid "No team"
 msgstr "بلا فريق"
+
+#: types_manage_edit.php
+msgid "Nobody"
+msgstr "لا أحد"
 
 #: teams_manage_edit.php
 msgid "Nobody (tickets start unassigned)"
@@ -913,7 +925,11 @@ msgid ""
 "told about tickets assigned to you (following your choice above). Here you "
 "can also choose to be told about new tickets and about updates of a ticket "
 "type, in the notification centre and/or by email."
-msgstr "لا يتلقى الموظفون إشعارات عن التذاكر لمجرد وجودها. ستصلك دائماً إشعارات عن التذاكر المسندة إليك (وفق اختيارك أعلاه). يمكنك هنا أيضاً اختيار تلقي إشعارات عن التذاكر الجديدة وعن تحديثات نوع تذكرة معيّن، في مركز الإشعارات و/أو بالبريد الإلكتروني."
+msgstr ""
+"لا يتلقى الموظفون إشعارات عن التذاكر لمجرد وجودها. ستصلك دائماً إشعارات عن "
+"التذاكر المسندة إليك (وفق اختيارك أعلاه). يمكنك هنا أيضاً اختيار تلقي إشعارات "
+"عن التذاكر الجديدة وعن تحديثات نوع تذكرة معيّن، في مركز الإشعارات و/أو "
+"بالبريد الإلكتروني."
 
 #: types_manage_edit.php
 msgid ""
@@ -922,7 +938,11 @@ msgid ""
 "new tickets and updates through the channels of their own notification "
 "settings; they can change this under Notification Settings. Candidates are "
 "the members of the teams of this type and the administrators."
-msgstr "لا يتلقى الموظفون إشعارات عن تذاكر هذا النوع إلا إذا أُسندت التذكرة إليهم أو تابعوها أو كانوا مدرجين هنا. يتلقى من تضيفهم هنا إشعارات عن التذاكر الجديدة والتحديثات عبر قنوات إعدادات الإشعارات الخاصة بهم، ويمكنهم تغيير ذلك من Notification Settings. المرشحون هم أعضاء فرق هذا النوع والمسؤولون."
+msgstr ""
+"لا يتلقى الموظفون إشعارات عن تذاكر هذا النوع إلا إذا أُسندت التذكرة إليهم أو "
+"تابعوها أو كانوا مدرجين هنا. يتلقى من تضيفهم هنا إشعارات عن التذاكر الجديدة "
+"والتحديثات عبر قنوات إعدادات الإشعارات الخاصة بهم، ويمكنهم تغيير ذلك من "
+"Notification Settings. المرشحون هم أعضاء فرق هذا النوع والمسؤولون."
 
 #: tickets.php
 msgid "Staff working on tickets (administrators and team members)"
@@ -1173,6 +1193,10 @@ msgstr ""
 "أخرى من Gibbon (الحضور، التسجيل) تبقى كما هي. يسجّل سطر في سجل النظام أن "
 "التذكرة حُذفت ومن حذفها - وليس محتواها."
 
+#: types_manage.php types_manage_edit.php
+msgid "The whole responsible team"
+msgstr "الفريق المسؤول بأكمله"
+
 #: workflow_stage_edit.php
 msgid "Then Move To"
 msgstr "ثم النقل إلى"
@@ -1300,6 +1324,14 @@ msgstr ""
 #: types_manage_edit.php
 msgid "Who can send this kind of request."
 msgstr "من يستطيع إرسال هذا النوع من الطلبات."
+
+#: types_manage_edit.php
+msgid ""
+"Who is told about a new ticket when no default assignee takes it: the whole "
+"responsible team, the administrators, or nobody. With a default assignee "
+"only that person is told. Staff listed under Notified Staff are told in "
+"addition."
+msgstr "من يتلقى إشعاراً عن تذكرة جديدة عندما لا يتولاها مسؤول افتراضي: الفريق المسؤول بأكمله أو المسؤولون أو لا أحد. عند وجود مسؤول افتراضي يُشعَر هو فقط. يُشعَر أيضاً الموظفون المدرجون ضمن «الموظفون الذين يتلقون الإشعارات»."
 
 #: tickets_requester.php
 msgid "Withdraw Request"

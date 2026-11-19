@@ -64,6 +64,29 @@ const expect = (label, got, want) => console.log((got === want ? 'ok   ' : 'FAIL
   expect('assignee told about the requester\'s comment', (await told(member, a)).length >= 1, true);
   expect('admin still not told', (await told(admin, a)).length, 0);
 
+  // ---- 2b. Setting of the ticket type for a new ticket without a default assignee (changed through the form)
+  const setRecipients = async value => {
+    await admin.goto(M + 'types_manage_edit.php&gibbonServiceDeskTicketTypeID=5');
+    await admin.selectOption('form#ticketType select[name=newTicketRecipients]', value);
+    await submit(admin, 'form#ticketType');
+  };
+  const d = 'Rules D ' + stamp;
+  await create(d);
+  expect('setting Nobody (default): member not told about a new unassigned ticket', (await told(member, d)).length, 0);
+  await setRecipients('Team');
+  expect('setting stored', sql('select newTicketRecipients from gibbonServiceDeskTicketType where gibbonServiceDeskTicketTypeID=5')[0][0], 'Team');
+  const e = 'Rules E ' + stamp;
+  await create(e);
+  expect('setting Team: member told', (await told(member, e)).length, 1);
+  expect('setting Team: admin not told', (await told(admin, e)).length, 0);
+  await setRecipients('Administrators');
+  const f = 'Rules F ' + stamp;
+  await create(f);
+  expect('setting Administrators: admin told', (await told(admin, f)).length, 1);
+  expect('setting Administrators: member not told', (await told(member, f)).length, 0);
+  await setRecipients('Nobody');
+  sql('delete from gibbonNotification where gibbonPersonID in (119, 192) and text like \'%' + stamp + '%\'');
+
   // ---- 3. The member chooses: new tickets in the notification centre, updates by email (Notification Settings)
   await member.goto(BASE + '/index.php?q=/modules/ServiceDesk/notifications.php');
   await check(member, 'notification settings of a team member');

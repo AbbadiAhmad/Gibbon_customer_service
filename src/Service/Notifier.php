@@ -110,6 +110,26 @@ class Notifier
                 }
             }
 
+            // A new ticket nobody is assigned to: the ticket type says who hears about it (team, administrators, nobody).
+            if ($event == 'new' && !$internal && empty($ticket['gibbonPersonIDAssignee'])) {
+                $setting = $this->db->selectOne("SELECT newTicketRecipients FROM gibbonServiceDeskTicketType WHERE gibbonServiceDeskTicketTypeID=:id", ['id' => $gibbonServiceDeskTicketTypeID]);
+                $audience = [];
+                if ($setting == 'Team') {
+                    foreach ($this->teamGateway->selectMembersByTicketType($gibbonServiceDeskTicketTypeID)->fetchAll() as $member) {
+                        $audience[] = intval($member['gibbonPersonID']);
+                    }
+                } elseif ($setting == 'Administrators') {
+                    foreach ($this->teamGateway->selectAdministrators()->fetchAll() as $administrator) {
+                        $audience[] = intval($administrator['gibbonPersonID']);
+                    }
+                }
+                foreach ($audience as $gibbonPersonID) {
+                    if (!isset($people[$gibbonPersonID])) {
+                        $people[$gibbonPersonID] = $this->subscriberGateway->getPreference($gibbonPersonID);
+                    }
+                }
+            }
+
             if ($internal) {
                 $people = array_intersect_key($people, $staff + [intval($ticket['gibbonPersonIDAssignee'] ?? 0) => true]);
             }

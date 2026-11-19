@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.10.00';
+$version     = '1.11.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -59,6 +59,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketType` (
     `shareWithFamily` enum('Y','N') NOT NULL DEFAULT 'N',
     `allowWithdraw` enum('Y','N') NOT NULL DEFAULT 'Y',
     `allowReopen` enum('Y','N') NOT NULL DEFAULT 'Y',
+    `newTicketRecipients` enum('Nobody','Team','Administrators') NOT NULL DEFAULT 'Nobody',
     `color` varchar(7) NOT NULL DEFAULT '',
     `retentionDays` int(5) unsigned NULL,
     `active` enum('Y','N') NOT NULL DEFAULT 'Y',

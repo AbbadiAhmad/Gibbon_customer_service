@@ -143,3 +143,10 @@ CREATE TABLE `gibbonServiceDeskTypeNotification` (`gibbonServiceDeskTicketTypeID
 DELETE s FROM `gibbonServiceDeskTicketSubscriber` s JOIN `gibbonServiceDeskTicket` t ON (t.gibbonServiceDeskTicketID=s.gibbonServiceDeskTicketID) WHERE s.gibbonPersonID<>t.gibbonPersonIDRequester AND (t.gibbonPersonIDAssignee IS NULL OR s.gibbonPersonID<>t.gibbonPersonIDAssignee) AND NOT EXISTS (SELECT 1 FROM `gibbonFamilyAdult` a JOIN `gibbonFamilyAdult` b ON (b.gibbonFamilyID=a.gibbonFamilyID) WHERE a.gibbonPersonID=s.gibbonPersonID AND b.gibbonPersonID=t.gibbonPersonIDRequester);end
 UPDATE `gibbonAction` SET URLList=CONCAT(URLList, ',types_notifyProcess.php') WHERE name='Manage Ticket Types' AND URLList NOT LIKE '%types_notifyProcess.php%' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');
 ";
+
+// v1.11.00 - who is told about a new ticket that has no default assignee is a setting of the ticket type.
+++$count;
+$sql[$count][0] = '1.11.00';
+$sql[$count][1] = "
+ALTER TABLE `gibbonServiceDeskTicketType` ADD `newTicketRecipients` enum('Nobody','Team','Administrators') NOT NULL DEFAULT 'Nobody' AFTER `allowReopen`;end
+";

@@ -68,6 +68,10 @@ msgstr "Ticket-Typ hinzufügen"
 msgid "Administration"
 msgstr "Verwaltung"
 
+#: types_manage.php types_manage_edit.php
+msgid "Administrators"
+msgstr "Administratoren"
+
 #: teams_manage_edit.php
 msgid "After saving you can add the members of the team."
 msgstr "Nach dem Speichern können Sie die Mitglieder des Teams hinzufügen."
@@ -572,6 +576,10 @@ msgstr "Neue Anfrage"
 msgid "New Tickets Reach"
 msgstr "Neue Tickets gehen an"
 
+#: types_manage_edit.php
+msgid "New Tickets Without Default Assignee"
+msgstr "Neue Tickets ohne Standardbearbeiter"
+
 #: src/Service/TicketService.php
 msgid "New comment"
 msgstr "Neuer Kommentar"
@@ -625,6 +633,10 @@ msgstr "Es wurden keine Lehrkräfte zum Benachrichtigen gefunden."
 #: types_manage.php
 msgid "No team"
 msgstr "Kein Team"
+
+#: types_manage_edit.php
+msgid "Nobody"
+msgstr "Niemand"
 
 #: teams_manage_edit.php
 msgid "Nobody (tickets start unassigned)"
@@ -933,7 +945,12 @@ msgid ""
 "told about tickets assigned to you (following your choice above). Here you "
 "can also choose to be told about new tickets and about updates of a ticket "
 "type, in the notification centre and/or by email."
-msgstr "Mitarbeiter werden nicht über Tickets benachrichtigt, nur weil es sie gibt. Über Tickets, die Ihnen zugewiesen sind, werden Sie immer benachrichtigt (gemäß Ihrer Wahl oben). Hier können Sie zusätzlich wählen, über neue Tickets und Aktualisierungen einer Ticketart benachrichtigt zu werden, in der Mitteilungszentrale und/oder per E-Mail."
+msgstr ""
+"Mitarbeiter werden nicht über Tickets benachrichtigt, nur weil es sie gibt. "
+"Über Tickets, die Ihnen zugewiesen sind, werden Sie immer benachrichtigt "
+"(gemäß Ihrer Wahl oben). Hier können Sie zusätzlich wählen, über neue "
+"Tickets und Aktualisierungen einer Ticketart benachrichtigt zu werden, in "
+"der Mitteilungszentrale und/oder per E-Mail."
 
 #: types_manage_edit.php
 msgid ""
@@ -942,7 +959,14 @@ msgid ""
 "new tickets and updates through the channels of their own notification "
 "settings; they can change this under Notification Settings. Candidates are "
 "the members of the teams of this type and the administrators."
-msgstr "Mitarbeiter werden über Tickets dieser Art nur benachrichtigt, wenn ihnen das Ticket zugewiesen ist, sie ihm folgen oder hier aufgeführt sind. Personen, die Sie hier hinzufügen, werden über neue Tickets und Aktualisierungen über die Kanäle ihrer eigenen Benachrichtigungseinstellungen informiert; sie können dies unter Notification Settings ändern. Zur Auswahl stehen die Mitglieder der Teams dieser Art und die Administratoren."
+msgstr ""
+"Mitarbeiter werden über Tickets dieser Art nur benachrichtigt, wenn ihnen "
+"das Ticket zugewiesen ist, sie ihm folgen oder hier aufgeführt sind. "
+"Personen, die Sie hier hinzufügen, werden über neue Tickets und "
+"Aktualisierungen über die Kanäle ihrer eigenen "
+"Benachrichtigungseinstellungen informiert; sie können dies unter "
+"Notification Settings ändern. Zur Auswahl stehen die Mitglieder der Teams "
+"dieser Art und die Administratoren."
 
 #: tickets.php
 msgid "Staff working on tickets (administrators and team members)"
@@ -1218,6 +1242,10 @@ msgstr ""
 "Ein Eintrag im Systemprotokoll hält fest, dass das Ticket gelöscht wurde und "
 "von wem – nicht, was darin stand."
 
+#: types_manage.php types_manage_edit.php
+msgid "The whole responsible team"
+msgstr "Das gesamte zuständige Team"
+
 #: workflow_stage_edit.php
 msgid "Then Move To"
 msgstr "Danach verschieben nach"
@@ -1259,7 +1287,9 @@ msgstr ""
 
 #: types_manage_edit.php
 msgid "Tick the people who should no longer be told about this type."
-msgstr "Markieren Sie die Personen, die über diese Art nicht mehr benachrichtigt werden sollen."
+msgstr ""
+"Markieren Sie die Personen, die über diese Art nicht mehr benachrichtigt "
+"werden sollen."
 
 #: tickets.php tickets_view.php templates/ticket.twig.html
 msgid "Ticket Type"
@@ -1354,6 +1384,14 @@ msgstr ""
 #: types_manage_edit.php
 msgid "Who can send this kind of request."
 msgstr "Wer diese Art von Anfrage senden kann."
+
+#: types_manage_edit.php
+msgid ""
+"Who is told about a new ticket when no default assignee takes it: the whole "
+"responsible team, the administrators, or nobody. With a default assignee "
+"only that person is told. Staff listed under Notified Staff are told in "
+"addition."
+msgstr "Wer über ein neues Ticket informiert wird, wenn kein Standardbearbeiter es übernimmt: das gesamte zuständige Team, die Administratoren oder niemand. Bei einem Standardbearbeiter wird nur diese Person informiert. Unter „Benachrichtigte Mitarbeiter“ aufgeführte Personen werden zusätzlich informiert."
 
 #: tickets_requester.php
 msgid "Withdraw Request"
