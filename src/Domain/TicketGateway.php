@@ -331,9 +331,14 @@ class TicketGateway extends QueryableGateway
         foreach (['gibbonServiceDeskTicketComment' => 'history lines', 'gibbonServiceDeskTicketSubscriber' => 'follower rows', 'gibbonServiceDeskTicketSeen' => '"seen" marks'] as $table => $label) {
             $checks[] = [$label.' of tickets that no longer exist', "SELECT COUNT(*) FROM {$table} x WHERE {$noTicket}", "DELETE x FROM {$table} x WHERE {$noTicket}"];
         }
-        foreach (['gibbonServiceDeskTicketSubscriber' => 'follower rows', 'gibbonServiceDeskTicketSeen' => '"seen" marks', 'gibbonServiceDeskNotificationPreference' => 'notification settings', 'gibbonServiceDeskViewPreference' => 'view settings', 'gibbonServiceDeskTeamMember' => 'team memberships'] as $table => $label) {
+        foreach (['gibbonServiceDeskTicketSubscriber' => 'follower rows', 'gibbonServiceDeskTicketSeen' => '"seen" marks', 'gibbonServiceDeskNotificationPreference' => 'notification settings', 'gibbonServiceDeskViewPreference' => 'view settings', 'gibbonServiceDeskTeamMember' => 'team memberships', 'gibbonServiceDeskTypeNotification' => 'ticket type notification settings'] as $table => $label) {
             $checks[] = [$label.' of people who no longer exist', "SELECT COUNT(*) FROM {$table} x WHERE {$noPerson}", "DELETE x FROM {$table} x WHERE {$noPerson}"];
         }
+        $checks[] = [
+            'ticket type notification settings of ticket types that no longer exist',
+            "SELECT COUNT(*) FROM gibbonServiceDeskTypeNotification x WHERE NOT EXISTS (SELECT 1 FROM gibbonServiceDeskTicketType t WHERE t.gibbonServiceDeskTicketTypeID=x.gibbonServiceDeskTicketTypeID)",
+            "DELETE x FROM gibbonServiceDeskTypeNotification x WHERE NOT EXISTS (SELECT 1 FROM gibbonServiceDeskTicketType t WHERE t.gibbonServiceDeskTicketTypeID=x.gibbonServiceDeskTicketTypeID)",
+        ];
         $checks[] = ['personal filters of people who no longer exist', "SELECT COUNT(*) FROM gibbonServiceDeskFilter x WHERE x.gibbonPersonID IS NOT NULL AND {$noPerson}", "DELETE x FROM gibbonServiceDeskFilter x WHERE x.gibbonPersonID IS NOT NULL AND {$noPerson}"];
         $checks[] = [
             'default assignees who are no longer members of their team',

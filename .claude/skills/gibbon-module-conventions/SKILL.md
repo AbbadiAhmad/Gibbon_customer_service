@@ -202,6 +202,22 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * On upgrade insert "seen now" rows for the people involved, or every old record lights up.
 * `DataTable::createPaginated` columns are sortable by clicking the heading out of the box (**LIVE**), also computed ones.
 
+## Settings that belong to a configured thing (**LIVE**, 1.9.00)
+* Declare, do not code per case: the thing (a script) returns definitions, one generic class renders, checks, stores and
+  describes them. Add a type there once and every script gets it (`AutomationSettings`).
+* Store as one JSON text column on the owner (`Stage.automationSettings`: `{"Script": {"name": value}}`); keep only names
+  the definition has; carry the column wherever the owner is copied (`copyDefaultWorkflow`).
+* Rows shown only when something is ticked: `$form->toggleVisibilityByClass($class)->onCheckbox('group')->when('Value')`
+  (the rows' inputs are disabled while hidden, so they are not posted); with `addCheckbox('group')` the checkbox name is
+  `group[]`, `onCheckbox` matches by the prefix. Flat input names `setting_<Script>_<name>`.
+* Check twice: when saving (against the definition; refuse the whole save) and when using (a stored select value that is
+  no longer offered must **fail**, never fall back - the fallback could be the wrong business value).
+* Reference external records by id (`gibbonAttendanceCodeID`), show names: renaming in the other module then changes
+  nothing. Option lists from other modules' tables are read on every render and check, never cached.
+* Gibbon's number input blanks a value that is not a number: to test the server's check, switch the input to text first.
+* Objects created by the module's own registry can use constructor injection if they are created with
+  `$container->get($class)`, not `new`.
+
 ## Lists stored as comma-separated text
 * `Stage.automation`, `TicketType.roleCategories`: store `implode(',', ...)` of **validated** keys in a fixed order
   (`array_intersect($allKeysInOrder, $posted)`); read with `array_filter(explode(',', $value))`; edit with
@@ -263,8 +279,9 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
   return value. `Notifier::sendTest()` (button on Notification Settings) reports both channels to the user.
 * Messages for the next page after a redirect: `$session->set('key', $data)` in the process script, read and
   `$session->forget('key')` on the page.
+* Who is notified (1.10.00): requesters by default; staff only as assignee, follower row, or a row in `gibbonServiceDeskTypeNotification` (`TypeNotificationGateway`). `Notifier::notify(..., $event)` takes `'new'`/`'update'`. Do not add "the team is told" fallbacks - the owner asked for opt-in.
 * "Notifications do not work" checklist: (0) ask the user to press *Send Me a Test Notification*; (1) the actor is never notified - test with two users; (2) is the
-  recipient a follower of the ticket or in a team of its type (empty teams -> administrators)? (3) the person's
+  recipient the assignee, a follower of the ticket, or listed for the type (`gibbonServiceDeskTypeNotification`; staff are told about nothing else)? (3) the person's
   policy rows (`gibbonServiceDeskNotificationPreference`, `gibbonServiceDeskTicketSubscriber`); (4) rows in
   `gibbonNotification`; (5) PHP error log / `gibbonLog` title "Service Desk".
 

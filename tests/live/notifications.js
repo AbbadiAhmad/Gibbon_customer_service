@@ -22,7 +22,7 @@ const M = BASE + '/index.php?q=/modules/ServiceDesk/';
     await check(page, user + ' ticket behind the notification');
   }
 
-  // Empty team: the administrators are told instead.
+  // Empty team: nobody is told by default any more (staff opt in; see notifyrules.js).
   const parent = await login(browser, '463');
   await parent.goto(M + 'request_new.php&gibbonServiceDeskTicketTypeID=4');
   await parent.fill('form#request textarea', 'The bus was late three times this week.');
@@ -32,7 +32,7 @@ const M = BASE + '/index.php?q=/modules/ServiceDesk/';
   const admin = await login(browser, '192');
   await admin.goto(BASE + '/index.php?q=notifications.php');
   const text = await admin.innerText('body');
-  console.log('administrator told about a ticket of a team without members (expect true):', text.includes('Late bus'));
+  console.log('administrator NOT told about a ticket of a team without members (expect true):', !text.includes('Late bus'));
   await admin.screenshot({ path: `${__dirname}/shots/notifications_admin.png` });
   await browser.close();
 })().catch(e => { console.error('ERR', e.message.split('\n').slice(0, 6).join('\n')); process.exit(1); });

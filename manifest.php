@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.8.00';
+$version     = '1.11.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -59,6 +59,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskTicketType` (
     `shareWithFamily` enum('Y','N') NOT NULL DEFAULT 'N',
     `allowWithdraw` enum('Y','N') NOT NULL DEFAULT 'Y',
     `allowReopen` enum('Y','N') NOT NULL DEFAULT 'Y',
+    `newTicketRecipients` enum('Nobody','Team','Administrators') NOT NULL DEFAULT 'Nobody',
     `color` varchar(7) NOT NULL DEFAULT '',
     `retentionDays` int(5) unsigned NULL,
     `active` enum('Y','N') NOT NULL DEFAULT 'Y',
@@ -80,7 +81,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskField` (
     `name` varchar(40) NOT NULL,
     `label` varchar(90) NOT NULL,
     `description` varchar(255) NOT NULL DEFAULT '',
-    `type` enum('Text','Long Text','Date','Select','Yes/No','Students','Classes') NOT NULL DEFAULT 'Text',
+    `type` enum('Text','Long Text','Date','Select','Attendance Reason','Yes/No','Students','Classes') NOT NULL DEFAULT 'Text',
     `options` text NULL,
     `required` enum('Y','N') NOT NULL DEFAULT 'N',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
@@ -96,6 +97,7 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskStage` (
     `category` enum('Open','In Progress','Closed') NOT NULL DEFAULT 'Open',
     `sequenceNumber` int(4) NOT NULL DEFAULT 0,
     `automation` varchar(255) NULL,
+    `automationSettings` text NULL,
     `nextStage` varchar(40) NULL,
     `withdrawn` enum('Y','N') NOT NULL DEFAULT 'N',
     PRIMARY KEY (`gibbonServiceDeskStageID`),
@@ -144,6 +146,20 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskNotificationPreference` (
     `notifyInApp` enum('Y','N') NOT NULL DEFAULT 'Y',
     `notifyEmail` enum('Y','N') NOT NULL DEFAULT 'Y',
     PRIMARY KEY (`gibbonPersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+// Which staff are told about the tickets of a ticket type (new tickets, updates; notification centre, email). No row = not
+// told. A row is made by the person themselves (Notification Settings) or by an administrator who assigns them to the type
+// (Manage Ticket Types).
+$moduleTables[] = "CREATE TABLE `gibbonServiceDeskTypeNotification` (
+    `gibbonServiceDeskTicketTypeID` int(8) unsigned zerofill NOT NULL,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `newInApp` enum('Y','N') NOT NULL DEFAULT 'N',
+    `newEmail` enum('Y','N') NOT NULL DEFAULT 'N',
+    `updateInApp` enum('Y','N') NOT NULL DEFAULT 'N',
+    `updateEmail` enum('Y','N') NOT NULL DEFAULT 'N',
+    PRIMARY KEY (`gibbonServiceDeskTicketTypeID`,`gibbonPersonID`),
+    KEY `gibbonPersonID` (`gibbonPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // The copy of that policy on one ticket: who follows the ticket and how they are told.
@@ -203,7 +219,7 @@ $moduleTables[] = "INSERT INTO `gibbonServiceDeskTicketTypeTeam` (`gibbonService
 
 $moduleTables[] = "INSERT INTO `gibbonServiceDeskField` (`gibbonServiceDeskTicketTypeID`, `name`, `label`, `description`, `type`, `options`, `required`, `sequenceNumber`) VALUES
     (1, 'students', 'Children', '', 'Students', NULL, 'Y', 1),
-    (1, 'reason', 'Absence Type', '', 'Select', 'Medical,Family,Education,Other', 'Y', 2),
+    (1, 'reason', 'Reason for Absence', 'The reasons are set by the school (School Admin > Attendance Settings).', 'Attendance Reason', NULL, 'Y', 2),
     (1, 'dateStart', 'First Day of Absence', '', 'Date', NULL, 'Y', 3),
     (1, 'dateEnd', 'Last Day of Absence', 'Leave empty for a single day.', 'Date', NULL, 'N', 4),
     (1, 'details', 'Details', '', 'Long Text', NULL, 'N', 5),
@@ -357,7 +373,7 @@ $actionRows[] = [
     'precedence'  => '0',
     'category'    => 'Configure',
     'description' => 'Define ticket types, their request form, teams and workflow. Holders are Service Desk administrators and see every ticket.',
-    'URLList'     => 'types_manage.php,types_manage_edit.php,types_manage_editProcess.php,types_manage_delete.php,types_manage_deleteProcess.php,types_field_edit.php,types_field_editProcess.php,types_field_delete.php,types_field_deleteProcess.php',
+    'URLList'     => 'types_manage.php,types_manage_edit.php,types_manage_editProcess.php,types_manage_delete.php,types_manage_deleteProcess.php,types_field_edit.php,types_field_editProcess.php,types_field_delete.php,types_field_deleteProcess.php,types_notifyProcess.php',
     'entryURL'    => 'types_manage.php',
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',

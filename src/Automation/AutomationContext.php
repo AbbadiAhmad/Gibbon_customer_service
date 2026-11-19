@@ -26,9 +26,14 @@ class AutomationContext
     protected $actorID;
     protected $db;
     protected $values;
+    protected $settings;
 
-    public function __construct(array $ticket, array $stage, $actorID, Connection $db)
+    /**
+     * @param array $settings The resolved settings of the running script (see AutomationSettings::resolve()).
+     */
+    public function __construct(array $ticket, array $stage, $actorID, Connection $db, array $settings = [])
     {
+        $this->settings = $settings;
         $this->ticket = $ticket;
         $this->stage = $stage;
         $this->actorID = $actorID;
@@ -74,6 +79,15 @@ class AutomationContext
         $value = $this->values[$name] ?? null;
 
         return $value === null || $value === '' || $value === [] ? $default : $value;
+    }
+
+    /**
+     * A setting of the running script, as configured on the stage (see HasSettings): its value, or $default when the
+     * setting has no value. The value has been checked against the script's definition.
+     */
+    public function setting(string $name, $default = null)
+    {
+        return $this->settings[$name] ?? $default;
     }
 
     public function fields(): array

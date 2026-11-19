@@ -55,8 +55,12 @@ Every file a browser can request authorises itself. In order:
    * "Updated" mark: computed per person in `queryTickets` (4th argument = the ticket types the person manages); people
      who do not manage a ticket are compared against `timestampModifiedPublic`, so internal activity is not revealed to
      requesters even as a mark. Marking a ticket as seen on a GET (opening it) only changes the person's own state.
+   * Automation settings: only the holders of *Manage Workflows* save them; the process script accepts a setting only for a
+     script that is ticked, that exists, and only the names and values its definition allows (`AutomationSettings::collect`),
+     and refuses the whole save otherwise (`error21`). The values are checked again before every run (`resolve`).
    * `canView = requester or canManage`. On the ticket page and in its process script, "not found" and "not allowed"
      give the same answer.
+   * Type notifications (`TypeNotificationGateway`): a team member may only save rows for the types of their teams, an administrator for any (`notificationsProcess.php`); adding someone to a type (`types_notifyProcess.php`, *Manage Ticket Types*) only works for people in a team of the type or administrators. The recipients are filtered again in `Notifier` (a person who left the team is not told, and never gets internal text they could not read).
    * Lists: `TicketGateway::queryTickets($criteria, $personID, $isAdmin)` puts the scope in the SQL. Any new query
      that returns tickets must take the same two arguments. Saved filters only narrow.
    * Internal notes / internal log lines: excluded **in the query** (`CommentGateway::selectCommentsByTicket($id,

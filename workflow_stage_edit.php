@@ -15,6 +15,7 @@ use Gibbon\Module\ServiceDesk\Domain\StageGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
 use Gibbon\Module\ServiceDesk\Service\TicketFilters;
 use Gibbon\Module\ServiceDesk\Automation\AutomationRegistry;
+use Gibbon\Module\ServiceDesk\Automation\AutomationSettings;
 
 if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/workflow_stage_edit.php') == false) {
     // Access denied
@@ -31,6 +32,8 @@ if (!empty($gibbonServiceDeskTicketTypeID) && !$container->get(TicketTypeGateway
     $page->addError(__('The specified record cannot be found.'));
     return;
 }
+
+$page->return->addReturns(['error21' => __m('Your request failed because a setting of an automation is missing or not valid.')]);
 
 $page->breadcrumbs
     ->add(__m('Manage Workflows'), 'workflow_manage.php', ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID])
@@ -72,6 +75,10 @@ $registry = $container->get(AutomationRegistry::class);
 $row = $form->addRow();
     $row->addLabel('automation', __m('Automation on Entry'));
     $row->addCheckbox('automation')->fromArray($registry->options());
+
+// The settings of the ticked scripts (a script that has none shows nothing): built from the scripts' own declarations.
+$automationSettings = $container->get(AutomationSettings::class);
+$automationSettings->addToForm($form, 'automation', AutomationSettings::decode($values['automationSettings'] ?? ''));
 
 $otherStages = [];
 foreach ($stageGateway->selectStagesByType($gibbonServiceDeskTicketTypeID)->fetchAll() as $stage) {

@@ -65,8 +65,8 @@ class StageGateway extends QueryableGateway
     public function copyDefaultWorkflow($gibbonServiceDeskTicketTypeID)
     {
         $data = ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID];
-        $sql = "INSERT INTO gibbonServiceDeskStage (gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, nextStage, withdrawn)
-                SELECT :gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, nextStage, withdrawn
+        $sql = "INSERT INTO gibbonServiceDeskStage (gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, automationSettings, nextStage, withdrawn)
+                SELECT :gibbonServiceDeskTicketTypeID, name, category, sequenceNumber, automation, automationSettings, nextStage, withdrawn
                 FROM gibbonServiceDeskStage WHERE gibbonServiceDeskTicketTypeID IS NULL ORDER BY sequenceNumber, gibbonServiceDeskStageID";
 
         return $this->db()->statement($sql, $data);

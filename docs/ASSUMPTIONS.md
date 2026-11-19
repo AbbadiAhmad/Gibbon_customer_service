@@ -33,3 +33,4 @@ Things taken as true without asking. If one is wrong, tell me and the affected p
 | B15 | A teacher notice links to the notification list because teachers cannot open tickets they are not part of. | `TicketService::notifyTeachers` |
 | B16 | Retention counts from the time the ticket was closed, in whole days. A reopened ticket is no longer closed, so its clock stops. | `TicketGateway::selectExpiredTickets` |
 | B17 | Dashboard hooks are shown to every role that holds the action *Tickets*; the module registers its own class namespace inside the hook because the dashboard is not one of its pages. | `hook_dashboard_*.php` |
+| B18 | Upgrading to 1.10.00 removes followers that are neither the requester, the assignee nor a co-adult of the requester: before, every comment by staff made them follower, which is the behaviour the owner called wrong. Staff who want a ticket can follow it again (per-ticket form) or set a type notification. | `CHANGEDB.php` 1.10.00 |

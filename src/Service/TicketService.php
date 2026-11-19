@@ -22,6 +22,7 @@ use Gibbon\Module\ServiceDesk\Domain\CommentGateway;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
 use Gibbon\Module\ServiceDesk\Automation\AutomationContext;
 use Gibbon\Module\ServiceDesk\Automation\AutomationRegistry;
+use Gibbon\Module\ServiceDesk\Automation\AutomationSettings;
 
 /**
  * Everything that changes a ticket goes through here, so the history, the notifications and the workflow automation
@@ -51,10 +52,11 @@ class TicketService
     protected $subscriberGateway;
     protected $notifier;
     protected $automations;
+    protected $automationSettings;
     protected $teamGateway;
     protected $ticketTypeGateway;
 
-    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, TeamGateway $teamGateway, TicketTypeGateway $ticketTypeGateway)
+    public function __construct(Connection $db, TicketGateway $ticketGateway, StageGateway $stageGateway, CommentGateway $commentGateway, SubscriberGateway $subscriberGateway, Notifier $notifier, AutomationRegistry $automations, AutomationSettings $automationSettings, TeamGateway $teamGateway, TicketTypeGateway $ticketTypeGateway)
     {
         $this->db = $db;
         $this->ticketGateway = $ticketGateway;
@@ -63,6 +65,7 @@ class TicketService
         $this->subscriberGateway = $subscriberGateway;
         $this->notifier = $notifier;
         $this->automations = $automations;
+        $this->automationSettings = $automationSettings;
         $this->teamGateway = $teamGateway;
         $this->ticketTypeGateway = $ticketTypeGateway;
     }
@@ -126,7 +129,7 @@ class TicketService
             $this->writeHistory($ticket, null, __m('Assigned to {name}.', ['name' => Format::name('', $assignee['preferredName'], $assignee['surname'], 'Student', false)]), 'Log');
         }
 
-        $this->notifier->notify($ticket, $text, $actorID, false, true);
+        $this->notifier->notify($ticket, $text, $actorID, false, 'new');
 
         // The first stage may have automation as well.
         if (!empty($stage['automation'])) {
@@ -137,20 +140,27 @@ class TicketService
     }
 
     /**
-     * Adds a comment (type "Comment") or an internal note (type "Internal Note") and tells the followers.
+     * Adds a comment (type "Comment") or an internal note (type "Internal Note") and tells the people who should hear
+     * about it (see Notifier::notify).
+     *
+     * @param bool $follow Does commenting make the person follow the ticket from now on? Yes for the requester side
+     *                     (they asked, they want the answer); no for staff: a team member or administrator who answers
+     *                     is not told about every later change unless they are assigned, set a notification for the
+     *                     ticket type, or choose to follow this ticket.
      */
-    public function addComment(array $ticket, $gibbonPersonID, string $comment, string $type = 'Comment')
+    public function addComment(array $ticket, $gibbonPersonID, string $comment, string $type = 'Comment', bool $follow = true)
     {
         $internal = $type == 'Internal Note';
         $this->writeHistory($ticket, $gibbonPersonID, $comment, $internal ? 'Internal Note' : 'Comment');
-        $this->subscriberGateway->subscribe($ticket['gibbonServiceDeskTicketID'], $gibbonPersonID);
+        if ($follow) {
+            $this->subscriberGateway->subscribe($ticket['gibbonServiceDeskTicketID'], $gibbonPersonID);
+        }
 
         $this->notifier->notify(
             $ticket,
             ($internal ? __m('New internal note') : __m('New comment')).': '.mb_substr($comment, 0, 200),
             $gibbonPersonID,
-            $internal,
-            empty($ticket['gibbonPersonIDAssignee'])
+            $internal
         );
     }
 
@@ -192,7 +202,7 @@ class TicketService
      * @param array $stage  A stage of the ticket's own type.
      * @param bool  $rerun  Run the automation even though the ticket is already in the stage (used on creation).
      */
-    public function changeStage(array $ticket, array $stage, $actorID, bool $rerun = false, int $depth = 0, ?string $text = null, bool $withTeam = false): bool
+    public function changeStage(array $ticket, array $stage, $actorID, bool $rerun = false, int $depth = 0, ?string $text = null): bool
     {
         $gibbonServiceDeskTicketID = $ticket['gibbonServiceDeskTicketID'];
         $alreadyThere = intval($ticket['gibbonServiceDeskStageID']) === intval($stage['gibbonServiceDeskStageID']);
@@ -202,7 +212,7 @@ class TicketService
         $scripts = [];
         foreach (array_filter(array_map('trim', explode(',', (string) ($stage['automation'] ?? '')))) as $key) {
             if ($script = $this->automations->get($key)) {
-                $scripts[] = $script;
+                $scripts[$key] = $script;
             }
         }
         $results = [];
@@ -218,8 +228,10 @@ class TicketService
             ]);
 
             // All scripts share the transaction: if one fails, what the others did is undone as well.
-            foreach ($scripts as $running) {
-                $result = $running->run(new AutomationContext($ticket, $stage, $actorID, $this->db));
+            foreach ($scripts as $key => $running) {
+                // The settings are checked again here: a value that is no longer valid stops the stage (and rolls it back).
+                $settings = $this->automationSettings->resolve($running, $key, $stage['automationSettings'] ?? '');
+                $result = $running->run(new AutomationContext($ticket, $stage, $actorID, $this->db, $settings));
                 if (!$result->isSuccess()) {
                     throw new \RuntimeException($result->getMessage());
                 }
@@ -241,7 +253,7 @@ class TicketService
         if (!$alreadyThere) {
             $text = $text ?? __m('Moved to {stage}.', ['stage' => __m($stage['name'])]);
             $this->writeHistory($ticket, $actorID, $text, 'Log');
-            $this->notifier->notify($ticket, $text, $actorID, false, $withTeam);
+            $this->notifier->notify($ticket, $text, $actorID);
         }
 
         $ticket = $this->ticketGateway->getTicketByID($gibbonServiceDeskTicketID);
@@ -338,7 +350,7 @@ class TicketService
             : __m('Made a comment of {date} internal.', ['date' => Format::dateTimeReadable($comment['timestamp'])]), 'Internal Log');
 
         if ($type == 'Comment') {
-            $this->notifier->notify($ticket, __m('New comment').': '.mb_substr($comment['comment'], 0, 200), $actorID, false, empty($ticket['gibbonPersonIDAssignee']));
+            $this->notifier->notify($ticket, __m('New comment').': '.mb_substr($comment['comment'], 0, 200), $actorID, false);
         }
     }
 
@@ -368,7 +380,7 @@ class TicketService
             $this->writeHistory($ticket, $actorID, $note, 'Comment');
         }
 
-        return $this->changeStage($ticket, $stage, $actorID, false, 0, __m('{name} withdrew the request.', ['name' => $this->personName($actorID)]), true);
+        return $this->changeStage($ticket, $stage, $actorID, false, 0, __m('{name} withdrew the request.', ['name' => $this->personName($actorID)]));
     }
 
     /**
@@ -383,7 +395,7 @@ class TicketService
             $this->writeHistory($ticket, $actorID, $note, 'Comment');
         }
 
-        return $this->changeStage($ticket, $stage, $actorID, false, 0, __m('{name} reopened the request.', ['name' => $this->personName($actorID)]), true);
+        return $this->changeStage($ticket, $stage, $actorID, false, 0, __m('{name} reopened the request.', ['name' => $this->personName($actorID)]));
     }
 
     /**
@@ -421,7 +433,8 @@ class TicketService
             $this->writeHistory($moved, $actorID, __m('The assignee is not in a team of the new ticket type: the ticket is unassigned.'), 'Internal Log');
         }
 
-        $this->notifier->notify($moved, $text, $actorID, false, true);
+        // For the staff of the new type this is a new ticket.
+        $this->notifier->notify($moved, $text, $actorID, false, 'new');
 
         return true;
     }

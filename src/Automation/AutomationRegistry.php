@@ -33,7 +33,9 @@ class AutomationRegistry
                     require_once $file;
                 }
                 if (class_exists($class) && is_subclass_of($class, AutomationScript::class)) {
-                    $this->scripts[$key] = new $class();
+                    // Created through Gibbon's container, so a script can ask for services in its constructor.
+                    global $container;
+                    $this->scripts[$key] = !empty($container) ? $container->get($class) : new $class();
                 }
             }
             ksort($this->scripts);

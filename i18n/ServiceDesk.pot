@@ -58,6 +58,10 @@ msgstr ""
 msgid "Administration"
 msgstr ""
 
+#: types_manage.php types_manage_edit.php
+msgid "Administrators"
+msgstr ""
+
 #: teams_manage_edit.php
 msgid "After saving you can add the members of the team."
 msgstr ""
@@ -114,6 +118,14 @@ msgstr ""
 msgid "Assignee"
 msgstr ""
 
+#: types_field_edit.php
+msgid "Attendance Reason (the reasons of School Admin > Attendance Settings)"
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "Attendance code"
+msgstr ""
+
 #: workflow_stage_edit.php
 msgid "Automation"
 msgstr ""
@@ -144,6 +156,10 @@ msgstr ""
 
 #: manifest.php
 msgid "Children Concerned"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Choose the people to add."
 msgstr ""
 
 #: manifest.php
@@ -208,6 +224,10 @@ msgstr ""
 
 #: types_field_edit.php
 msgid "Date"
+msgstr ""
+
+#: src/Automation/AutomationSettings.php
+msgid "Default"
 msgstr ""
 
 #: teams_manage.php teams_manage_edit.php
@@ -411,7 +431,7 @@ msgid "Management"
 msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
-msgid "Marks the students absent for each school day of the period. Reads the fields: students, dateStart, dateEnd (optional), reason (optional)."
+msgid "Marks the students absent for each school day of the period, with the attendance code chosen as setting of the stage. Reads the fields: students, dateStart, dateEnd (optional), reason (optional)."
 msgstr ""
 
 #: src/Automation/Scripts/UnenrolFromClasses.php
@@ -486,6 +506,14 @@ msgstr ""
 msgid "New Request"
 msgstr ""
 
+#: types_manage.php
+msgid "New Tickets Reach"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "New Tickets Without Default Assignee"
+msgstr ""
+
 #: src/Service/TicketService.php
 msgid "New comment"
 msgstr ""
@@ -500,6 +528,14 @@ msgstr ""
 
 #: workflow_stage_edit.php
 msgid "New tickets start in the stage with the lowest number."
+msgstr ""
+
+#: notifications.php
+msgid "New tickets: email"
+msgstr ""
+
+#: notifications.php
+msgid "New tickets: notification centre"
 msgstr ""
 
 #: src/Service/TicketService.php
@@ -522,12 +558,20 @@ msgstr ""
 msgid "No team"
 msgstr ""
 
+#: types_manage_edit.php
+msgid "Nobody"
+msgstr ""
+
 #: teams_manage_edit.php
 msgid "Nobody (tickets start unassigned)"
 msgstr ""
 
 #: tickets.php
 msgid "Nobody (unassigned)"
+msgstr ""
+
+#: types_manage.php
+msgid "Nobody is told"
 msgstr ""
 
 #: templates/board.twig.html
@@ -550,8 +594,20 @@ msgstr ""
 msgid "Notification Settings"
 msgstr ""
 
+#: notifications.php
+msgid "Notifications by Ticket Type"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Notified Staff"
+msgstr ""
+
 #: src/Automation/Scripts/TellTeachers.php
 msgid "Notifies the form tutors and class teachers of the children (notification centre only, never email; without the reason). Reads the fields of type Students (all class teachers) and Classes (the teachers of those classes)."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Notify"
 msgstr ""
 
 #: request_new.php
@@ -635,6 +691,10 @@ msgid "Reason"
 msgstr ""
 
 #: manifest.php
+msgid "Reason for Absence"
+msgstr ""
+
+#: manifest.php
 msgid "Reason for leaving and anything the office should know."
 msgstr ""
 
@@ -646,7 +706,7 @@ msgstr ""
 msgid "Rejected"
 msgstr ""
 
-#: teams_manage_edit.php
+#: teams_manage_edit.php types_manage_edit.php
 msgid "Remove"
 msgstr ""
 
@@ -742,6 +802,10 @@ msgstr ""
 msgid "Service Desk test notification ({time})."
 msgstr ""
 
+#: src/Automation/AutomationSettings.php
+msgid "Settings of \"{script}\""
+msgstr ""
+
 #: types_manage_edit.php
 msgid "Share With Family"
 msgstr ""
@@ -764,6 +828,14 @@ msgstr ""
 
 #: workflow_manage.php
 msgid "Special"
+msgstr ""
+
+#: notifications.php
+msgid "Staff are not told about tickets just because they exist. You are always told about tickets assigned to you (following your choice above). Here you can also choose to be told about new tickets and about updates of a ticket type, in the notification centre and/or by email."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Staff are only told about tickets of this type when they are assigned to the ticket, follow it, or are listed here. People you add here are told about new tickets and updates through the channels of their own notification settings; they can change this under Notification Settings. Candidates are the members of the teams of this type and the administrators."
 msgstr ""
 
 #: tickets.php
@@ -838,6 +910,14 @@ msgstr ""
 msgid "The attendance code \"Absent\" does not exist or is not active."
 msgstr ""
 
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The attendance code chosen for this stage is not available any more (deleted, inactive, or not allowed for absences in advance)."
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "The attendance code written for each absent day, for example an excused or an unexcused variant of \"Absent\". The codes come from School Admin > Manage Attendance Codes (active, leaving, allowed for absences in advance). Default: the code named \"Absent\"."
+msgstr ""
+
 #: tickets.php
 msgid "The audience of a shared filter. A filter never shows a person more tickets than they may see."
 msgstr ""
@@ -848,6 +928,10 @@ msgstr ""
 
 #: manifest.php
 msgid "The classes your child should leave."
+msgstr ""
+
+#: types_manage.php
+msgid "The default assignee"
 msgstr ""
 
 #: src/Service/Notifier.php
@@ -874,6 +958,10 @@ msgstr ""
 msgid "The questions people answer when they send this request. A subject line is always offered. The field name is what automation scripts use to read the answer."
 msgstr ""
 
+#: manifest.php
+msgid "The reasons are set by the school (School Admin > Attendance Settings)."
+msgstr ""
+
 #: tickets_requester.php
 msgid "The request goes back to the start of its workflow and the team is told."
 msgstr ""
@@ -892,6 +980,14 @@ msgstr ""
 
 #: src/Automation/Scripts/RecordAbsence.php
 msgid "The school is closed on every day of the absence period."
+msgstr ""
+
+#: src/Automation/AutomationSettings.php
+msgid "The setting \"{setting}\" of \"{script}\" has not been chosen on this stage. Edit the stage in Manage Workflows."
+msgstr ""
+
+#: src/Automation/AutomationSettings.php
+msgid "The setting \"{setting}\" of \"{script}\" on this stage is no longer valid ({error}). Edit the stage in Manage Workflows."
 msgstr ""
 
 #: workflow_manage.php
@@ -922,6 +1018,10 @@ msgstr ""
 msgid "The ticket, its comments, its notification settings and the notifications written about it are deleted for good. This cannot be undone. Changes the workflow made elsewhere in Gibbon (attendance, enrolment) stay as they are. A line in the system log records that the ticket was deleted, and by whom - not what it said."
 msgstr ""
 
+#: types_manage.php types_manage_edit.php
+msgid "The whole responsible team"
+msgstr ""
+
 #: workflow_stage_edit.php
 msgid "Then Move To"
 msgstr ""
@@ -938,6 +1038,10 @@ msgstr ""
 msgid "There are no students linked to your account."
 msgstr ""
 
+#: notifications.php
+msgid "There are no ticket types you handle."
+msgstr ""
+
 #: tickets_filter_delete.php
 msgid "This is a shared filter: it will disappear for everyone who uses it."
 msgstr ""
@@ -948,6 +1052,10 @@ msgstr ""
 
 #: tickets.php
 msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Tick the people who should no longer be told about this type."
 msgstr ""
 
 #: tickets.php tickets_view.php templates/ticket.twig.html
@@ -990,6 +1098,14 @@ msgstr ""
 msgid "Updated"
 msgstr ""
 
+#: notifications.php
+msgid "Updates: email"
+msgstr ""
+
+#: notifications.php
+msgid "Updates: notification centre"
+msgstr ""
+
 #: tickets_comment_edit.php tickets_view.php
 msgid "Visibility"
 msgstr ""
@@ -1012,6 +1128,10 @@ msgstr ""
 
 #: types_manage_edit.php
 msgid "Who can send this kind of request."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Who is told about a new ticket when no default assignee takes it: the whole responsible team, the administrators, or nobody. With a default assignee only that person is told. Staff listed under Notified Staff are told in addition."
 msgstr ""
 
 #: tickets_requester.php
@@ -1058,6 +1178,10 @@ msgstr ""
 msgid "You have sent many requests in the last hour. Please wait a while before sending another one, or contact the school office."
 msgstr ""
 
+#: workflow_stage_edit.php
+msgid "Your request failed because a setting of an automation is missing or not valid."
+msgstr ""
+
 #: workflow_manage.php
 msgid "Your request failed because a workflow needs at least one stage."
 msgstr ""
@@ -1070,12 +1194,32 @@ msgstr ""
 msgid "Your request failed because tickets are in this stage. Move them to another stage first."
 msgstr ""
 
+#: src/Automation/AutomationSettings.php
+msgid "a number is required"
+msgstr ""
+
+#: src/Automation/AutomationSettings.php
+msgid "a value is required"
+msgstr ""
+
 #: src/Service/RequestFields.php
 msgid "classes"
 msgstr ""
 
 #: templates/ticket.twig.html
 msgid "edited"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "new: centre"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "new: email"
+msgstr ""
+
+#: src/Automation/AutomationSettings.php
+msgid "not available"
 msgstr ""
 
 #: workflow_manage.php
@@ -1086,8 +1230,32 @@ msgstr ""
 msgid "requesters"
 msgstr ""
 
+#: src/Automation/AutomationSettings.php
+msgid "the number is out of range"
+msgstr ""
+
+#: src/Automation/AutomationSettings.php
+msgid "the text is too long"
+msgstr ""
+
 #: workflow_manage.php
 msgid "then move to {stage}"
+msgstr ""
+
+#: src/Automation/AutomationSettings.php
+msgid "this choice is not available"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "updates: centre"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "updates: email"
+msgstr ""
+
+#: types_manage.php
+msgid "{count} notified staff"
 msgstr ""
 
 #: src/Automation/Scripts/TellTeachers.php
@@ -1096,6 +1264,10 @@ msgstr ""
 
 #: types_manage.php
 msgid "{days} days"
+msgstr ""
+
+#: src/Automation/Scripts/RecordAbsence.php
+msgid "{name} already has the attendance record \"{type}\" on {date}. Change or remove it in Attendance first."
 msgstr ""
 
 #: src/Service/TicketService.php

@@ -15,6 +15,7 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | A rule or multi-step change to a ticket | `src/Service/TicketService.php` (history + notification + automation happen there; process scripts call it) |
 | Who may see/do something | `src/Service/TicketAccess.php` |
 | A request-form field type | `RequestFields`: `TYPES`, `addToForm()`, `collect()` (validate!), `describe()`; the `type` enum of `gibbonServiceDeskField` (manifest + CHANGEDB); the type list in `types_field_edit.php` |
+| A setting of an automation script (a code to write, a class to use, a number) | `getSettings()` in the script (`HasSettings`) and `$context->setting('name')` in `run()` - nothing else; copy `RecordAbsence`. Select options that come from the database must be a function, not an array |
 | An automation script | new class in `src/Automation/Scripts/` implementing `AutomationScript` - nothing else (copy `RecordAbsence.php`) |
 | A filter criterion | `TicketFilters::clean()` + `apply()`, a rule in `TicketGateway::queryTickets()`, a row in the form of `tickets.php` |
 | A permission variant of an existing page | a grouped action `<Name>_<suffix>` in `manifest.php` + CHANGEDB, a `can...()` method in `TicketAccess` using `getHighestGroupedAction` (see `canCreateOnBehalf`) |
@@ -31,7 +32,7 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | A stage behaviour (flag) | a column on `gibbonServiceDeskStage` (manifest + CHANGEDB + copy in `StageGateway::copyDefaultWorkflow`), fields in `workflow_stage_edit.php` + its process, behaviour in `TicketService::changeStage` |
 | A new list of tickets, or a new filter or sort column | `TicketGateway::queryTickets` (step 1 conditions as id lists, the sort column in `SORTABLE`, columns step 1 needs in the covering indexes) - then `tests/perf/measure.js` |
 | A table that refers to a ticket or a person | delete it in `TicketService::deleteTickets` and add it to `TicketGateway::orphanChecks()` |
-| A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
+| A notification event | call `Notifier::notify($ticket, $text, $actorID, $internal, 'new' or 'update')` from the `TicketService` method that makes the change; who is told is decided only in `Notifier` (requesters, assignee, follower rows, type notifications) |
 | A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |
 | A view with more than a few lines of HTML | `templates/<name>.twig.html` + classes in `css/module.css` |
 | Default data | `manifest.php` INSERTs (explicit ids) - upgrades do not insert defaults |

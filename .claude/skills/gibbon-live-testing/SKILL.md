@@ -64,6 +64,7 @@ existing site, undo its effects by hand and set the version back (e.g. `DELETE` 
 | `updated.js` | the "Updated" mark (new ticket, parent comment, team answer, internal note, own changes, board move, closed) and sorting by clicking headings |
 | `options.js` | several automation scripts on one stage (both succeed; one fails -> nothing happens), stage form keeps ticks, ticket type switches for withdraw / reopen |
 | `security.js` | 46 forged-request probes: script injection, other people's tickets, doing a team's job, permissions, form token, SQL fragments, direct file requests, what a requester learns about internal work, flooding |
+| `settings.js` | automation settings: attendance code dropdown, stored by id, default, conflicts, deactivated and renamed codes, 9 forged values, copy with a new type, reasons from School Admin, and a test-only script (`fixtures/ExampleSettings.php`, copied into the site and removed again) with all four setting types |
 | `mail-on.sh` + `smtp-sink.py` | starts a local SMTP sink and points Gibbon at it; sent emails land in `/tmp/servicedesk-mail.txt` (log in again after running it) |
 | `shot.js <user> '<page&params>' <name>` | one screenshot into `tests/live/shots/` (tall viewport) |
 | `lib.js` | `login(browser, username)`, `check(page, label)` (prints `ok`/`FAIL` with the error text found) |

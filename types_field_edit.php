@@ -66,6 +66,7 @@ $types = [
     'Long Text' => __m('Long Text'),
     'Date'      => __m('Date'),
     'Select'    => __m('Select (choose one option)'),
+    'Attendance Reason' => __m('Attendance Reason (the reasons of School Admin > Attendance Settings)'),
     'Yes/No'    => __m('Yes/No'),
     'Students'  => __m('Students (parents choose among their children)'),
     'Classes'   => __m('Classes (the classes of those students)'),
