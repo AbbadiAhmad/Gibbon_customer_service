@@ -50,6 +50,7 @@ ViewPreference (per person: List | Board)
 TicketSeen (per person per ticket: when last opened); Ticket.timestampModifiedPublic = last change a requester can read (1.7.00)
 TicketType.shareWithFamily, TicketType.retentionDays, Stage.withdrawn, Ticket.searchText (1.5.00)
 TicketType.allowWithdraw, TicketType.allowReopen; Stage.automation = comma-separated script names (1.6.00)
+TypeNotification (person x ticket type: newInApp, newEmail, updateInApp, updateEmail; none = not told)
 NotificationPreference (per person)         Filter (person NULL = shared, with audience Agents | Requesters;
                                                     team = agents of that team only)
 ```
@@ -101,13 +102,26 @@ longer valid stops the stage (nothing is changed). Contract and rules in
 
 ## 5. Notifications
 
-`Notifier::notify($ticket, $text, $actorID, $internal, $withTeam)` - recipients are the ticket's subscribers (+ the
-team members for new/unassigned tickets), minus the actor, minus non-team people for internal events. Each recipient
-gets the channels of their row: notification centre (Gibbon `gibbonNotification`) and/or email (Gibbon `Mailer`).
-All notification-centre entries are written before any email is sent, and the mailer is only created when an email
-is really sent, so mail trouble cannot affect the centre. A new ticket of a type whose teams are empty goes to the
-administrators. Failures are caught and logged (PHP error log + Gibbon log, title "Service Desk"); they never break
-the request. **Nobody is notified about their own action** - testing with a single user shows no notifications.
+`Notifier::notify($ticket, $text, $actorID, $internal, $event)` (`$event` = `new` for a created or moved-in ticket,
+`update` for everything else). Since 1.10.00 **staff are told only about what they chose or are assigned to**:
+
+| Who | Told when |
+|---|---|
+| Requester, and the other adults of a shared type | every public event (their own policy, copied to the ticket) |
+| Assignee (also a team's default assignee) | every event on the ticket, by their general policy |
+| Anyone with a row in `gibbonServiceDeskTicketSubscriber` | by that row: the per-ticket choice always wins (also to mute) |
+| Staff with a row in `gibbonServiceDeskTypeNotification` for the ticket's type | new tickets / updates, notification centre / email, as switched on in the row |
+
+*Staff* = members of the teams of the type and the Service Desk administrators; a type setting of someone who left
+the team is ignored. Internal events (internal notes, internal log) reach only staff and the assignee. Commenting does
+not make staff followers (`addComment(..., $follow)`; requesters follow by commenting). A type setting is made by the
+person (Notification Settings, only for the types they handle) or by an administrator (*Notified Staff* in Manage Ticket
+Types; the person starts with their general channels). The list of ticket types warns when nobody is told about new
+tickets (no default assignee, no notified staff). Each recipient gets the channels of their row: notification centre
+(Gibbon `gibbonNotification`) and/or email (Gibbon `Mailer`). All notification-centre entries are written before any
+email is sent, and the mailer is only created when an email is really sent, so mail trouble cannot affect the centre.
+Failures are caught and logged (PHP error log + Gibbon log, title "Service Desk"); they never break the request.
+**Nobody is notified about their own action** - testing with a single user shows no notifications.
 
 ## 6. File map
 
@@ -123,7 +137,8 @@ tickets_delete.php (+Process)               delete a ticket (action Delete Ticke
 cli_deleteExpiredTickets.php                retention: run from cron (CLI only)
 hook_dashboard.php                          home page: sidebar box "my open tickets" (parents, staff, students)
 tickets_comment_delete.php (+Process)       delete a comment
-notifications.php (+Process)                personal notification policy
+notifications.php (+Process)                personal notification policy + staff: per ticket type (new / updates x centre / email)
+types_notifyProcess.php                     administrator adds / removes notified staff of a ticket type
 types_manage*.php, types_field_*.php        ticket types and their form fields      (admin)
 workflow_manage.php, workflow_stage_*.php   default and per-type workflows          (admin)
 teams_manage*.php, teams_memberProcess.php  teams and members                        (admin)
@@ -197,6 +212,15 @@ Usual in ticketing systems and likely to be asked for. Ordered by how much I exp
   staff member in no team see All / Open / Closed; a team member sees the agent filters and the team's filter; the
   administrator sees all with the requesters' ones marked; a filter shared with requesters reaches the parent and not
   the team member.
+* 1.10.00 notification rules (`tests/live/notifyrules.js`; upgrade 1.9.00 -> 1.10.00 through Manage Modules and a fresh
+  install, then all 20 live scripts: 230 checks, no failure): by default neither the administrator nor a team member is
+  told about a new ticket or an update, also not after commenting (and commenting creates no follower row); the assignee
+  is told; a member who switches on "new: centre" / "updates: email" in Notification Settings gets exactly that (the
+  email read from the SMTP sink); internal notes reach staff only; an administrator adds a person under Notified Staff
+  (a person outside the teams is not offered, a forged post is ignored); the per-ticket row mutes a type setting; a
+  forged type id in the settings form is refused; a non-staff user has no type section. The follower clean-up of the
+  upgrade step was run against a seeded row (removed; the requester's row stays). Not tested in a browser: the German and
+  Arabic texts of the new pages, the warning column's wording with several teams.
 * Reporter notifications (`tests/live/reporter.js`): the requester gets a notification for a public comment, an
   assignment and a stage change made by a team member; none for an internal note or for their own comment; the team
   member is told about the requester's comment; the self-test reports both channels.

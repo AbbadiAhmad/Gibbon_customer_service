@@ -35,6 +35,8 @@ class TicketTypeGateway extends QueryableGateway
             ->cols([
                 'gibbonServiceDeskTicketType.*',
                 "(SELECT GROUP_CONCAT(gibbonServiceDeskTeam.name ORDER BY gibbonServiceDeskTeam.name SEPARATOR ', ') FROM gibbonServiceDeskTicketTypeTeam JOIN gibbonServiceDeskTeam ON (gibbonServiceDeskTeam.gibbonServiceDeskTeamID=gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTeamID) WHERE gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTicketTypeID=gibbonServiceDeskTicketType.gibbonServiceDeskTicketTypeID) AS teams",
+                "(SELECT COUNT(*) FROM gibbonServiceDeskTypeNotification WHERE gibbonServiceDeskTypeNotification.gibbonServiceDeskTicketTypeID=gibbonServiceDeskTicketType.gibbonServiceDeskTicketTypeID AND (newInApp='Y' OR newEmail='Y')) AS notifiedNew",
+                "(SELECT COUNT(*) FROM gibbonServiceDeskTeam t JOIN gibbonServiceDeskTicketTypeTeam tt ON (tt.gibbonServiceDeskTeamID=t.gibbonServiceDeskTeamID) WHERE tt.gibbonServiceDeskTicketTypeID=gibbonServiceDeskTicketType.gibbonServiceDeskTicketTypeID AND t.active='Y' AND t.gibbonPersonIDDefaultAssignee IS NOT NULL) AS defaultAssignees",
             ]);
 
         return $this->runQuery($query, $criteria);
@@ -101,6 +103,7 @@ class TicketTypeGateway extends QueryableGateway
         $data = ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID];
         $this->db()->delete("DELETE FROM gibbonServiceDeskField WHERE gibbonServiceDeskTicketTypeID=:gibbonServiceDeskTicketTypeID", $data);
         $this->db()->delete("DELETE FROM gibbonServiceDeskStage WHERE gibbonServiceDeskTicketTypeID=:gibbonServiceDeskTicketTypeID", $data);
+        $this->db()->delete("DELETE FROM gibbonServiceDeskTypeNotification WHERE gibbonServiceDeskTicketTypeID=:gibbonServiceDeskTicketTypeID", $data);
         $this->db()->delete("DELETE FROM gibbonServiceDeskTicketTypeTeam WHERE gibbonServiceDeskTicketTypeID=:gibbonServiceDeskTicketTypeID", $data);
 
         return $this->delete($gibbonServiceDeskTicketTypeID);

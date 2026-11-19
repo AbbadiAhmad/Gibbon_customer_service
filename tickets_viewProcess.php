@@ -52,7 +52,8 @@ switch ($_POST['action'] ?? '') {
         }
 
         $type = $canManage && ($_POST['type'] ?? '') == 'Internal Note' ? 'Internal Note' : 'Comment';
-        $ticketService->addComment($ticket, $gibbonPersonID, $comment, $type);
+        // The requester side follows the ticket by commenting; staff do not (see TicketService::addComment).
+        $ticketService->addComment($ticket, $gibbonPersonID, $comment, $type, !$canManage);
         break;
 
     // Stage, assignee and priority: team members and administrators.

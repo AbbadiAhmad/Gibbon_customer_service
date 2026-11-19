@@ -25,7 +25,7 @@ $description = 'Requests from parents, students and staff, routed to the right t
 $entryURL    = 'tickets.php';
 $type        = 'Additional';
 $category    = 'Other';
-$version     = '1.9.00';
+$version     = '1.10.00';
 $author      = 'Abbadi Ahmad';
 $url         = 'https://github.com/AbbadiAhmad/Gibbon_help_desk';
 
@@ -145,6 +145,20 @@ $moduleTables[] = "CREATE TABLE `gibbonServiceDeskNotificationPreference` (
     `notifyInApp` enum('Y','N') NOT NULL DEFAULT 'Y',
     `notifyEmail` enum('Y','N') NOT NULL DEFAULT 'Y',
     PRIMARY KEY (`gibbonPersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+// Which staff are told about the tickets of a ticket type (new tickets, updates; notification centre, email). No row = not
+// told. A row is made by the person themselves (Notification Settings) or by an administrator who assigns them to the type
+// (Manage Ticket Types).
+$moduleTables[] = "CREATE TABLE `gibbonServiceDeskTypeNotification` (
+    `gibbonServiceDeskTicketTypeID` int(8) unsigned zerofill NOT NULL,
+    `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+    `newInApp` enum('Y','N') NOT NULL DEFAULT 'N',
+    `newEmail` enum('Y','N') NOT NULL DEFAULT 'N',
+    `updateInApp` enum('Y','N') NOT NULL DEFAULT 'N',
+    `updateEmail` enum('Y','N') NOT NULL DEFAULT 'N',
+    PRIMARY KEY (`gibbonServiceDeskTicketTypeID`,`gibbonPersonID`),
+    KEY `gibbonPersonID` (`gibbonPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // The copy of that policy on one ticket: who follows the ticket and how they are told.
@@ -358,7 +372,7 @@ $actionRows[] = [
     'precedence'  => '0',
     'category'    => 'Configure',
     'description' => 'Define ticket types, their request form, teams and workflow. Holders are Service Desk administrators and see every ticket.',
-    'URLList'     => 'types_manage.php,types_manage_edit.php,types_manage_editProcess.php,types_manage_delete.php,types_manage_deleteProcess.php,types_field_edit.php,types_field_editProcess.php,types_field_delete.php,types_field_deleteProcess.php',
+    'URLList'     => 'types_manage.php,types_manage_edit.php,types_manage_editProcess.php,types_manage_delete.php,types_manage_deleteProcess.php,types_field_edit.php,types_field_editProcess.php,types_field_delete.php,types_field_deleteProcess.php,types_notifyProcess.php',
     'entryURL'    => 'types_manage.php',
     'entrySidebar' => 'Y',
     'menuShow'    => 'Y',

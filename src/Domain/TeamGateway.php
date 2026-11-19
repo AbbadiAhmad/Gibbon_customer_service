@@ -148,6 +148,34 @@ class TeamGateway extends QueryableGateway
     }
 
     /**
+     * Who can be told about the tickets of a ticket type: the people of its teams and the Service Desk administrators
+     * (active users), as gibbonPersonID => name parts.
+     */
+    public function selectNotifiableStaff($gibbonServiceDeskTicketTypeID)
+    {
+        $data = ['gibbonServiceDeskTicketTypeID' => $gibbonServiceDeskTicketTypeID];
+        $sql = "SELECT gibbonPerson.gibbonPersonID, gibbonPerson.title, gibbonPerson.surname, gibbonPerson.preferredName
+                FROM gibbonPerson
+                WHERE gibbonPerson.status='Full' AND (
+                    gibbonPerson.gibbonPersonID IN (
+                        SELECT gibbonServiceDeskTeamMember.gibbonPersonID
+                        FROM gibbonServiceDeskTicketTypeTeam
+                        JOIN gibbonServiceDeskTeam ON (gibbonServiceDeskTeam.gibbonServiceDeskTeamID=gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTeamID AND gibbonServiceDeskTeam.active='Y')
+                        JOIN gibbonServiceDeskTeamMember ON (gibbonServiceDeskTeamMember.gibbonServiceDeskTeamID=gibbonServiceDeskTeam.gibbonServiceDeskTeamID)
+                        WHERE gibbonServiceDeskTicketTypeTeam.gibbonServiceDeskTicketTypeID=:gibbonServiceDeskTicketTypeID)
+                    OR gibbonPerson.gibbonPersonID IN (
+                        SELECT p.gibbonPersonID
+                        FROM gibbonAction
+                        JOIN gibbonModule ON (gibbonModule.gibbonModuleID=gibbonAction.gibbonModuleID)
+                        JOIN gibbonPermission ON (gibbonPermission.gibbonActionID=gibbonAction.gibbonActionID)
+                        JOIN gibbonPerson p ON (FIND_IN_SET(gibbonPermission.gibbonRoleID, p.gibbonRoleIDAll))
+                        WHERE gibbonModule.name='ServiceDesk' AND gibbonAction.name='Manage Ticket Types'))
+                ORDER BY gibbonPerson.surname, gibbonPerson.preferredName";
+
+        return $this->db()->select($sql, $data);
+    }
+
+    /**
      * Everyone who is in an active team, as gibbonPersonID => [surname, preferredName], for the assignee filter.
      */
     public function selectAllMembers()

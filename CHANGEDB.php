@@ -133,3 +133,13 @@ ALTER TABLE `gibbonServiceDeskField` MODIFY `type` enum('Text','Long Text','Date
 UPDATE `gibbonServiceDeskField` f JOIN `gibbonServiceDeskTicketType` t ON (t.gibbonServiceDeskTicketTypeID=f.gibbonServiceDeskTicketTypeID) SET f.type='Attendance Reason', f.options=NULL, f.description='The reasons are set by the school (School Admin > Attendance Settings).' WHERE t.name='Absence Report' AND f.name='reason' AND f.type='Select' AND f.options='Medical,Family,Education,Other';end
 UPDATE `gibbonServiceDeskField` f JOIN `gibbonServiceDeskTicketType` t ON (t.gibbonServiceDeskTicketTypeID=f.gibbonServiceDeskTicketTypeID) SET f.label='Reason for Absence' WHERE t.name='Absence Report' AND f.name='reason' AND f.label='Absence Type';
 ";
+
+// v1.10.00 - notification rules: staff are told only about what they are assigned to or chose (per ticket type: new
+//            tickets / updates, notification centre / email). Staff who only commented are no longer followers.
+++$count;
+$sql[$count][0] = '1.10.00';
+$sql[$count][1] = "
+CREATE TABLE `gibbonServiceDeskTypeNotification` (`gibbonServiceDeskTicketTypeID` int(8) unsigned zerofill NOT NULL, `gibbonPersonID` int(10) unsigned zerofill NOT NULL, `newInApp` enum('Y','N') NOT NULL DEFAULT 'N', `newEmail` enum('Y','N') NOT NULL DEFAULT 'N', `updateInApp` enum('Y','N') NOT NULL DEFAULT 'N', `updateEmail` enum('Y','N') NOT NULL DEFAULT 'N', PRIMARY KEY (`gibbonServiceDeskTicketTypeID`,`gibbonPersonID`), KEY `gibbonPersonID` (`gibbonPersonID`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;end
+DELETE s FROM `gibbonServiceDeskTicketSubscriber` s JOIN `gibbonServiceDeskTicket` t ON (t.gibbonServiceDeskTicketID=s.gibbonServiceDeskTicketID) WHERE s.gibbonPersonID<>t.gibbonPersonIDRequester AND (t.gibbonPersonIDAssignee IS NULL OR s.gibbonPersonID<>t.gibbonPersonIDAssignee) AND NOT EXISTS (SELECT 1 FROM `gibbonFamilyAdult` a JOIN `gibbonFamilyAdult` b ON (b.gibbonFamilyID=a.gibbonFamilyID) WHERE a.gibbonPersonID=s.gibbonPersonID AND b.gibbonPersonID=t.gibbonPersonIDRequester);end
+UPDATE `gibbonAction` SET URLList=CONCAT(URLList, ',types_notifyProcess.php') WHERE name='Manage Ticket Types' AND URLList NOT LIKE '%types_notifyProcess.php%' AND gibbonModuleID=(SELECT gibbonModuleID FROM gibbonModule WHERE name='ServiceDesk');
+";

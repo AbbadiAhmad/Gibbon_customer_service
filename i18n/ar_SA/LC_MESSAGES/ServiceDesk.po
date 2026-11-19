@@ -168,6 +168,10 @@ msgstr "الأبناء"
 msgid "Children Concerned"
 msgstr "الأبناء المعنيون"
 
+#: types_manage_edit.php
+msgid "Choose the people to add."
+msgstr "اختر الأشخاص المراد إضافتهم."
+
 #: manifest.php
 msgid "Classes"
 msgstr "الصفوف"
@@ -470,7 +474,10 @@ msgid ""
 "Marks the students absent for each school day of the period, with the "
 "attendance code chosen as setting of the stage. Reads the fields: students, "
 "dateStart, dateEnd (optional), reason (optional)."
-msgstr "يسجّل الطلاب غائبين لكل يوم دراسي من الفترة، برمز الحضور المختار في إعدادات المرحلة. يقرأ الحقول: students وdateStart وdateEnd (اختياري) وreason (اختياري)."
+msgstr ""
+"يسجّل الطلاب غائبين لكل يوم دراسي من الفترة، برمز الحضور المختار في إعدادات "
+"المرحلة. يقرأ الحقول: students وdateStart وdateEnd (اختياري) وreason "
+"(اختياري)."
 
 #: src/Automation/Scripts/UnenrolFromClasses.php
 msgid ""
@@ -549,6 +556,10 @@ msgstr "جديدة"
 msgid "New Request"
 msgstr "طلب جديد"
 
+#: types_manage.php
+msgid "New Tickets Reach"
+msgstr "تصل التذاكر الجديدة إلى"
+
 #: src/Service/TicketService.php
 msgid "New comment"
 msgstr "تعليق جديد"
@@ -568,6 +579,14 @@ msgstr ""
 #: workflow_stage_edit.php
 msgid "New tickets start in the stage with the lowest number."
 msgstr "تبدأ التذاكر الجديدة في المرحلة ذات الرقم الأدنى."
+
+#: notifications.php
+msgid "New tickets: email"
+msgstr "التذاكر الجديدة: البريد الإلكتروني"
+
+#: notifications.php
+msgid "New tickets: notification centre"
+msgstr "التذاكر الجديدة: مركز الإشعارات"
 
 #: src/Service/TicketService.php
 msgid "New {type} request from {name}."
@@ -602,6 +621,10 @@ msgstr "لا أحد (تبدأ التذاكر دون إسناد)"
 msgid "Nobody (unassigned)"
 msgstr "لا أحد (غير مُسندة)"
 
+#: types_manage.php
+msgid "Nobody is told"
+msgstr "لا أحد يتلقى إشعاراً"
+
 #: templates/board.twig.html
 msgid "Not all tickets fit on the board: narrow the filter."
 msgstr "لا تتسع اللوحة لجميع التذاكر: ضيّق المرشّح."
@@ -622,6 +645,14 @@ msgstr "مركز الإشعارات"
 msgid "Notification Settings"
 msgstr "إعدادات الإشعارات"
 
+#: notifications.php
+msgid "Notifications by Ticket Type"
+msgstr "الإشعارات حسب نوع التذكرة"
+
+#: types_manage_edit.php
+msgid "Notified Staff"
+msgstr "الموظفون الذين يتلقون الإشعارات"
+
 #: src/Automation/Scripts/TellTeachers.php
 msgid ""
 "Notifies the form tutors and class teachers of the children (notification "
@@ -631,6 +662,10 @@ msgstr ""
 "يُبلغ مربّي الصفوف ومعلمي الفصول للأطفال (في مركز الإشعارات فقط، وليس بالبريد "
 "الإلكتروني أبدًا؛ دون ذكر السبب). يقرأ الحقول من نوع Students (جميع معلمي "
 "الفصول) وClasses (معلمو تلك الصفوف)."
+
+#: types_manage_edit.php
+msgid "Notify"
+msgstr "إشعار"
 
 #: request_new.php
 msgid "On Behalf Of"
@@ -733,7 +768,7 @@ msgstr "تسجيل الغياب في الحضور"
 msgid "Rejected"
 msgstr "مرفوضة"
 
-#: teams_manage_edit.php
+#: teams_manage_edit.php types_manage_edit.php
 msgid "Remove"
 msgstr "إزالة"
 
@@ -872,6 +907,23 @@ msgstr "يظهر للأشخاص الذين يختارون خدمة."
 msgid "Special"
 msgstr "خاص"
 
+#: notifications.php
+msgid ""
+"Staff are not told about tickets just because they exist. You are always "
+"told about tickets assigned to you (following your choice above). Here you "
+"can also choose to be told about new tickets and about updates of a ticket "
+"type, in the notification centre and/or by email."
+msgstr "لا يتلقى الموظفون إشعارات عن التذاكر لمجرد وجودها. ستصلك دائماً إشعارات عن التذاكر المسندة إليك (وفق اختيارك أعلاه). يمكنك هنا أيضاً اختيار تلقي إشعارات عن التذاكر الجديدة وعن تحديثات نوع تذكرة معيّن، في مركز الإشعارات و/أو بالبريد الإلكتروني."
+
+#: types_manage_edit.php
+msgid ""
+"Staff are only told about tickets of this type when they are assigned to the "
+"ticket, follow it, or are listed here. People you add here are told about "
+"new tickets and updates through the channels of their own notification "
+"settings; they can change this under Notification Settings. Candidates are "
+"the members of the teams of this type and the administrators."
+msgstr "لا يتلقى الموظفون إشعارات عن تذاكر هذا النوع إلا إذا أُسندت التذكرة إليهم أو تابعوها أو كانوا مدرجين هنا. يتلقى من تضيفهم هنا إشعارات عن التذاكر الجديدة والتحديثات عبر قنوات إعدادات الإشعارات الخاصة بهم، ويمكنهم تغيير ذلك من Notification Settings. المرشحون هم أعضاء فرق هذا النوع والمسؤولون."
+
 #: tickets.php
 msgid "Staff working on tickets (administrators and team members)"
 msgstr "الموظفون العاملون على التذاكر (المسؤولون وأعضاء الفرق)"
@@ -953,7 +1005,9 @@ msgstr "رمز الحضور «Absent» غير موجود أو غير نشط."
 msgid ""
 "The attendance code chosen for this stage is not available any more "
 "(deleted, inactive, or not allowed for absences in advance)."
-msgstr "رمز الحضور المختار لهذه المرحلة لم يعد متاحاً (محذوف أو غير نشط أو غير مسموح به للغياب المسبق)."
+msgstr ""
+"رمز الحضور المختار لهذه المرحلة لم يعد متاحاً (محذوف أو غير نشط أو غير مسموح "
+"به للغياب المسبق)."
 
 #: src/Automation/Scripts/RecordAbsence.php
 msgid ""
@@ -961,7 +1015,10 @@ msgid ""
 "an unexcused variant of \"Absent\". The codes come from School Admin > "
 "Manage Attendance Codes (active, leaving, allowed for absences in advance). "
 "Default: the code named \"Absent\"."
-msgstr "رمز الحضور الذي يُسجَّل لكل يوم غياب، مثل صيغة بعذر أو بدون عذر من «Absent». تأتي الرموز من School Admin > Manage Attendance Codes (نشطة، تدل على المغادرة، ومسموح بها للغياب المسبق). الافتراضي: الرمز المسمّى «Absent»."
+msgstr ""
+"رمز الحضور الذي يُسجَّل لكل يوم غياب، مثل صيغة بعذر أو بدون عذر من «Absent». "
+"تأتي الرموز من School Admin > Manage Attendance Codes (نشطة، تدل على "
+"المغادرة، ومسموح بها للغياب المسبق). الافتراضي: الرمز المسمّى «Absent»."
 
 #: tickets.php
 msgid ""
@@ -977,6 +1034,10 @@ msgstr "الجرس أعلى الصفحة."
 #: manifest.php
 msgid "The classes your child should leave."
 msgstr "الصفوف التي يجب أن يغادرها طفلك."
+
+#: types_manage.php
+msgid "The default assignee"
+msgstr "المسؤول الافتراضي عن التذاكر"
 
 #: src/Service/Notifier.php
 msgid "The email to {email} could not be sent: {error}"
@@ -1059,13 +1120,17 @@ msgstr "المدرسة مغلقة في كل يوم من فترة الغياب."
 msgid ""
 "The setting \"{setting}\" of \"{script}\" has not been chosen on this stage. "
 "Edit the stage in Manage Workflows."
-msgstr "لم يتم اختيار الإعداد «{setting}» الخاص بـ «{script}» في هذه المرحلة. عدّل المرحلة من Manage Workflows."
+msgstr ""
+"لم يتم اختيار الإعداد «{setting}» الخاص بـ «{script}» في هذه المرحلة. عدّل "
+"المرحلة من Manage Workflows."
 
 #: src/Automation/AutomationSettings.php
 msgid ""
 "The setting \"{setting}\" of \"{script}\" on this stage is no longer valid "
 "({error}). Edit the stage in Manage Workflows."
-msgstr "الإعداد «{setting}» الخاص بـ «{script}» في هذه المرحلة لم يعد صالحاً ({error}). عدّل المرحلة من Manage Workflows."
+msgstr ""
+"الإعداد «{setting}» الخاص بـ «{script}» في هذه المرحلة لم يعد صالحاً "
+"({error}). عدّل المرحلة من Manage Workflows."
 
 #: workflow_manage.php
 msgid ""
@@ -1124,6 +1189,10 @@ msgstr "لا توجد خدمات متاحة لك في الوقت الحالي."
 msgid "There are no students linked to your account."
 msgstr "لا يوجد طلاب مرتبطون بحسابك."
 
+#: notifications.php
+msgid "There are no ticket types you handle."
+msgstr "لا توجد أنواع تذاكر تتولاها."
+
 #: tickets_filter_delete.php
 msgid "This is a shared filter: it will disappear for everyone who uses it."
 msgstr "هذا مرشّح مشترك: سيختفي لدى كل من يستخدمه."
@@ -1137,6 +1206,10 @@ msgstr "هذا يغيّر هذه التذكرة فقط. اختيارك العا�
 #: tickets.php
 msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
 msgstr "تشغّل هذه المرحلة أتمتة عند دخول التذكرة إليها. هل تريد نقل التذكرة؟"
+
+#: types_manage_edit.php
+msgid "Tick the people who should no longer be told about this type."
+msgstr "حدّد الأشخاص الذين لا ينبغي إشعارهم بعد الآن عن هذا النوع."
 
 #: tickets.php tickets_view.php templates/ticket.twig.html
 msgid "Ticket Type"
@@ -1184,6 +1257,14 @@ msgstr "تحديث التذكرة"
 #: tickets.php src/Service/DashboardWidget.php templates/board.twig.html
 msgid "Updated"
 msgstr "محدَّثة"
+
+#: notifications.php
+msgid "Updates: email"
+msgstr "التحديثات: البريد الإلكتروني"
+
+#: notifications.php
+msgid "Updates: notification centre"
+msgstr "التحديثات: مركز الإشعارات"
 
 #: tickets_comment_edit.php tickets_view.php
 msgid "Visibility"
@@ -1309,6 +1390,14 @@ msgstr "الصفوف"
 msgid "edited"
 msgstr "معدّل"
 
+#: types_manage_edit.php
+msgid "new: centre"
+msgstr "جديد: المركز"
+
+#: types_manage_edit.php
+msgid "new: email"
+msgstr "جديد: بريد إلكتروني"
+
 #: src/Automation/AutomationSettings.php
 msgid "not available"
 msgstr "غير متاح"
@@ -1337,6 +1426,18 @@ msgstr "ثم النقل إلى {stage}"
 msgid "this choice is not available"
 msgstr "هذا الخيار غير متاح"
 
+#: types_manage_edit.php
+msgid "updates: centre"
+msgstr "التحديثات: المركز"
+
+#: types_manage_edit.php
+msgid "updates: email"
+msgstr "التحديثات: بريد إلكتروني"
+
+#: types_manage.php
+msgid "{count} notified staff"
+msgstr "{count} موظفين يتلقون الإشعارات"
+
 #: src/Automation/Scripts/TellTeachers.php
 msgid "{count} teacher(s) were told (notification centre only)."
 msgstr "أُبلغ {count} معلم/معلمين (في مركز الإشعارات فقط)."
@@ -1349,7 +1450,8 @@ msgstr "{days} يومًا"
 msgid ""
 "{name} already has the attendance record \"{type}\" on {date}. Change or "
 "remove it in Attendance first."
-msgstr "لدى {name} سجل حضور «{type}» بتاريخ {date}. غيّره أو احذفه من الحضور أولاً."
+msgstr ""
+"لدى {name} سجل حضور «{type}» بتاريخ {date}. غيّره أو احذفه من الحضور أولاً."
 
 #: src/Service/TicketService.php
 msgid "{name} reopened the request."

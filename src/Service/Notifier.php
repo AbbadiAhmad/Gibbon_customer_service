@@ -19,6 +19,7 @@ use Gibbon\Domain\System\NotificationGateway;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
 use Gibbon\Module\ServiceDesk\Domain\SubscriberGateway;
 use Gibbon\Module\ServiceDesk\Domain\GuardianGateway;
+use Gibbon\Module\ServiceDesk\Domain\TypeNotificationGateway;
 
 /**
  * Tells people about ticket updates, each through the channels of their notification policy for that ticket:
@@ -35,13 +36,14 @@ class Notifier
     protected $subscriberGateway;
     protected $teamGateway;
     protected $guardianGateway;
+    protected $typeNotificationGateway;
 
     /**
      * Kinds of failure already logged during this request.
      */
     protected static $logged = [];
 
-    public function __construct(Session $session, Connection $db, NotificationGateway $notificationGateway, SubscriberGateway $subscriberGateway, TeamGateway $teamGateway, GuardianGateway $guardianGateway)
+    public function __construct(Session $session, Connection $db, NotificationGateway $notificationGateway, SubscriberGateway $subscriberGateway, TeamGateway $teamGateway, GuardianGateway $guardianGateway, TypeNotificationGateway $typeNotificationGateway)
     {
         $this->session = $session;
         $this->db = $db;
@@ -49,50 +51,42 @@ class Notifier
         $this->subscriberGateway = $subscriberGateway;
         $this->teamGateway = $teamGateway;
         $this->guardianGateway = $guardianGateway;
+        $this->typeNotificationGateway = $typeNotificationGateway;
     }
 
     /**
+     * Tells the people who should hear about something that happened on a ticket, through the channels they chose.
+     *
+     * Who is told:
+     *  - the people who follow the ticket: the requester, the assignee, family adults of a shared ticket, and anyone
+     *    who chose to follow it. Their notification setting for this ticket decides the channels;
+     *  - staff (administrators and members of the teams of the ticket's type) who chose, in Notification Settings or
+     *    through an administrator (Manage Ticket Types), to be told about "new tickets" or "updates" of this type -
+     *    unless they set something else for this one ticket.
+     * Nobody else: a team member or administrator is not told about tickets they are not involved in, and nobody is told
+     * about what they did themselves. Internal events (notes) only reach staff.
+     *
      * @param array  $ticket   Ticket row.
      * @param string $text     What happened, already translated.
      * @param mixed  $actorID  The person who did it; never notified.
-     * @param bool   $internal Only for the team: the requester is not told.
-     * @param bool   $withTeam Also tell the members of the type's teams (new tickets, tickets nobody is assigned to).
+     * @param bool   $internal Only for staff: the requester side is not told.
+     * @param string $event    'new' (the ticket was created, or moved into this type) or 'update' (anything else).
      */
-    public function notify(array $ticket, string $text, $actorID, bool $internal = false, bool $withTeam = false)
+    public function notify(array $ticket, string $text, $actorID, bool $internal = false, string $event = 'update')
     {
         try {
             $gibbonServiceDeskTicketID = $ticket['gibbonServiceDeskTicketID'];
-            $recipients = $this->subscriberGateway->selectSubscribersByTicket($gibbonServiceDeskTicketID);
+            $gibbonServiceDeskTicketTypeID = $ticket['gibbonServiceDeskTicketTypeID'];
 
-            $team = [];
-            foreach ($this->teamGateway->selectMembersByTicketType($ticket['gibbonServiceDeskTicketTypeID'])->fetchAll() as $member) {
-                $team[intval($member['gibbonPersonID'])] = true;
+            // Followers: a row for this ticket decides, whatever else is set.
+            $followers = [];
+            foreach ($this->subscriberGateway->selectSubscribersByTicket($gibbonServiceDeskTicketID) as $gibbonPersonID => $policy) {
+                $followers[intval($gibbonPersonID)] = $policy;
             }
-
-            $people = [];
-            foreach ($recipients as $gibbonPersonID => $policy) {
-                $people[intval($gibbonPersonID)] = $policy;
-            }
-
-            if ($withTeam) {
-                // A ticket type whose teams have no members yet would reach nobody: tell the administrators instead.
-                $audience = $team;
-                if (empty($audience)) {
-                    foreach ($this->teamGateway->selectAdministrators()->fetchAll() as $admin) {
-                        $audience[intval($admin['gibbonPersonID'])] = true;
-                    }
-                    $team = $audience;
-                }
-
-                foreach (array_keys($audience) as $gibbonPersonID) {
-                    if (!isset($people[$gibbonPersonID])) {
-                        $people[$gibbonPersonID] = $this->subscriberGateway->getPreference($gibbonPersonID);
-                    }
-                }
-            }
+            $people = $followers;
 
             // The other adults of the requester's family follow public updates of tickets shared with the family, with
-            // their own notification settings, unless they chose something else for this ticket (a row in $recipients).
+            // their own notification settings, unless they chose something else for this ticket (a row in $followers).
             if (!$internal && ($ticket['shareWithFamily'] ?? 'N') == 'Y') {
                 foreach ($this->guardianGateway->selectCoAdultIDs($ticket['gibbonPersonIDRequester']) as $gibbonPersonID) {
                     if (!isset($people[intval($gibbonPersonID)])) {
@@ -101,8 +95,23 @@ class Notifier
                 }
             }
 
+            // Staff who work on this type: the only people a ticket type's notification settings can reach.
+            $staff = [];
+            foreach ($this->teamGateway->selectMembersByTicketType($gibbonServiceDeskTicketTypeID)->fetchAll() as $member) {
+                $staff[intval($member['gibbonPersonID'])] = true;
+            }
+            foreach ($this->teamGateway->selectAdministrators()->fetchAll() as $administrator) {
+                $staff[intval($administrator['gibbonPersonID'])] = true;
+            }
+
+            foreach ($this->typeNotificationGateway->selectRecipients($gibbonServiceDeskTicketTypeID, $event) as $gibbonPersonID => $policy) {
+                if (isset($staff[$gibbonPersonID]) && !isset($followers[$gibbonPersonID])) {
+                    $people[$gibbonPersonID] = $policy;
+                }
+            }
+
             if ($internal) {
-                $people = array_intersect_key($people, $team + [intval($ticket['gibbonPersonIDAssignee'] ?? 0) => true]);
+                $people = array_intersect_key($people, $staff + [intval($ticket['gibbonPersonIDAssignee'] ?? 0) => true]);
             }
             unset($people[intval($actorID)], $people[0]);
 

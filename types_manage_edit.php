@@ -15,6 +15,7 @@ use Gibbon\Tables\DataTable;
 use Gibbon\Module\ServiceDesk\Domain\TeamGateway;
 use Gibbon\Module\ServiceDesk\Domain\FieldGateway;
 use Gibbon\Module\ServiceDesk\Domain\TicketTypeGateway;
+use Gibbon\Module\ServiceDesk\Domain\TypeNotificationGateway;
 
 if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/types_manage_edit.php') == false) {
     // Access denied
@@ -106,6 +107,48 @@ if (empty($gibbonServiceDeskTicketTypeID)) {
     echo Format::alert(__m('After saving you can build the request form. The new type starts with a copy of the default workflow.'), 'message');
     return;
 }
+
+// NOTIFIED STAFF: people assigned to this type are told about its tickets. They start with their own general channels
+// and can change the four switches themselves in Notification Settings.
+$typeNotificationGateway = $container->get(TypeNotificationGateway::class);
+$notified = $typeNotificationGateway->selectByType($gibbonServiceDeskTicketTypeID)->fetchAll();
+$notifiedIDs = array_map('intval', array_column($notified, 'gibbonPersonID'));
+$eligible = [];
+foreach ($container->get(TeamGateway::class)->selectNotifiableStaff($gibbonServiceDeskTicketTypeID)->fetchAll() as $person) {
+    if (!in_array(intval($person['gibbonPersonID']), $notifiedIDs, true)) {
+        $eligible[$person['gibbonPersonID']] = Format::name('', $person['preferredName'], $person['surname'], 'Staff', true, true);
+    }
+}
+$current = [];
+foreach ($notified as $person) {
+    $yes = [];
+    foreach (['newInApp' => __m('new: centre'), 'newEmail' => __m('new: email'), 'updateInApp' => __m('updates: centre'), 'updateEmail' => __m('updates: email')] as $flag => $label) {
+        if ($person[$flag] == 'Y') $yes[] = $label;
+    }
+    $current[$person['gibbonPersonID']] = Format::name('', $person['preferredName'], $person['surname'], 'Staff', true, true).' ('.implode(', ', $yes).')';
+}
+
+$form = Form::create('typeNotified', $session->get('absoluteURL').'/modules/ServiceDesk/types_notifyProcess.php');
+$form->setTitle(__m('Notified Staff'));
+$form->setDescription(__m('Staff are only told about tickets of this type when they are assigned to the ticket, follow it, or are listed here. People you add here are told about new tickets and updates through the channels of their own notification settings; they can change this under Notification Settings. Candidates are the members of the teams of this type and the administrators.'));
+$form->addHiddenValue('address', $session->get('address'));
+$form->addHiddenValue('gibbonServiceDeskTicketTypeID', $gibbonServiceDeskTicketTypeID);
+
+$row = $form->addRow();
+    $row->addLabel('add', __m('Notify'))->description(__m('Choose the people to add.'));
+    $row->addSelect('add')->fromArray($eligible)->selectMultiple();
+
+if (!empty($current)) {
+    $row = $form->addRow();
+        $row->addLabel('remove', __m('Remove'))->description(__m('Tick the people who should no longer be told about this type.'));
+        $row->addCheckbox('remove')->fromArray($current);
+}
+
+$row = $form->addRow();
+    $row->addFooter();
+    $row->addSubmit();
+
+echo $form->getOutput();
 
 // REQUEST FORM: the fields people fill in
 $fields = $container->get(FieldGateway::class)->selectFieldsByType($gibbonServiceDeskTicketTypeID)->toDataSet();

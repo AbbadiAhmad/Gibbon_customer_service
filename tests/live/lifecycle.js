@@ -31,7 +31,7 @@ const stamp = Date.now() % 100000;
   await parent.goto(M + 'tickets_view.php&gibbonServiceDeskTicketID=' + id); text = await parent.innerText('.serviceDesk-ticket');
   console.log('requester sees the move, not the assignee line (expect true):', text.includes('Moved from General Request to Complaint.') && !text.includes('unassigned') && /TICKET TYPE\s*Complaint/i.test(text));
   await admin.goto(BASE + '/index.php?q=notifications.php');
-  console.log('administrator told (the new type\'s team is empty) (expect true):', (await admin.innerText('body')).includes('Move me ' + stamp));
+  console.log('administrator not told by default (expect true):', !(await admin.innerText('body')).includes('Move me ' + stamp));
 
   // ---- DELETE (data protection)
   await member.goto(M + 'tickets_delete.php&gibbonServiceDeskTicketID=' + id);

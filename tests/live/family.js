@@ -35,7 +35,7 @@ const told = async (page, subject) => { await page.goto(BASE + '/index.php?q=not
   // the team comments: both parents are told
   await member.goto(M + 'tickets_view.php&gibbonServiceDeskTicketID=' + absence);
   await member.fill('form#comment textarea', 'We have received the absence.'); await submit(member, 'form#comment');
-  console.log('both parents told about the team\'s comment (expect 1, 1):', (await told(parent, subject)).length, (await told(coParent, subject)).length);
+  console.log('both parents told about the team\'s comment (expect 1, 2: the co-parent was also told about the new request):', (await told(parent, subject)).length, (await told(coParent, subject)).length);
 
   // withdraw by the co-parent, with a note
   await coParent.goto(M + 'tickets_view.php&gibbonServiceDeskTicketID=' + absence);
@@ -45,7 +45,7 @@ const told = async (page, subject) => { await page.goto(BASE + '/index.php?q=not
   await submit(coParent, 'form#requesterAction'); console.log('withdrawn:', ret(coParent));
   let text = await coParent.innerText('.serviceDesk-ticket');
   console.log('  stage Withdrawn (expect true):', /STAGE\s*Withdrawn/i.test(text), '| history says who (expect true):', /Family\s+withdrew the request|Schultz withdrew the request|withdrew the request/.test(text), '| note shown (expect true):', text.includes('The trip was cancelled.'));
-  console.log('  team member told, with the team (expect true):', (await told(member, subject)).some(t => t.includes('withdrew the request')));
+  console.log('  team member not told by default (expect true):', !(await told(member, subject)).some(t => t.includes('withdrew the request')));
   console.log('  withdraw link gone, reopen link there (expect true):', !(await coParent.$('a[href*="action=withdraw"]')) && !!(await coParent.$('a[href*="action=reopen"]')));
   console.log('  other family cannot open the withdraw page (expect true):', await (async () => { await stranger.goto(M + 'tickets_requester.php&action=reopen&gibbonServiceDeskTicketID=' + absence); return (await stranger.content()).includes('cannot be found'); })());
 

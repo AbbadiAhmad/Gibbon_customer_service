@@ -154,6 +154,10 @@ msgstr ""
 msgid "Children Concerned"
 msgstr ""
 
+#: types_manage_edit.php
+msgid "Choose the people to add."
+msgstr ""
+
 #: manifest.php
 msgid "Classes"
 msgstr ""
@@ -498,6 +502,10 @@ msgstr ""
 msgid "New Request"
 msgstr ""
 
+#: types_manage.php
+msgid "New Tickets Reach"
+msgstr ""
+
 #: src/Service/TicketService.php
 msgid "New comment"
 msgstr ""
@@ -512,6 +520,14 @@ msgstr ""
 
 #: workflow_stage_edit.php
 msgid "New tickets start in the stage with the lowest number."
+msgstr ""
+
+#: notifications.php
+msgid "New tickets: email"
+msgstr ""
+
+#: notifications.php
+msgid "New tickets: notification centre"
 msgstr ""
 
 #: src/Service/TicketService.php
@@ -542,6 +558,10 @@ msgstr ""
 msgid "Nobody (unassigned)"
 msgstr ""
 
+#: types_manage.php
+msgid "Nobody is told"
+msgstr ""
+
 #: templates/board.twig.html
 msgid "Not all tickets fit on the board: narrow the filter."
 msgstr ""
@@ -562,8 +582,20 @@ msgstr ""
 msgid "Notification Settings"
 msgstr ""
 
+#: notifications.php
+msgid "Notifications by Ticket Type"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Notified Staff"
+msgstr ""
+
 #: src/Automation/Scripts/TellTeachers.php
 msgid "Notifies the form tutors and class teachers of the children (notification centre only, never email; without the reason). Reads the fields of type Students (all class teachers) and Classes (the teachers of those classes)."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Notify"
 msgstr ""
 
 #: request_new.php
@@ -662,7 +694,7 @@ msgstr ""
 msgid "Rejected"
 msgstr ""
 
-#: teams_manage_edit.php
+#: teams_manage_edit.php types_manage_edit.php
 msgid "Remove"
 msgstr ""
 
@@ -786,6 +818,14 @@ msgstr ""
 msgid "Special"
 msgstr ""
 
+#: notifications.php
+msgid "Staff are not told about tickets just because they exist. You are always told about tickets assigned to you (following your choice above). Here you can also choose to be told about new tickets and about updates of a ticket type, in the notification centre and/or by email."
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Staff are only told about tickets of this type when they are assigned to the ticket, follow it, or are listed here. People you add here are told about new tickets and updates through the channels of their own notification settings; they can change this under Notification Settings. Candidates are the members of the teams of this type and the administrators."
+msgstr ""
+
 #: tickets.php
 msgid "Staff working on tickets (administrators and team members)"
 msgstr ""
@@ -876,6 +916,10 @@ msgstr ""
 
 #: manifest.php
 msgid "The classes your child should leave."
+msgstr ""
+
+#: types_manage.php
+msgid "The default assignee"
 msgstr ""
 
 #: src/Service/Notifier.php
@@ -978,6 +1022,10 @@ msgstr ""
 msgid "There are no students linked to your account."
 msgstr ""
 
+#: notifications.php
+msgid "There are no ticket types you handle."
+msgstr ""
+
 #: tickets_filter_delete.php
 msgid "This is a shared filter: it will disappear for everyone who uses it."
 msgstr ""
@@ -988,6 +1036,10 @@ msgstr ""
 
 #: tickets.php
 msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "Tick the people who should no longer be told about this type."
 msgstr ""
 
 #: tickets.php tickets_view.php templates/ticket.twig.html
@@ -1028,6 +1080,14 @@ msgstr ""
 
 #: tickets.php src/Service/DashboardWidget.php templates/board.twig.html
 msgid "Updated"
+msgstr ""
+
+#: notifications.php
+msgid "Updates: email"
+msgstr ""
+
+#: notifications.php
+msgid "Updates: notification centre"
 msgstr ""
 
 #: tickets_comment_edit.php tickets_view.php
@@ -1130,6 +1190,14 @@ msgstr ""
 msgid "edited"
 msgstr ""
 
+#: types_manage_edit.php
+msgid "new: centre"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "new: email"
+msgstr ""
+
 #: src/Automation/AutomationSettings.php
 msgid "not available"
 msgstr ""
@@ -1156,6 +1224,18 @@ msgstr ""
 
 #: src/Automation/AutomationSettings.php
 msgid "this choice is not available"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "updates: centre"
+msgstr ""
+
+#: types_manage_edit.php
+msgid "updates: email"
+msgstr ""
+
+#: types_manage.php
+msgid "{count} notified staff"
 msgstr ""
 
 #: src/Automation/Scripts/TellTeachers.php

@@ -32,7 +32,7 @@ may ask for next). Follow `gibbon-module-conventions`, `gibbon-access-control`, 
 | A stage behaviour (flag) | a column on `gibbonServiceDeskStage` (manifest + CHANGEDB + copy in `StageGateway::copyDefaultWorkflow`), fields in `workflow_stage_edit.php` + its process, behaviour in `TicketService::changeStage` |
 | A new list of tickets, or a new filter or sort column | `TicketGateway::queryTickets` (step 1 conditions as id lists, the sort column in `SORTABLE`, columns step 1 needs in the covering indexes) - then `tests/perf/measure.js` |
 | A table that refers to a ticket or a person | delete it in `TicketService::deleteTickets` and add it to `TicketGateway::orphanChecks()` |
-| A notification event | call `Notifier::notify()` from the `TicketService` method that makes the change |
+| A notification event | call `Notifier::notify($ticket, $text, $actorID, $internal, 'new' or 'update')` from the `TicketService` method that makes the change; who is told is decided only in `Notifier` (requesters, assignee, follower rows, type notifications) |
 | A page | `<area>_<verb>.php` + `<area>_<verb>Process.php`, and both in an action's `URLList` |
 | A view with more than a few lines of HTML | `templates/<name>.twig.html` + classes in `css/module.css` |
 | Default data | `manifest.php` INSERTs (explicit ids) - upgrades do not insert defaults |

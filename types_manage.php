@@ -51,6 +51,13 @@ $table->addColumn('teams', __m('Teams'))
     ->format(function ($type) {
         return !empty($type['teams']) ? htmlspecialchars($type['teams']) : Format::tag(__m('No team'), 'error');
     });
+$table->addColumn('notified', __m('New Tickets Reach'))
+    ->notSortable()
+    ->format(function ($type) {
+        if (!empty($type['defaultAssignees'])) return __m('The default assignee');
+        if (!empty($type['notifiedNew'])) return __m('{count} notified staff', ['count' => intval($type['notifiedNew'])]);
+        return Format::tag(__m('Nobody is told'), 'warning');
+    });
 $table->addColumn('roleCategories', __m('Requested By'))
     ->notSortable()
     ->format(function ($type) {

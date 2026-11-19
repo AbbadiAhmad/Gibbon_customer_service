@@ -22,7 +22,7 @@ const told = async (page, subject) => {
   await submit(parent, 'form#request'); await check(parent, 'request sent');
   const url = parent.url().replace(/&return=.*/, '');
   console.log('reporter told about their own new request (expect 0):', (await told(parent, subject)).length);
-  console.log('team member told about the new request (expect 1):', (await told(member, subject)).length);
+  console.log('team member not told about the new request by default (expect 0):', (await told(member, subject)).length);
 
   // team member: internal note, public comment, assign to self, move to In Progress
   await member.goto(url);

@@ -172,6 +172,10 @@ msgstr "Kinder"
 msgid "Children Concerned"
 msgstr "Betroffene Kinder"
 
+#: types_manage_edit.php
+msgid "Choose the people to add."
+msgstr "Wählen Sie die Personen aus, die hinzugefügt werden sollen."
+
 #: manifest.php
 msgid "Classes"
 msgstr "Kurse"
@@ -481,7 +485,10 @@ msgid ""
 "Marks the students absent for each school day of the period, with the "
 "attendance code chosen as setting of the stage. Reads the fields: students, "
 "dateStart, dateEnd (optional), reason (optional)."
-msgstr "Markiert die Schüler für jeden Schultag des Zeitraums als abwesend, mit dem Anwesenheitscode, der als Einstellung der Stufe gewählt wurde. Liest die Felder: students, dateStart, dateEnd (optional), reason (optional)."
+msgstr ""
+"Markiert die Schüler für jeden Schultag des Zeitraums als abwesend, mit dem "
+"Anwesenheitscode, der als Einstellung der Stufe gewählt wurde. Liest die "
+"Felder: students, dateStart, dateEnd (optional), reason (optional)."
 
 #: src/Automation/Scripts/UnenrolFromClasses.php
 msgid ""
@@ -561,6 +568,10 @@ msgstr "Neu"
 msgid "New Request"
 msgstr "Neue Anfrage"
 
+#: types_manage.php
+msgid "New Tickets Reach"
+msgstr "Neue Tickets gehen an"
+
 #: src/Service/TicketService.php
 msgid "New comment"
 msgstr "Neuer Kommentar"
@@ -580,6 +591,14 @@ msgstr ""
 #: workflow_stage_edit.php
 msgid "New tickets start in the stage with the lowest number."
 msgstr "Neue Tickets beginnen in der Phase mit der niedrigsten Nummer."
+
+#: notifications.php
+msgid "New tickets: email"
+msgstr "Neue Tickets: E-Mail"
+
+#: notifications.php
+msgid "New tickets: notification centre"
+msgstr "Neue Tickets: Mitteilungszentrale"
 
 #: src/Service/TicketService.php
 msgid "New {type} request from {name}."
@@ -615,6 +634,10 @@ msgstr "Niemand (Tickets beginnen ohne Zuweisung)"
 msgid "Nobody (unassigned)"
 msgstr "Niemand (nicht zugewiesen)"
 
+#: types_manage.php
+msgid "Nobody is told"
+msgstr "Niemand wird benachrichtigt"
+
 #: templates/board.twig.html
 msgid "Not all tickets fit on the board: narrow the filter."
 msgstr "Nicht alle Tickets passen auf das Board: Grenzen Sie den Filter ein."
@@ -635,6 +658,14 @@ msgstr "Benachrichtigungscenter"
 msgid "Notification Settings"
 msgstr "Benachrichtigungseinstellungen"
 
+#: notifications.php
+msgid "Notifications by Ticket Type"
+msgstr "Benachrichtigungen nach Ticketart"
+
+#: types_manage_edit.php
+msgid "Notified Staff"
+msgstr "Benachrichtigte Mitarbeiter"
+
 #: src/Automation/Scripts/TellTeachers.php
 msgid ""
 "Notifies the form tutors and class teachers of the children (notification "
@@ -645,6 +676,10 @@ msgstr ""
 "Benachrichtigungscenter, nie per E-Mail; ohne den Grund). Liest die Felder "
 "vom Typ Students (alle Kurslehrkräfte) und Classes (die Lehrkräfte dieser "
 "Kurse)."
+
+#: types_manage_edit.php
+msgid "Notify"
+msgstr "Benachrichtigen"
 
 #: request_new.php
 msgid "On Behalf Of"
@@ -749,7 +784,7 @@ msgstr "Abwesenheit in der Anwesenheit erfassen"
 msgid "Rejected"
 msgstr "Abgelehnt"
 
-#: teams_manage_edit.php
+#: teams_manage_edit.php types_manage_edit.php
 msgid "Remove"
 msgstr "Entfernen"
 
@@ -892,6 +927,23 @@ msgstr "Wird Personen angezeigt, die eine Leistung auswählen."
 msgid "Special"
 msgstr "Spezial"
 
+#: notifications.php
+msgid ""
+"Staff are not told about tickets just because they exist. You are always "
+"told about tickets assigned to you (following your choice above). Here you "
+"can also choose to be told about new tickets and about updates of a ticket "
+"type, in the notification centre and/or by email."
+msgstr "Mitarbeiter werden nicht über Tickets benachrichtigt, nur weil es sie gibt. Über Tickets, die Ihnen zugewiesen sind, werden Sie immer benachrichtigt (gemäß Ihrer Wahl oben). Hier können Sie zusätzlich wählen, über neue Tickets und Aktualisierungen einer Ticketart benachrichtigt zu werden, in der Mitteilungszentrale und/oder per E-Mail."
+
+#: types_manage_edit.php
+msgid ""
+"Staff are only told about tickets of this type when they are assigned to the "
+"ticket, follow it, or are listed here. People you add here are told about "
+"new tickets and updates through the channels of their own notification "
+"settings; they can change this under Notification Settings. Candidates are "
+"the members of the teams of this type and the administrators."
+msgstr "Mitarbeiter werden über Tickets dieser Art nur benachrichtigt, wenn ihnen das Ticket zugewiesen ist, sie ihm folgen oder hier aufgeführt sind. Personen, die Sie hier hinzufügen, werden über neue Tickets und Aktualisierungen über die Kanäle ihrer eigenen Benachrichtigungseinstellungen informiert; sie können dies unter Notification Settings ändern. Zur Auswahl stehen die Mitglieder der Teams dieser Art und die Administratoren."
+
 #: tickets.php
 msgid "Staff working on tickets (administrators and team members)"
 msgstr ""
@@ -981,7 +1033,10 @@ msgstr "Der Anwesenheitscode „Absent“ existiert nicht oder ist nicht aktiv."
 msgid ""
 "The attendance code chosen for this stage is not available any more "
 "(deleted, inactive, or not allowed for absences in advance)."
-msgstr "Der für diese Stufe gewählte Anwesenheitscode ist nicht mehr verfügbar (gelöscht, inaktiv oder nicht für im Voraus gemeldete Abwesenheiten zugelassen)."
+msgstr ""
+"Der für diese Stufe gewählte Anwesenheitscode ist nicht mehr verfügbar "
+"(gelöscht, inaktiv oder nicht für im Voraus gemeldete Abwesenheiten "
+"zugelassen)."
 
 #: src/Automation/Scripts/RecordAbsence.php
 msgid ""
@@ -989,7 +1044,12 @@ msgid ""
 "an unexcused variant of \"Absent\". The codes come from School Admin > "
 "Manage Attendance Codes (active, leaving, allowed for absences in advance). "
 "Default: the code named \"Absent\"."
-msgstr "Der Anwesenheitscode, der für jeden Abwesenheitstag eingetragen wird, zum Beispiel eine entschuldigte oder unentschuldigte Variante von „Absent“. Die Codes stammen aus School Admin > Manage Attendance Codes (aktiv, abwesend, für im Voraus gemeldete Abwesenheiten zugelassen). Standard: der Code mit dem Namen „Absent“."
+msgstr ""
+"Der Anwesenheitscode, der für jeden Abwesenheitstag eingetragen wird, zum "
+"Beispiel eine entschuldigte oder unentschuldigte Variante von „Absent“. Die "
+"Codes stammen aus School Admin > Manage Attendance Codes (aktiv, abwesend, "
+"für im Voraus gemeldete Abwesenheiten zugelassen). Standard: der Code mit "
+"dem Namen „Absent“."
 
 #: tickets.php
 msgid ""
@@ -1006,6 +1066,10 @@ msgstr "Die Glocke oben auf der Seite."
 #: manifest.php
 msgid "The classes your child should leave."
 msgstr "Die Kurse, die Ihr Kind verlassen soll."
+
+#: types_manage.php
+msgid "The default assignee"
+msgstr "Der Standardbearbeiter"
 
 #: src/Service/Notifier.php
 msgid "The email to {email} could not be sent: {error}"
@@ -1098,13 +1162,17 @@ msgstr "Die Schule ist an jedem Tag des Abwesenheitszeitraums geschlossen."
 msgid ""
 "The setting \"{setting}\" of \"{script}\" has not been chosen on this stage. "
 "Edit the stage in Manage Workflows."
-msgstr "Die Einstellung „{setting}“ von „{script}“ wurde für diese Stufe nicht gewählt. Bearbeiten Sie die Stufe unter Manage Workflows."
+msgstr ""
+"Die Einstellung „{setting}“ von „{script}“ wurde für diese Stufe nicht "
+"gewählt. Bearbeiten Sie die Stufe unter Manage Workflows."
 
 #: src/Automation/AutomationSettings.php
 msgid ""
 "The setting \"{setting}\" of \"{script}\" on this stage is no longer valid "
 "({error}). Edit the stage in Manage Workflows."
-msgstr "Die Einstellung „{setting}“ von „{script}“ ist für diese Stufe nicht mehr gültig ({error}). Bearbeiten Sie die Stufe unter Manage Workflows."
+msgstr ""
+"Die Einstellung „{setting}“ von „{script}“ ist für diese Stufe nicht mehr "
+"gültig ({error}). Bearbeiten Sie die Stufe unter Manage Workflows."
 
 #: workflow_manage.php
 msgid ""
@@ -1166,6 +1234,10 @@ msgstr "Für Sie sind derzeit keine Leistungen verfügbar."
 msgid "There are no students linked to your account."
 msgstr "Mit Ihrem Konto sind keine Schülerinnen und Schüler verknüpft."
 
+#: notifications.php
+msgid "There are no ticket types you handle."
+msgstr "Es gibt keine Ticketarten, die Sie bearbeiten."
+
 #: tickets_filter_delete.php
 msgid "This is a shared filter: it will disappear for everyone who uses it."
 msgstr ""
@@ -1184,6 +1256,10 @@ msgid "This stage runs an automation when a ticket enters it. Move the ticket?"
 msgstr ""
 "Diese Phase führt eine Automatisierung aus, wenn ein Ticket eintritt. Ticket "
 "verschieben?"
+
+#: types_manage_edit.php
+msgid "Tick the people who should no longer be told about this type."
+msgstr "Markieren Sie die Personen, die über diese Art nicht mehr benachrichtigt werden sollen."
 
 #: tickets.php tickets_view.php templates/ticket.twig.html
 msgid "Ticket Type"
@@ -1233,6 +1309,14 @@ msgstr "Ticket aktualisieren"
 #: tickets.php src/Service/DashboardWidget.php templates/board.twig.html
 msgid "Updated"
 msgstr "Aktualisiert"
+
+#: notifications.php
+msgid "Updates: email"
+msgstr "Aktualisierungen: E-Mail"
+
+#: notifications.php
+msgid "Updates: notification centre"
+msgstr "Aktualisierungen: Mitteilungszentrale"
 
 #: tickets_comment_edit.php tickets_view.php
 msgid "Visibility"
@@ -1328,7 +1412,9 @@ msgstr ""
 msgid ""
 "Your request failed because a setting of an automation is missing or not "
 "valid."
-msgstr "Ihre Anfrage ist fehlgeschlagen, weil eine Einstellung einer Automatisierung fehlt oder ungültig ist."
+msgstr ""
+"Ihre Anfrage ist fehlgeschlagen, weil eine Einstellung einer Automatisierung "
+"fehlt oder ungültig ist."
 
 #: workflow_manage.php
 msgid "Your request failed because a workflow needs at least one stage."
@@ -1368,6 +1454,14 @@ msgstr "Kurse"
 msgid "edited"
 msgstr "bearbeitet"
 
+#: types_manage_edit.php
+msgid "new: centre"
+msgstr "neu: Zentrale"
+
+#: types_manage_edit.php
+msgid "new: email"
+msgstr "neu: E-Mail"
+
 #: src/Automation/AutomationSettings.php
 msgid "not available"
 msgstr "nicht verfügbar"
@@ -1396,6 +1490,18 @@ msgstr "danach nach {stage} verschieben"
 msgid "this choice is not available"
 msgstr "diese Auswahl ist nicht verfügbar"
 
+#: types_manage_edit.php
+msgid "updates: centre"
+msgstr "Aktualisierungen: Zentrale"
+
+#: types_manage_edit.php
+msgid "updates: email"
+msgstr "Aktualisierungen: E-Mail"
+
+#: types_manage.php
+msgid "{count} notified staff"
+msgstr "{count} benachrichtigte Mitarbeiter"
+
 #: src/Automation/Scripts/TellTeachers.php
 msgid "{count} teacher(s) were told (notification centre only)."
 msgstr ""
@@ -1410,7 +1516,9 @@ msgstr "{days} Tage"
 msgid ""
 "{name} already has the attendance record \"{type}\" on {date}. Change or "
 "remove it in Attendance first."
-msgstr "{name} hat am {date} bereits den Anwesenheitseintrag „{type}“. Ändern oder entfernen Sie ihn zuerst in der Anwesenheit."
+msgstr ""
+"{name} hat am {date} bereits den Anwesenheitseintrag „{type}“. Ändern oder "
+"entfernen Sie ihn zuerst in der Anwesenheit."
 
 #: src/Service/TicketService.php
 msgid "{name} reopened the request."

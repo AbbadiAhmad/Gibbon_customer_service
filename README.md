@@ -45,6 +45,9 @@ Requires Gibbon v28+ (tested on v31), PHP 8.1+, MySQL 5.7+ / MariaDB 10.2+.
 * *Tickets*: follow their requests, read the team's comments, reply.
 * *Notification Settings*: notification centre and/or email. The choice is copied to each ticket they are involved in
   and can be changed per ticket (bottom of the ticket page).
+* *Notification Settings* for staff (administrators, team members): staff are told about nothing by default except
+  tickets assigned to them. Per ticket type they can switch on "new tickets" and "updates", each by notification centre
+  and/or email. Administrators can also assign people to a ticket type (*Manage Ticket Types > Notified Staff*).
 * Filter the ticket list (type, status, stage, assignee, priority, text) and save filters under a name.
 
 **Requesters** (and, for shared services, the other adult of the family)
