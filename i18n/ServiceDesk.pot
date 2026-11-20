@@ -266,6 +266,10 @@ msgstr ""
 msgid "Deleted a comment of {date}."
 msgstr ""
 
+#: src/Service/Notifier.php
+msgid "Detail: {detail}"
+msgstr ""
+
 #: manifest.php
 msgid "Details"
 msgstr ""
@@ -791,7 +795,7 @@ msgid "Send Request"
 msgstr ""
 
 #: notifications.php
-msgid "Sends a test notification to you through both channels, whatever you chose above, and tells you whether each one worked. Remember: you are never notified about your own comments and changes, only about those of other people."
+msgid "Sends a test notification to you through both channels, whatever you chose above, and tells you whether each one worked. Use it to check the email settings of the school. Remember: you are never notified about your own comments and changes, only about those of other people."
 msgstr ""
 
 #: src/Service/Notifier.php templates/ticket.twig.html
@@ -935,7 +939,7 @@ msgid "The default assignee"
 msgstr ""
 
 #: src/Service/Notifier.php
-msgid "The email to {email} could not be sent: {error}"
+msgid "The email to {email} could not be sent. Check the email settings in System Admin > Email Settings."
 msgstr ""
 
 #: teams_manage.php

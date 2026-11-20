@@ -27,7 +27,7 @@ The module is self-contained: **no Gibbon core file is changed**, also not for t
 5. Log out and in again (Gibbon caches the menu per session).
 
 Notifications: nobody is told about their own action, so try it with two users (e.g. a parent and a team member).
-*Notification Settings > Send Me a Test Notification* tries both channels for you and says what happened, including
+*Notification Settings > Send Me a Test Notification* (administrators only) tries both channels for you and says what happened, including
 the mail server's error message - the quickest way to check a new installation.
 Email needs Gibbon's email settings and the organisation email (System Settings) to be filled in.
 

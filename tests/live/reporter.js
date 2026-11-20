@@ -56,11 +56,13 @@ const told = async (page, subject) => {
   console.log('team member told about the reporter\'s comment (expect true):', (await told(member, subject)).some(t => t.includes('New comment: Thank you')));
 
   // self test on the settings page
-  await parent.goto(M + 'notifications.php'); await check(parent, 'notification settings');
-  await submit(parent, 'form#notificationTest');
-  const alerts = await parent.$$eval('.success, .error', els => els.map(e => e.innerText.replace(/\s+/g, ' ').trim()).filter(t => t.length > 10));
+  console.log('parent has no test button (expect true):', !(await (async () => { await parent.goto(M + 'notifications.php'); return parent.$('form#notificationTest'); })()));
+  const tester = await login(browser, '192');
+  await tester.goto(M + 'notifications.php'); await check(tester, 'notification settings');
+  await submit(tester, 'form#notificationTest');
+  const alerts = await tester.$$eval('.success, .error', els => els.map(e => e.innerText.replace(/\s+/g, ' ').trim()).filter(t => t.length > 10));
   console.log('test result shown:', alerts.join(' || ').slice(0, 300));
-  await parent.screenshot({ path: `${__dirname}/shots/reporter_test.png` });
-  console.log('test notification in the centre (expect true):', (await told(parent, 'Service Desk test notification')).length > 0);
+  await tester.screenshot({ path: `${__dirname}/shots/reporter_test.png` });
+  console.log('test notification in the centre (expect true):', (await told(tester, 'Service Desk test notification')).length > 0, '| alert shows no web link (expect true):', !alerts.join(' ').includes('http'));
   await browser.close();
 })().catch(e => { console.error('ERR', e.message.split('\n').slice(0, 6).join('\n')); process.exit(1); });

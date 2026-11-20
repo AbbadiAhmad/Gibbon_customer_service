@@ -247,11 +247,23 @@ class Notifier
 
             // The mailer reports failures in ErrorInfo instead of throwing.
             $this->logFailure('Email failed', new \RuntimeException((string) $mail->ErrorInfo));
-            return [false, __m('The email to {email} could not be sent: {error}', ['email' => $email, 'error' => (string) $mail->ErrorInfo])];
+            return [false, $this->describeFailure($email, (string) $mail->ErrorInfo)];
         } catch (\Throwable $e) {
             $this->logFailure('Email failed', $e);
-            return [false, __m('The email to {email} could not be sent: {error}', ['email' => $email, 'error' => $e->getMessage()])];
+            return [false, $this->describeFailure($email, $e->getMessage())];
         }
+    }
+
+    /**
+     * What the administrator reads when an email fails: the mail library's detail without its web links (it points to
+     * its own troubleshooting wiki), and where the settings are.
+     */
+    protected function describeFailure(string $email, string $detail): string
+    {
+        $detail = trim(preg_replace('/\s+/', ' ', preg_replace('~https?://\S+~i', '', $detail)));
+
+        return __m('The email to {email} could not be sent. Check the email settings in System Admin > Email Settings.', ['email' => $email])
+            .($detail !== '' ? ' '.__m('Detail: {detail}', ['detail' => $detail]) : '');
     }
 
     /**
@@ -264,7 +276,7 @@ class Notifier
      */
     protected function logFailure(string $what, \Throwable $e)
     {
-        $message = preg_replace('/[^\s<>"\':;,]+@[^\s<>"\':;,]+/', '[address]', $e->getMessage());
+        $message = preg_replace('~https?://\S+~i', '', preg_replace('/[^\s<>"\':;,]+@[^\s<>"\':;,]+/', '[address]', $e->getMessage()));
         error_log('ServiceDesk: '.$what.': '.$message);
 
         if (isset(self::$logged[$what])) return;
