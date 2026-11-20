@@ -290,6 +290,10 @@ msgstr "Dieses Ticket löschen"
 msgid "Deleted a comment of {date}."
 msgstr "Einen Kommentar vom {date} gelöscht."
 
+#: src/Service/Notifier.php
+msgid "Detail: {detail}"
+msgstr "Detail: {detail}"
+
 #: manifest.php
 msgid "Details"
 msgstr "Details"
@@ -894,14 +898,10 @@ msgstr "Anfrage senden"
 #: notifications.php
 msgid ""
 "Sends a test notification to you through both channels, whatever you chose "
-"above, and tells you whether each one worked. Remember: you are never "
-"notified about your own comments and changes, only about those of other "
-"people."
-msgstr ""
-"Sendet Ihnen über beide Kanäle eine Testbenachrichtigung, unabhängig von "
-"Ihrer obigen Auswahl, und teilt Ihnen mit, ob jeder Kanal funktioniert hat. "
-"Bedenken Sie: Über Ihre eigenen Kommentare und Änderungen werden Sie nie "
-"benachrichtigt, nur über die anderer Personen."
+"above, and tells you whether each one worked. Use it to check the email "
+"settings of the school. Remember: you are never notified about your own "
+"comments and changes, only about those of other people."
+msgstr "Sendet Ihnen eine Testbenachrichtigung über beide Kanäle, unabhängig von Ihrer Auswahl oben, und zeigt, ob jeder Kanal funktioniert hat. Damit können Sie die E-Mail-Einstellungen der Schule prüfen. Denken Sie daran: Über Ihre eigenen Kommentare und Änderungen werden Sie nie benachrichtigt, nur über die anderer Personen."
 
 #: src/Service/Notifier.php templates/ticket.twig.html
 msgid "Service Desk"
@@ -1096,8 +1096,10 @@ msgid "The default assignee"
 msgstr "Der Standardbearbeiter"
 
 #: src/Service/Notifier.php
-msgid "The email to {email} could not be sent: {error}"
-msgstr "Die E-Mail an {email} konnte nicht gesendet werden: {error}"
+msgid ""
+"The email to {email} could not be sent. Check the email settings in System "
+"Admin > Email Settings."
+msgstr "Die E-Mail an {email} konnte nicht gesendet werden. Prüfen Sie die E-Mail-Einstellungen unter System Admin > Email Settings."
 
 #: teams_manage.php
 msgid ""
@@ -1391,7 +1393,12 @@ msgid ""
 "responsible team, the administrators, or nobody. With a default assignee "
 "only that person is told. Staff listed under Notified Staff are told in "
 "addition."
-msgstr "Wer über ein neues Ticket informiert wird, wenn kein Standardbearbeiter es übernimmt: das gesamte zuständige Team, die Administratoren oder niemand. Bei einem Standardbearbeiter wird nur diese Person informiert. Unter „Benachrichtigte Mitarbeiter“ aufgeführte Personen werden zusätzlich informiert."
+msgstr ""
+"Wer über ein neues Ticket informiert wird, wenn kein Standardbearbeiter es "
+"übernimmt: das gesamte zuständige Team, die Administratoren oder niemand. "
+"Bei einem Standardbearbeiter wird nur diese Person informiert. Unter "
+"„Benachrichtigte Mitarbeiter“ aufgeführte Personen werden zusätzlich "
+"informiert."
 
 #: tickets_requester.php
 msgid "Withdraw Request"
@@ -1569,6 +1576,20 @@ msgstr "{name} hat die Anfrage zurückgezogen."
 #: src/Automation/Scripts/TellTeachers.php
 msgid "{type} approved: {details}."
 msgstr "{type} genehmigt: {details}."
+
+#~ msgid ""
+#~ "Sends a test notification to you through both channels, whatever you "
+#~ "chose above, and tells you whether each one worked. Remember: you are "
+#~ "never notified about your own comments and changes, only about those of "
+#~ "other people."
+#~ msgstr ""
+#~ "Sendet Ihnen über beide Kanäle eine Testbenachrichtigung, unabhängig von "
+#~ "Ihrer obigen Auswahl, und teilt Ihnen mit, ob jeder Kanal funktioniert "
+#~ "hat. Bedenken Sie: Über Ihre eigenen Kommentare und Änderungen werden Sie "
+#~ "nie benachrichtigt, nur über die anderer Personen."
+
+#~ msgid "The email to {email} could not be sent: {error}"
+#~ msgstr "Die E-Mail an {email} konnte nicht gesendet werden: {error}"
 
 #~ msgid ""
 #~ "Marks the students absent for each school day of the period. Reads the "

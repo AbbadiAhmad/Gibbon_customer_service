@@ -280,7 +280,7 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/page.php') == 
 * Messages for the next page after a redirect: `$session->set('key', $data)` in the process script, read and
   `$session->forget('key')` on the page.
 * Who is notified (1.10.00): requesters by default; staff only as assignee, follower row, or a row in `gibbonServiceDeskTypeNotification` (`TypeNotificationGateway`). `Notifier::notify(..., $event)` takes `'new'`/`'update'`. Do not add "the team is told" fallbacks - the owner asked for opt-in.
-* "Notifications do not work" checklist: (0) ask the user to press *Send Me a Test Notification*; (1) the actor is never notified - test with two users; (2) is the
+* "Notifications do not work" checklist: (0) ask the administrator to press *Send Me a Test Notification* (administrators only; PHPMailer's `ErrorInfo` contains a link to its wiki - `Notifier::describeFailure` removes web links); (1) the actor is never notified - test with two users; (2) is the
   recipient the assignee, a follower of the ticket, or listed for the type (`gibbonServiceDeskTypeNotification`; staff are told about nothing else)? (3) the person's
   policy rows (`gibbonServiceDeskNotificationPreference`, `gibbonServiceDeskTicketSubscriber`); (4) rows in
   `gibbonNotification`; (5) PHP error log / `gibbonLog` title "Service Desk".

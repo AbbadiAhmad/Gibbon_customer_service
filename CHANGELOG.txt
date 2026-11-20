@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+After v1.11.00 (code only, no upgrade step)
+-------
+- "Send Me a Test Notification" is only offered to administrators (it shows mail server details); the process script
+  refuses everybody else.
+- A failed email no longer shows the web link of the mail library: the message says what failed and points to
+  System Admin > Email Settings; links are also removed from the log line.
+
 v1.11.00
 -------
 - Ticket type setting "New Tickets Without Default Assignee": tell the whole responsible team, the administrators, or

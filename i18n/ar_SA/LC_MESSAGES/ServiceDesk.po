@@ -286,6 +286,10 @@ msgstr "حذف هذه التذكرة"
 msgid "Deleted a comment of {date}."
 msgstr "حُذف تعليق بتاريخ {date}."
 
+#: src/Service/Notifier.php
+msgid "Detail: {detail}"
+msgstr "التفاصيل: {detail}"
+
 #: manifest.php
 msgid "Details"
 msgstr "التفاصيل"
@@ -875,13 +879,10 @@ msgstr "إرسال الطلب"
 #: notifications.php
 msgid ""
 "Sends a test notification to you through both channels, whatever you chose "
-"above, and tells you whether each one worked. Remember: you are never "
-"notified about your own comments and changes, only about those of other "
-"people."
-msgstr ""
-"يرسل إليك إشعارًا تجريبيًا عبر القناتين، مهما كان اختيارك أعلاه، ويخبرك إن "
-"كانت كل قناة تعمل. تذكّر: لا يتم إشعارك أبدًا بتعليقاتك وتغييراتك أنت، بل "
-"بتعليقات وتغييرات الآخرين فقط."
+"above, and tells you whether each one worked. Use it to check the email "
+"settings of the school. Remember: you are never notified about your own "
+"comments and changes, only about those of other people."
+msgstr "يرسل إليك إشعاراً تجريبياً عبر القناتين، مهما كان اختيارك أعلاه، ويبيّن إن نجحت كل قناة. استخدمه للتحقق من إعدادات البريد الإلكتروني للمدرسة. تذكّر: لا تتلقى إشعارات عن تعليقاتك وتغييراتك، بل عن تعليقات الآخرين وتغييراتهم فقط."
 
 #: src/Service/Notifier.php templates/ticket.twig.html
 msgid "Service Desk"
@@ -1060,8 +1061,10 @@ msgid "The default assignee"
 msgstr "المسؤول الافتراضي عن التذاكر"
 
 #: src/Service/Notifier.php
-msgid "The email to {email} could not be sent: {error}"
-msgstr "تعذّر إرسال البريد الإلكتروني إلى {email}: {error}"
+msgid ""
+"The email to {email} could not be sent. Check the email settings in System "
+"Admin > Email Settings."
+msgstr "تعذّر إرسال البريد الإلكتروني إلى {email}. تحقق من إعدادات البريد في System Admin > Email Settings."
 
 #: teams_manage.php
 msgid ""
@@ -1331,7 +1334,10 @@ msgid ""
 "responsible team, the administrators, or nobody. With a default assignee "
 "only that person is told. Staff listed under Notified Staff are told in "
 "addition."
-msgstr "من يتلقى إشعاراً عن تذكرة جديدة عندما لا يتولاها مسؤول افتراضي: الفريق المسؤول بأكمله أو المسؤولون أو لا أحد. عند وجود مسؤول افتراضي يُشعَر هو فقط. يُشعَر أيضاً الموظفون المدرجون ضمن «الموظفون الذين يتلقون الإشعارات»."
+msgstr ""
+"من يتلقى إشعاراً عن تذكرة جديدة عندما لا يتولاها مسؤول افتراضي: الفريق "
+"المسؤول بأكمله أو المسؤولون أو لا أحد. عند وجود مسؤول افتراضي يُشعَر هو فقط. "
+"يُشعَر أيضاً الموظفون المدرجون ضمن «الموظفون الذين يتلقون الإشعارات»."
 
 #: tickets_requester.php
 msgid "Withdraw Request"
@@ -1496,6 +1502,19 @@ msgstr "سحب {name} الطلب."
 #: src/Automation/Scripts/TellTeachers.php
 msgid "{type} approved: {details}."
 msgstr "تمت الموافقة على {type}: {details}."
+
+#~ msgid ""
+#~ "Sends a test notification to you through both channels, whatever you "
+#~ "chose above, and tells you whether each one worked. Remember: you are "
+#~ "never notified about your own comments and changes, only about those of "
+#~ "other people."
+#~ msgstr ""
+#~ "يرسل إليك إشعارًا تجريبيًا عبر القناتين، مهما كان اختيارك أعلاه، ويخبرك إن "
+#~ "كانت كل قناة تعمل. تذكّر: لا يتم إشعارك أبدًا بتعليقاتك وتغييراتك أنت، بل "
+#~ "بتعليقات وتغييرات الآخرين فقط."
+
+#~ msgid "The email to {email} could not be sent: {error}"
+#~ msgstr "تعذّر إرسال البريد الإلكتروني إلى {email}: {error}"
 
 #~ msgid ""
 #~ "Marks the students absent for each school day of the period. Reads the "

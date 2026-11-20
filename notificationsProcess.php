@@ -29,6 +29,11 @@ if (isActionAccessible($guid, $connection2, '/modules/ServiceDesk/notifications.
 
 // TEST: try both channels for the current user; the page shows the result.
 if (($_POST['action'] ?? '') == 'test') {
+    // Only for administrators: it shows mail server details.
+    if (!$container->get(TicketAccess::class)->isAdmin()) {
+        header("Location: {$URL}&return=error0");
+        exit;
+    }
     $session->set('serviceDeskNotificationTest', $container->get(Notifier::class)->sendTest($session->get('gibbonPersonID')));
     header("Location: {$URL}");
     exit;
