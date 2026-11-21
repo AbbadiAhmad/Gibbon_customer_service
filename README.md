@@ -185,3 +185,13 @@ All module text goes through Gibbon's module translation domain (`__m()`). `i18n
 * `tests/live/` - builds a real Gibbon with demo data and drives the module in a browser (see `tests/live/setup.sh`);
   `tests/live/security.js` are the forged-request probes.
 * `tests/perf/` - 200 000 tickets and a timing of every page (`seed.sql`, `measure.js`).
+
+## Support & Donations
+
+If this module has been helpful, we kindly welcome donations to support ongoing maintenance and improvements.
+
+**Donate via PayPal:**  
+👉 *[Donate here](https://www.paypal.com/donate?hosted_button_id=LZKTGKBK3B444)*
+
+Your support helps keep this module alive and evolving — thank you 💛
+
